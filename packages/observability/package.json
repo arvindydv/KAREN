@@ -1,0 +1,42 @@
+{
+  "name": "@karen/observability",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./tracing": {
+      "types": "./dist/tracing.d.ts",
+      "default": "./dist/tracing.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "1.10.0",
+    "@opentelemetry/exporter-trace-otlp-http": "0.301.1",
+    "@opentelemetry/instrumentation-http": "0.301.1",
+    "@opentelemetry/sdk-node": "0.301.1",
+    "@sentry/node": "11.12.0",
+    "pino": "10.4.0"
+  },
+  "devDependencies": {
+    "@karen/eslint-config": "workspace:*",
+    "@karen/typescript-config": "workspace:*",
+    "@types/node": "24.19.2",
+    "eslint": "10.14.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.12"
+  }
+}

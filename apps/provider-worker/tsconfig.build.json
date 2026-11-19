@@ -1,0 +1,4 @@
+{
+  "extends": "@karen/typescript-config/node-service.json",
+  "exclude": ["${configDir}/src/**/*.test.ts", "${configDir}/dist"]
+}

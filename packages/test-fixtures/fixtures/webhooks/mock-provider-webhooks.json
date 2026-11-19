@@ -1,0 +1,36 @@
+{
+  "description": "Signed webhook fixtures for the SANDBOX mock provider. TEST-ONLY secret; never use outside tests.",
+  "provider_id": "mock-sandbox",
+  "secret": "whsec_test_only_mock_provider_0123456789",
+  "tolerance_seconds": 300,
+  "fixtures": [
+    {
+      "name": "valid-status-changed",
+      "body": "{\"id\":\"evt_mock_0001\",\"type\":\"operation.status_changed\",\"created_at\":\"2026-11-19T10:00:00Z\",\"data\":{\"provider_operation_id\":\"mockop_0001\",\"merchant_reference\":\"karen-t1-s1\",\"status\":\"CONFIRMED\",\"environment\":\"SANDBOX\"}}",
+      "timestamp": 1763546400,
+      "header": "t=1763546400,v1=b60c06f9553ab9ae9b2ac392cafaaac0952ed3a107f8d5f9d0ecfc348b4f05fb",
+      "expected": "ACCEPT"
+    },
+    {
+      "name": "tampered-body",
+      "body": "{\"id\":\"evt_mock_0001\",\"type\":\"operation.status_changed\",\"created_at\":\"2026-11-19T10:00:00Z\",\"data\":{\"provider_operation_id\":\"mockop_0001\",\"merchant_reference\":\"karen-t1-s1\",\"status\":\"CANCELLED\",\"environment\":\"SANDBOX\"}}",
+      "timestamp": 1763546400,
+      "header": "t=1763546400,v1=b60c06f9553ab9ae9b2ac392cafaaac0952ed3a107f8d5f9d0ecfc348b4f05fb",
+      "expected": "REJECT_SIGNATURE_MISMATCH"
+    },
+    {
+      "name": "wrong-secret",
+      "body": "{\"id\":\"evt_mock_0001\",\"type\":\"operation.status_changed\",\"created_at\":\"2026-11-19T10:00:00Z\",\"data\":{\"provider_operation_id\":\"mockop_0001\",\"merchant_reference\":\"karen-t1-s1\",\"status\":\"CONFIRMED\",\"environment\":\"SANDBOX\"}}",
+      "timestamp": 1763546400,
+      "header": "t=1763546400,v1=62a18eb124a77d8a624f72c9fe823dda22a55c037dbf5bb8748a00b1b6184020",
+      "expected": "REJECT_SIGNATURE_MISMATCH"
+    },
+    {
+      "name": "malformed-header",
+      "body": "{\"id\":\"evt_mock_0001\",\"type\":\"operation.status_changed\",\"created_at\":\"2026-11-19T10:00:00Z\",\"data\":{\"provider_operation_id\":\"mockop_0001\",\"merchant_reference\":\"karen-t1-s1\",\"status\":\"CONFIRMED\",\"environment\":\"SANDBOX\"}}",
+      "timestamp": 1763546400,
+      "header": "sha256=abc",
+      "expected": "REJECT_MALFORMED"
+    }
+  ]
+}

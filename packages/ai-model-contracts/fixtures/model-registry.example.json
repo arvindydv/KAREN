@@ -1,0 +1,47 @@
+{
+  "registry_version": "2026-11-19.v1",
+  "models": [
+    {
+      "model_id": "mock/economy",
+      "tiers": ["ECONOMY"],
+      "supports_streaming": true,
+      "supports_tools": false,
+      "supports_json_schema": true,
+      "supports_vision": false,
+      "max_context_tokens": 32000,
+      "max_output_tokens": 2000,
+      "input_usd_per_million_tokens": 0,
+      "output_usd_per_million_tokens": 0,
+      "verified_at": null,
+      "notes": "Local mock adapter only. Not a real gateway model."
+    },
+    {
+      "model_id": "mock/balanced",
+      "tiers": ["BALANCED"],
+      "supports_streaming": true,
+      "supports_tools": true,
+      "supports_json_schema": true,
+      "supports_vision": false,
+      "max_context_tokens": 128000,
+      "max_output_tokens": 4000,
+      "input_usd_per_million_tokens": 0,
+      "output_usd_per_million_tokens": 0,
+      "verified_at": null,
+      "notes": "Local mock adapter only. Not a real gateway model."
+    },
+    {
+      "model_id": "mock/reasoning",
+      "tiers": ["REASONING"],
+      "supports_streaming": true,
+      "supports_tools": true,
+      "supports_json_schema": true,
+      "supports_vision": false,
+      "max_context_tokens": 200000,
+      "max_output_tokens": 8000,
+      "input_usd_per_million_tokens": 0,
+      "output_usd_per_million_tokens": 0,
+      "verified_at": null,
+      "notes": "Local mock adapter only. Not a real gateway model."
+    }
+  ]
+}

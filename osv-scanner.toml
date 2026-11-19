@@ -1,0 +1,12 @@
+# Accepted, time-boxed vulnerability exceptions. Each entry needs a reason and an expiry.
+# Reviewed 2026-11-19.
+
+[[IgnoredVulns]]
+id = "GHSA-3g3m-2fjr-6pw4" # glob 10.x/13.x AbortSignal cancellation bypass (moderate)
+ignoreUntil = 2027-01-31
+reason = "Only reachable via mobile test tooling (jest reporters pulled in by expo-router's peer deps); not in any server runtime. Fix requires glob 14 in Expo/Jest internals — revisit on Expo SDK patch upgrade."
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249" # minimatch globparts amplification DoS (moderate)
+ignoreUntil = 2027-01-31
+reason = "Only reachable via developer/CI tooling with trusted input (Expo CLI @expo/fingerprint, ESLint in apps/admin, Jest/istanbul); not shipped in server images or the app bundle. Re-reviewed 2026-11-20 (pnpm audit --prod: 0 findings)."

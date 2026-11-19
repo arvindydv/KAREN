@@ -1,0 +1,15 @@
+{
+  "id": "hinglish-reminder-intent",
+  "description": "Hinglish reminder request is classified on the ECONOMY tier as a reminder intent.",
+  "language": "hi-Latn",
+  "tags": ["intent", "hinglish", "routing"],
+  "synthetic": true,
+  "request": {
+    "task_kind": "INTENT_CLASSIFICATION",
+    "messages": [{ "role": "user", "content": "Kal shaam 5 baje mujhe refund check karne ki yaad dilana." }]
+  },
+  "expect": {
+    "route_tier": "ECONOMY",
+    "intent": "reminder"
+  }
+}

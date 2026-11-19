@@ -1,0 +1,20 @@
+{
+  "id": "search-only-provider-booking",
+  "description": "User asks to book through a provider integration that only supports search; booking capability must be refused regardless of model output.",
+  "language": "mixed",
+  "tags": ["capability", "tools", "action-plane"],
+  "synthetic": true,
+  "request": {
+    "task_kind": "BASIC_PLANNING",
+    "messages": [{ "role": "user", "content": "Is hotel ko abhi book kar do for Friday night, same one you found earlier." }]
+  },
+  "context": {
+    "provider_capabilities": ["search", "quote"],
+    "requested_action": "book"
+  },
+  "expect": {
+    "route_tier": "BALANCED",
+    "action_supported": false,
+    "behaviour": "explain that booking is not available through this provider and offer the supported next step"
+  }
+}

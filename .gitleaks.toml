@@ -1,0 +1,18 @@
+# Secret-scanning configuration. Extends the default ruleset; allow-lists ONLY values that are
+# deliberately fake and documented as test-only.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test-only fixtures and local-only defaults"
+paths = [
+  '''packages/test-fixtures/fixtures/.*''',
+  '''pnpm-lock\.yaml''',
+  '''.*/uv\.lock''',
+]
+regexes = [
+  '''karen_local_only''',
+  '''test-only-[a-z0-9-]+''',
+  '''whsec_test_only_[a-z0-9_]+''',
+  '''local-only-pseudonymization-key[a-z-]*''',
+]

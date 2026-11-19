@@ -1,0 +1,20 @@
+# Testing strategy
+
+| Layer                                                                                                                 | Tooling                                                        | Location                                  | Runs in CI job      |
+| --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------- | ------------------- |
+| Pure domain rules (state machine, policy, approvals, capability validation, signatures)                               | Vitest                                                         | `packages/*/src/**/*.test.ts`             | typescript          |
+| API unit (config validation, JWT verifier incl. JWKS rotation, AI client signing/contract)                            | Vitest                                                         | `apps/api/src/**/*.test.ts`               | typescript          |
+| API integration (real Postgres/pgvector + Redis: health, auth, permissions, audit, migrations, transactions, consent) | Vitest + Supertest                                             | `apps/api/test/*.int.test.ts`             | integration         |
+| Workflows (approval wait/expiry/reject, hash/amount mismatch, ambiguous reconcile, escalation, duplicate start)       | @temporalio/testing time-skipping server                       | `apps/temporal-worker/src/**`             | typescript          |
+| Workflow on real Temporal dev server                                                                                  | Vitest                                                         | `apps/temporal-worker/test/*.int.test.ts` | integration         |
+| Provider worker (capabilities, idempotency, signed webhook fixtures, replay)                                          | Vitest + fastify.inject                                        | `apps/provider-worker/src`                | typescript          |
+| Web                                                                                                                   | Vitest + Testing Library; Playwright smoke on production build | `apps/web`                                | typescript, web-e2e |
+| Admin                                                                                                                 | Vitest                                                         | `apps/admin`                              | typescript          |
+| Mobile                                                                                                                | jest-expo + RNTL; `expo export` bundles iOS/Android JS         | `apps/mobile`                             | typescript, mobile  |
+| AI service / voice                                                                                                    | pytest (+ mypy strict, ruff)                                   | `apps/*/tests`                            | python              |
+| AI evals                                                                                                              | golden cases, mock gateway (routing/safety checks only)        | `evals/`                                  | python              |
+| IaC                                                                                                                   | terraform validate + mocked `terraform test`                   | `infra/terraform`                         | terraform           |
+
+Principles: deterministic, no network to paid services, no real bookings/payments/messages. Live-provider and live-gateway verification are **separate, manually triggered** suites (to be added with credentials) and must never run in normal CI. Mock-only results are never presented as model accuracy.
+
+**Mobile end-to-end:** not yet automated. Planned approach: Maestro flows against an EAS development build on an Android emulator in CI (and a small physical-device matrix of low-end Android phones before beta).

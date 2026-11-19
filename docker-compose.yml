@@ -1,0 +1,87 @@
+# KAREN local development infrastructure.
+# Only services genuinely required for local work. Host ports are deliberately non-default
+# to avoid clashing with other local Postgres/Redis instances (see docs/development/ports.md).
+name: karen
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: karen
+      POSTGRES_PASSWORD: karen_local_only
+      POSTGRES_DB: karen
+    ports:
+      - '127.0.0.1:5442:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U karen -d karen']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7.4.12-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes', '--save', '60', '1000']
+    ports:
+      - '127.0.0.1:6390:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  temporal-volume-init:
+    # Named volumes are created root-owned; the Temporal image runs as uid 1000.
+    image: temporalio/temporal:1.10.1
+    user: root
+    entrypoint: ['sh', '-c', 'chown -R 1000:1000 /home/temporal/data']
+    volumes:
+      - temporal-data:/home/temporal/data
+
+  temporal:
+    # Temporal CLI dev server (single binary, SQLite persistence). Deployed envs use Temporal Cloud.
+    image: temporalio/temporal:1.10.1
+    restart: unless-stopped
+    depends_on:
+      temporal-volume-init:
+        condition: service_completed_successfully
+    command:
+      - server
+      - start-dev
+      - --ip
+      - 0.0.0.0
+      - --db-filename
+      - /home/temporal/data/temporal.db
+      - --namespace
+      - default
+    ports:
+      - '127.0.0.1:7233:7233'
+      - '127.0.0.1:8233:8233'
+    volumes:
+      - temporal-data:/home/temporal/data
+    healthcheck:
+      test: ['CMD', 'temporal', 'operator', 'cluster', 'health', '--address', '127.0.0.1:7233']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # --- Optional profile: OpenTelemetry collector that prints spans (docker compose --profile observability up) ---
+  otel-collector:
+    profiles: ['observability']
+    image: otel/opentelemetry-collector-contrib:0.140.0
+    command: ['--config=/etc/otelcol/config.yaml']
+    volumes:
+      - ./infra/observability/otel-collector.local.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - '127.0.0.1:4318:4318'
+
+volumes:
+  postgres-data:
+  redis-data:
+  temporal-data:

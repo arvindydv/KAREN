@@ -1,0 +1,15 @@
+{
+  "id": "deterministic-date-no-model",
+  "description": "A plain date question is answered deterministically: NO_MODEL route, zero gateway calls.",
+  "language": "hi-Latn",
+  "tags": ["routing", "no-model", "cost"],
+  "synthetic": true,
+  "request": {
+    "task_kind": "DETERMINISTIC",
+    "messages": [{ "role": "user", "content": "Aaj kya date hai?" }]
+  },
+  "expect": {
+    "route_tier": "NO_MODEL",
+    "no_model_call": true
+  }
+}

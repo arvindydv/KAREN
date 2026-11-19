@@ -1,0 +1,29 @@
+{
+  "description": "Synthetic, non-sensitive development users. Names/emails are fictional and use the reserved example.com domain.",
+  "users": [
+    {
+      "external_subject": "dev|asha-0001",
+      "email": "asha.dev@example.com",
+      "display_name": "Asha (synthetic)",
+      "locale": "en-IN",
+      "timezone": "Asia/Kolkata",
+      "roles": ["user"]
+    },
+    {
+      "external_subject": "dev|rohan-0002",
+      "email": "rohan.dev@example.com",
+      "display_name": "Rohan (synthetic)",
+      "locale": "hi-IN",
+      "timezone": "Asia/Kolkata",
+      "roles": ["user"]
+    },
+    {
+      "external_subject": "dev|ops-0003",
+      "email": "ops.dev@example.com",
+      "display_name": "Ops Reviewer (synthetic)",
+      "locale": "en-IN",
+      "timezone": "Asia/Kolkata",
+      "roles": ["user", "support_agent"]
+    }
+  ]
+}

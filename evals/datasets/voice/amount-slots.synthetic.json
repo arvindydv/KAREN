@@ -1,0 +1,21 @@
+{
+  "description": "Synthetic Hindi/Hinglish spoken-amount slot cases. 'hypothesis' simulates STT output (some deliberately wrong) and is scored against the labelled amount. Tests the deterministic slot scorer only; no speech model was involved.",
+  "synthetic": true,
+  "slot": "amount_inr",
+  "cases": [
+    { "id": "pandrah-sau-correct", "language": "hi-Latn", "reference": "Bijli ka bill pandrah sau rupaye ka hai", "hypothesis": "Bijli ka bill pandrah sau rupaye ka hai", "expected_amount_inr": 1500 },
+    { "id": "pandrah-sau-misheard-as-hazaar", "language": "hi-Latn", "reference": "Bijli ka bill pandrah sau rupaye ka hai", "hypothesis": "Bijli ka bill pandrah hazaar rupaye ka hai", "expected_amount_inr": 1500 },
+    { "id": "pandrah-hazaar-correct", "language": "hi-Latn", "reference": "Rent pandrah hazaar transfer karna hai", "hypothesis": "Rent pandrah hazaar transfer karna hai", "expected_amount_inr": 15000 },
+    { "id": "digits-with-rupee-sign", "language": "mixed", "reference": "₹1,500 bhej do", "hypothesis": "₹1,500 bhej do", "expected_amount_inr": 1500 },
+    { "id": "dedh-hazaar", "language": "hi-Latn", "reference": "Dedh hazaar ka recharge kar do", "hypothesis": "Dedh hazaar ka recharge kar do", "expected_amount_inr": 1500 },
+    { "id": "saade-teen-hazaar", "language": "hi-Latn", "reference": "Saade teen hazaar ka order hai", "hypothesis": "Saade teen hazaar ka order hai", "expected_amount_inr": 3500 },
+    { "id": "devanagari-pandrah-sau", "language": "hi", "reference": "पंद्रह सौ रुपये भेज दो", "hypothesis": "पंद्रह सौ रुपये भेज दो", "expected_amount_inr": 1500 },
+    { "id": "dropped-leading-number", "language": "hi-Latn", "reference": "Pandrah sau rupaye de do", "hypothesis": "Sau rupaye de do", "expected_amount_inr": 1500 },
+    { "id": "ek-lakh-misheard-as-das-hazaar", "language": "hi-Latn", "reference": "Ek lakh ka transfer", "hypothesis": "Das hazaar ka transfer", "expected_amount_inr": 100000 }
+  ],
+  "expected_summary": {
+    "total": 9,
+    "exact": 6,
+    "magnitude_errors": ["pandrah-sau-misheard-as-hazaar", "ek-lakh-misheard-as-das-hazaar"]
+  }
+}

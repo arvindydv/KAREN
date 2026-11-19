@@ -1,0 +1,37 @@
+{
+  "name": "@karen/temporal-worker",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json && node --env-file-if-exists=.env --enable-source-maps dist/main.js",
+    "start": "node --enable-source-maps dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "tsc -p tsconfig.build.json && vitest run --project unit",
+    "test:integration": "tsc -p tsconfig.build.json && vitest run --project integration"
+  },
+  "dependencies": {
+    "@karen/config": "workspace:*",
+    "@karen/domain": "workspace:*",
+    "@karen/observability": "workspace:*",
+    "@karen/types": "workspace:*",
+    "@temporalio/activity": "1.25.0",
+    "@temporalio/client": "1.25.0",
+    "@temporalio/common": "1.25.0",
+    "@temporalio/worker": "1.25.0",
+    "@temporalio/workflow": "1.25.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@karen/eslint-config": "workspace:*",
+    "@karen/typescript-config": "workspace:*",
+    "@temporalio/testing": "1.25.0",
+    "@types/node": "24.19.2",
+    "eslint": "10.14.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.12"
+  }
+}

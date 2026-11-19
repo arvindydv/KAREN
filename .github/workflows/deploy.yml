@@ -1,0 +1,54 @@
+# Deployment pipeline skeleton. INACTIVE: runs only on manual dispatch AND when the repository
+# variable DEPLOYMENTS_ENABLED is 'true'. Production additionally requires the protected
+# `production` GitHub environment (manual approval). Uses GitHub OIDC → AWS role; no static keys.
+name: Deploy (manual, gated)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [dev, staging, production]
+        required: true
+      service:
+        description: Service to deploy
+        type: choice
+        options: [api, temporal-worker, provider-worker, ai-service, voice-agent]
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    if: vars.DEPLOYMENTS_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-south-1
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+      - name: Build and push image (tag = commit SHA; images are immutable)
+        run: |
+          set -euo pipefail
+          IMAGE="${{ steps.ecr.outputs.registry }}/karen-${{ inputs.environment }}-${{ inputs.service }}:${GITHUB_SHA}"
+          case "${{ inputs.service }}" in
+            api) docker build -f infra/docker/node-service.Dockerfile --build-arg APP=api --build-arg HEALTH_PORT=4100 -t "$IMAGE" . ;;
+            temporal-worker) docker build -f infra/docker/node-service.Dockerfile --build-arg APP=temporal-worker --build-arg HEALTH_PORT=4300 -t "$IMAGE" . ;;
+            provider-worker) docker build -f infra/docker/node-service.Dockerfile --build-arg APP=provider-worker --build-arg HEALTH_PORT=4200 -t "$IMAGE" . ;;
+            ai-service|voice-agent) docker build -t "$IMAGE" "apps/${{ inputs.service }}" ;;
+          esac
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+      - name: Roll out via Terraform image tag
+        run: |
+          echo "Image pushed: $IMAGE"
+          echo "Rollout is performed by updating image_tags in Terraform for ${{ inputs.environment }} and applying with review."
+          echo "Database migrations are NEVER applied automatically by this workflow (see docs/runbooks/database-migrations.md)."

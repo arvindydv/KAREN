@@ -1,0 +1,15 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "db:generate": {
+      "inputs": ["prisma/schema.prisma"],
+      "outputs": ["src/generated/prisma/**"]
+    },
+    "build": { "dependsOn": ["^build", "db:generate"] },
+    "typecheck": { "dependsOn": ["^build", "db:generate"] },
+    "lint": { "dependsOn": ["^build", "db:generate"] },
+    "test": { "dependsOn": ["^build", "db:generate"] },
+    "test:integration": { "dependsOn": ["^build", "db:generate"] }
+  }
+}

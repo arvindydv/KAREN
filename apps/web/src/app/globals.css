@@ -1,0 +1,28 @@
+@import 'tailwindcss';
+@import '@karen/ui/tokens.css';
+/* Let Tailwind see class names used by shared web primitives. */
+@source '../../node_modules/@karen/ui/dist';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-background: var(--karen-background);
+  --color-surface: var(--karen-surface);
+  --color-border: var(--karen-border);
+  --color-foreground: var(--karen-text-primary);
+  --color-muted: var(--karen-text-secondary);
+  --color-accent: var(--karen-accent);
+  --font-sans: var(--karen-font-sans);
+}
+
+html {
+  background: var(--karen-background);
+  color: var(--karen-text-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

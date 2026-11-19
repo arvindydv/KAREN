@@ -1,0 +1,5 @@
+{
+  "extends": "@karen/typescript-config/nestjs.json",
+  "compilerOptions": { "sourceMap": true },
+  "exclude": ["${configDir}/src/**/*.test.ts", "${configDir}/dist"]
+}

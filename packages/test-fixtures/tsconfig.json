@@ -1,0 +1,3 @@
+{
+  "extends": "@karen/typescript-config/library.json"
+}

@@ -1,0 +1,82 @@
+[project]
+name = "karen-voice-agent"
+version = "0.1.0"
+description = "KAREN LiveKit voice worker foundation: session lifecycle, speech pipeline interfaces, audio capability gate."
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "livekit-agents==1.8.10",
+    "pydantic==2.14.2",
+    "pydantic-settings==2.16.2",
+    "httpx2==2.16.0",
+    "sentry-sdk==2.73.0",
+    "opentelemetry-sdk==1.45.2",
+    "opentelemetry-exporter-otlp-proto-http==1.45.2",
+]
+
+[project.scripts]
+karen-voice = "karen_voice.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest==9.2.0",
+    "pytest-asyncio==1.4.1",
+    "ruff==0.17.3",
+    "mypy==2.4.1",
+]
+
+[tool.uv]
+# Supply-chain hygiene: resolve only releases at least ~2 weeks old (direct AND transitive).
+exclude-newer = "2026-11-05T00:00:00Z"
+# livekit-agents 1.8.10 needs livekit-protocol>=1.1.29; 1.1.28-1.1.31 are all yanked upstream, so the
+# first installable release (1.1.32, 2026-11-14) is allowed as a documented exception.
+exclude-newer-package = { livekit-protocol = "2026-11-15T00:00:00Z" }
+
+[build-system]
+requires = ["uv_build>=0.9.10,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "karen_voice"
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "N", "UP", "B", "S", "A", "C4", "SIM", "RET", "PT", "ASYNC",
+    "BLE", "T20", "RUF", "PL", "TID", "ERA",
+]
+ignore = [
+    "PLR0913", # explicit keyword-only constructors are clearer than parameter objects here
+    "PLR2004", # magic values are fine in focused checks
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "PLR2004", "PLC0415"]
+"src/karen_voice/cli.py" = ["T201", "PLC0415"]
+"src/karen_voice/observability.py" = ["PLC0415"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src", "tests"]
+mypy_path = "src"
+plugins = ["pydantic.mypy"]
+warn_unreachable = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra --strict-markers --strict-config"

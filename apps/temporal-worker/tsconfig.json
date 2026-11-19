@@ -1,0 +1,5 @@
+{
+  "extends": "@karen/typescript-config/node-service.json",
+  "compilerOptions": { "rootDir": "${configDir}", "noEmit": true },
+  "include": ["src", "test"]
+}

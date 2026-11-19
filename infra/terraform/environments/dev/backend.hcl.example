@@ -1,0 +1,6 @@
+# Copy to backend.hcl (git-ignored) and fill in values created by the state
+# bootstrap runbook (docs/runbooks/terraform-state-bootstrap.md).
+bucket     = "REPLACE_ME-karen-tfstate-<account-id>-ap-south-1"
+key        = "karen/dev/terraform.tfstate"
+region     = "ap-south-1"
+kms_key_id = "arn:aws:kms:ap-south-1:<account-id>:alias/karen-tfstate"

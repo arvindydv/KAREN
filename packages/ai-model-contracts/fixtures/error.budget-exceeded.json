@@ -1,0 +1,8 @@
+{
+  "error": {
+    "code": "BUDGET_EXCEEDED",
+    "message": "Estimated request cost exceeds the per-request budget.",
+    "retryable": false,
+    "request_id": "req_01JD3Q8Z6M4T1"
+  }
+}

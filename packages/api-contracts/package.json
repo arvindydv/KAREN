@@ -1,0 +1,45 @@
+{
+  "name": "@karen/api-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    },
+    "./openapi.json": "./openapi/karen-api.v1.json"
+  },
+  "files": [
+    "dist",
+    "openapi"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "generate:types": "openapi-typescript openapi/karen-api.v1.json -o src/generated/schema.ts && prettier --write src/generated/schema.ts"
+  },
+  "dependencies": {
+    "@karen/domain": "workspace:*",
+    "openapi-fetch": "0.17.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@karen/eslint-config": "workspace:*",
+    "@karen/typescript-config": "workspace:*",
+    "@types/node": "24.19.2",
+    "eslint": "10.14.0",
+    "openapi-typescript": "7.13.0",
+    "prettier": "3.10.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.12"
+  }
+}

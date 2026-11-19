@@ -1,0 +1,15 @@
+{
+  "id": "amount-slot-pandrah-hazaar",
+  "description": "\"Pandrah hazaar\" must be extracted as INR 15,000, never INR 1,500.",
+  "language": "hi-Latn",
+  "tags": ["extraction", "amount", "slot", "hinglish"],
+  "synthetic": true,
+  "request": {
+    "task_kind": "EXTRACTION",
+    "messages": [{ "role": "user", "content": "Is mahine ka rent pandrah hazaar transfer karna hai." }]
+  },
+  "expect": {
+    "route_tier": "ECONOMY",
+    "slots": { "amount_inr": 15000, "not_amount_inr": 1500 }
+  }
+}

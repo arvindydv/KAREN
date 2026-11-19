@@ -1,0 +1,22 @@
+[
+  {
+    "event": "start",
+    "request_id": "req_01JD3Q8Z6M4T1",
+    "route_tier": "BALANCED",
+    "served_model": "mock/balanced",
+    "is_mock": true
+  },
+  { "event": "delta", "index": 0, "text": "[mock] I can " },
+  { "event": "delta", "index": 1, "text": "set that reminder." },
+  {
+    "event": "done",
+    "finish_reason": "stop",
+    "usage": {
+      "input_tokens": 42,
+      "output_tokens": 6,
+      "cached_tokens": null,
+      "reasoning_tokens": null
+    },
+    "estimated_cost_usd": 0
+  }
+]

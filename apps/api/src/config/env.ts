@@ -1,0 +1,100 @@
+import {
+  baseServiceEnv,
+  booleanFlag,
+  databaseEnv,
+  internalAuthEnv,
+  isDeployedEnv,
+  loadEnv,
+  observabilityEnv,
+  optionalString,
+  optionalUrl,
+  port,
+  redisEnv,
+  requiredWhenDeployed,
+  resolveRedisUrl,
+} from '@karen/config';
+import { z } from 'zod';
+
+const csv = z
+  .string()
+  .default('')
+  .transform((s) =>
+    s
+      .split(',')
+      .map((v) => v.trim())
+      .filter(Boolean),
+  );
+
+export const apiEnvShape = {
+  ...baseServiceEnv,
+  ...databaseEnv,
+  ...redisEnv,
+  ...observabilityEnv,
+  ...internalAuthEnv,
+  API_PORT: port(4100),
+  API_PUBLIC_BASE_URL: z.string().url().default('http://localhost:4100'),
+  API_CORS_ALLOWED_ORIGINS: csv,
+  API_BODY_LIMIT_BYTES: z.coerce
+    .number()
+    .int()
+    .min(1024)
+    .max(10 * 1024 * 1024)
+    .default(1_048_576),
+  API_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).max(10_000).default(120),
+  /** Per-client limit for @SensitiveRateLimit() routes (auth, OTP, approvals). Fails closed. */
+  API_SENSITIVE_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).max(1_000).default(10),
+  /**
+   * Number of reverse proxies in front of the API whose X-Forwarded-For entries are trusted
+   * (ALB only = 1; Cloudflare → ALB = 2). Client IPs drive rate limiting, so trusting every hop
+   * would let callers spoof their address. 0 = use the socket address.
+   */
+  API_TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
+  API_DOCS_ENABLED: booleanFlag(false),
+  AUTH_MODE: z.enum(['oidc', 'local-dev']).default('oidc'),
+  OIDC_ISSUER_URL: optionalUrl,
+  OIDC_AUDIENCE: optionalString,
+  OIDC_JWKS_URL: optionalUrl,
+  OIDC_ALLOWED_ALGORITHMS: csv.pipe(
+    z.array(z.enum(['RS256', 'RS384', 'RS512', 'PS256', 'ES256', 'ES384', 'EdDSA'])),
+  ),
+  AI_SERVICE_URL: z.string().url().default('http://localhost:8100'),
+  KAREN_EXECUTION_PAUSED: booleanFlag(false),
+};
+
+export type ApiEnv = ReturnType<typeof loadApiEnv>;
+
+export function loadApiEnv(source: Record<string, string | undefined> = process.env) {
+  const env = loadEnv(apiEnvShape, {
+    source,
+    rules: [
+      // The local-dev token issuer must never be reachable outside local/test.
+      (env) =>
+        env.AUTH_MODE === 'local-dev' && env.APP_ENV !== 'local' && env.APP_ENV !== 'test'
+          ? `AUTH_MODE: local-dev is forbidden when APP_ENV=${env.APP_ENV}`
+          : undefined,
+      (env) =>
+        env.AUTH_MODE === 'oidc' &&
+        (!env.OIDC_ISSUER_URL || !env.OIDC_AUDIENCE || !env.OIDC_JWKS_URL)
+          ? 'OIDC_ISSUER_URL, OIDC_AUDIENCE and OIDC_JWKS_URL are required when AUTH_MODE=oidc'
+          : undefined,
+      (env) =>
+        env.AUTH_MODE === 'oidc' && env.OIDC_ALLOWED_ALGORITHMS.length === 0
+          ? 'OIDC_ALLOWED_ALGORITHMS must list at least one asymmetric algorithm'
+          : undefined,
+      (env) =>
+        env.APP_ENV === 'production' && env.API_DOCS_ENABLED
+          ? 'API_DOCS_ENABLED must be false in production'
+          : undefined,
+      (env) =>
+        isDeployedEnv(env.APP_ENV) && env.API_CORS_ALLOWED_ORIGINS.some((o) => o === '*')
+          ? 'API_CORS_ALLOWED_ORIGINS may not contain "*" in deployed environments'
+          : undefined,
+      (env) =>
+        isDeployedEnv(env.APP_ENV) && (env.INTERNAL_SERVICE_HMAC_SECRET?.length ?? 0) < 32
+          ? 'INTERNAL_SERVICE_HMAC_SECRET: required (>= 32 chars) when deployed'
+          : undefined,
+      requiredWhenDeployed('LOG_PSEUDONYMIZATION_KEY'),
+    ],
+  });
+  return { ...env, REDIS_URL: resolveRedisUrl(env) };
+}

@@ -1,0 +1,8 @@
+{
+  "contract_version": "2026-11-19.v1",
+  "request_id": "req_01JD3Q8Z6M4T1",
+  "task_kind": "CHAT",
+  "messages": [{ "role": "user", "content": "hi" }],
+  "user_ref": "usr_hmac_4f1c2a9b7d",
+  "model": "someone/invented-model"
+}

@@ -1,0 +1,66 @@
+# User data isolation and PostgreSQL RLS
+
+Reviewed 2026-11-20 against the code, not assumed. KAREN is a **single-tenant-per-user** consumer
+product: the isolation unit is the user (`identity.users.id`). There is no organisation/tenant
+concept yet; if one is added it becomes a second key in every rule below.
+
+## Layer 1 — application (enforced today)
+
+- The user is derived only from a verified access token: `AuthGuard` → `IdentityService.resolvePrincipal(iss, sub)`.
+  No route accepts a user ID from body/query/path (apps/api/CLAUDE.md).
+- Every query that exists today is scoped by the verified principal or by `(issuer, subject)`:
+
+| Query                                       | Scope                                                         | File                                  |
+| ------------------------------------------- | ------------------------------------------------------------- | ------------------------------------- |
+| `externalIdentity.findUnique/create/update` | `(issuer, subject)` from the verified token                   | `identity/identity.service.ts`        |
+| `staffRoleGrant.findMany`                   | `userId` of the resolved principal                            | `identity/identity.service.ts`        |
+| `user.findUniqueOrThrow`                    | `principal.userId`                                            | `identity/me.controller.ts` → service |
+| `consentGrant.findFirst`                    | `userId` argument + purpose; caller passes `principal.userId` | `consent/consent.service.ts`          |
+| pgvector helpers                            | no user data (extension version, literal distance)            | `infrastructure/database/vector.ts`   |
+
+- Integration test `isolates users: one user's consent never satisfies another user's check`
+  (`apps/api/test/app.int.test.ts`) proves cross-user consent isolation on real PostgreSQL.
+- Unknown principals are provisioned as a _new_ user; a token can never attach to an existing user
+  except via its own `(issuer, subject)` link.
+
+## Layer 2 — PostgreSQL Row-Level Security (required, not yet enabled)
+
+RLS is defence in depth against a missed `where userId` (architecture §5). It is **required
+before real user data is stored** in the following tables, and must be added in the same
+migration that creates each new user-owned table:
+
+| Table (schema)                                                                                                      | RLS required                                                   | Why / policy                                                                                                            |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `consent.consent_grants`, `consent.legal_acceptances`                                                               | **Yes**                                                        | user-owned legal records                                                                                                |
+| `identity.users` (row = the user)                                                                                   | **Yes**                                                        | `id = current_setting('karen.user_id')::uuid`                                                                           |
+| `identity.external_identities`                                                                                      | **Yes**, with an auth-resolution bypass                        | identity resolution runs _before_ a user is known → resolve via a `SECURITY DEFINER` function owned by a dedicated role |
+| `identity.staff_role_grants`                                                                                        | Read: yes (own row) · Write: security_admin path only          | privilege escalation target                                                                                             |
+| `platform.idempotency_records`                                                                                      | **Yes**                                                        | carries `user_id`                                                                                                       |
+| future: `conversation.*`, `memory.*` (incl. pgvector embeddings), `tasks.*`, `approvals.*`, `providers.connections` | **Yes — mandatory**                                            | the product's most sensitive data; vector similarity queries must also filter by `user_id` _inside_ the SQL             |
+| `audit.audit_events`                                                                                                | No (append-only, staff/ops access via audited admin endpoints) | not user-readable via API                                                                                               |
+| `platform.outbox_events`                                                                                            | No (system table, no direct user reads)                        | —                                                                                                                       |
+
+**Mechanism (to implement with the first user-data feature, before onboarding real users):**
+
+1. Services connect as a non-owner role (`karen_api_rw`) — never the migration/owner role —
+   so `FORCE ROW LEVEL SECURITY` cannot be bypassed by table ownership.
+2. `PrismaService.withUserScope(userId, fn)` opens a transaction and runs
+   `SELECT set_config('karen.user_id', $1, true)` (transaction-local, safe with pooling).
+3. Policies: `USING (user_id = current_setting('karen.user_id', true)::uuid)` with the same
+   `WITH CHECK`. Missing setting ⇒ `NULL` ⇒ no rows (deny by default).
+4. System workers (temporal-worker, provider-worker) use separate roles with explicit,
+   narrow policies; staff access goes through audited API endpoints only.
+5. An integration test per table asserts that a query without the scope returns zero rows.
+
+## Layer 3 — database roles (blocker before first deploy)
+
+Terraform creates per-service `DATABASE_URL` secrets, but **no SQL creates the roles or grants**.
+Before the first deployed environment: add a reviewed SQL bootstrap (run by an operator, never
+automatically) creating `karen_migrator` (DDL owner), `karen_api_rw`, `karen_temporal_rw`,
+`karen_provider_rw`, `karen_ai_ro` with schema-scoped `USAGE`/`SELECT`/`INSERT`/`UPDATE` only,
+no `DELETE`/`UPDATE` on `audit.*`, and RDS IAM auth or Secrets-Manager-rotated passwords.
+
+## Redis
+
+Keys are namespaced `karen:<purpose>:…` and carry TTLs; no user content is stored. Rate-limit keys
+contain client IPs (personal data under DPDP — 60 s TTL). AI budget keys hold only aggregate spend.

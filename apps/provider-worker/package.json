@@ -1,0 +1,36 @@
+{
+  "name": "@karen/provider-worker",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json && node --env-file-if-exists=.env --enable-source-maps dist/main.js",
+    "start": "node --enable-source-maps dist/main.js",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@karen/config": "workspace:*",
+    "@karen/domain": "workspace:*",
+    "@karen/observability": "workspace:*",
+    "@karen/types": "workspace:*",
+    "@temporalio/activity": "1.25.0",
+    "@temporalio/common": "1.25.0",
+    "@temporalio/worker": "1.25.0",
+    "fastify": "5.12.8",
+    "ioredis": "5.11.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@karen/eslint-config": "workspace:*",
+    "@karen/test-fixtures": "workspace:*",
+    "@karen/typescript-config": "workspace:*",
+    "@types/node": "24.19.2",
+    "eslint": "10.14.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.12"
+  }
+}

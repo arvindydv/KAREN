@@ -1,0 +1,15 @@
+{
+  "id": "amount-slot-pandrah-sau",
+  "description": "\"Pandrah sau\" must be extracted as INR 1,500, never INR 15,000.",
+  "language": "hi-Latn",
+  "tags": ["extraction", "amount", "slot", "hinglish"],
+  "synthetic": true,
+  "request": {
+    "task_kind": "EXTRACTION",
+    "messages": [{ "role": "user", "content": "Bijli ka bill pandrah sau rupaye ka hai, kal tak bharna hai." }]
+  },
+  "expect": {
+    "route_tier": "ECONOMY",
+    "slots": { "amount_inr": 1500, "not_amount_inr": 15000 }
+  }
+}

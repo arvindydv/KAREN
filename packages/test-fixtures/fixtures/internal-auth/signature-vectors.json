@@ -1,0 +1,23 @@
+{
+  "description": "Cross-language test vectors for the internal service request signature (TS + Python must agree). TEST-ONLY secret.",
+  "secret": "test-only-internal-hmac-secret-0123456789abcdef",
+  "tolerance_seconds": 300,
+  "vectors": [
+    {
+      "method": "POST",
+      "path_with_query": "/internal/v1/completions",
+      "body": "{\"hello\":\"world\"}",
+      "timestamp": 1763550000,
+      "signing_string": "POST\n/internal/v1/completions\n93a23971a914e5eacbf0a8d25154cda309c3c1c72fbb9914d47c60f3cb681588",
+      "header": "t=1763550000,v1=12fc3f4fa62445785d8d66f44592462aef50942a3b857b4ac412b7b67a4ef6b1"
+    },
+    {
+      "method": "GET",
+      "path_with_query": "/health/ready",
+      "body": "",
+      "timestamp": 1763550000,
+      "signing_string": "GET\n/health/ready\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "header": "t=1763550000,v1=9f2e71a832c0ebe5caf133313edc57828118b0ca983725b8582c5ca937002a27"
+    }
+  ]
+}

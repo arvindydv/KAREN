@@ -1,0 +1,236 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  TURBO_TELEMETRY_DISABLED: '1'
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  typescript:
+    name: TypeScript — format, lint, typecheck, unit tests, build, contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm check:env-public
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - name: OpenAPI contract drift
+        run: pnpm contracts:check
+
+  integration:
+    name: Integration — PostgreSQL/pgvector, Redis, Temporal, migrations
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start local infrastructure (same compose file developers use)
+        run: docker compose up -d --wait postgres redis temporal
+      - name: Apply migrations from scratch (reproducibility)
+        run: pnpm db:migrate:deploy
+        env:
+          DATABASE_URL: postgresql://karen:karen_local_only@localhost:5442/karen
+      - name: Schema ↔ migrations drift check
+        run: pnpm --filter @karen/api db:migrate:diff
+        env:
+          DATABASE_URL: postgresql://karen:karen_local_only@localhost:5442/karen
+          SHADOW_DATABASE_URL: postgresql://karen:karen_local_only@localhost:5442/karen_shadow
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+        working-directory: apps/ai-service
+      - run: pnpm test:integration
+      - name: Show infrastructure logs on failure
+        if: failure()
+        run: docker compose logs --tail=200
+
+  web-e2e:
+    name: Web — Playwright smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter=@karen/web^...
+      - run: pnpm --filter @karen/web exec playwright install --with-deps chromium
+      - run: pnpm test:e2e:web
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
+
+  mobile:
+    name: Mobile — Expo config + JS bundle (iOS/Android)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter=@karen/mobile^...
+      - run: pnpm --filter @karen/mobile config:check
+      - run: pnpm --filter @karen/mobile export:check
+
+  python:
+    name: Python — ${{ matrix.app }} (ruff, mypy, pytest)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [ai-service, voice-agent]
+    defaults:
+      run:
+        working-directory: apps/${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest
+      - name: Golden-case eval harness (mock gateway — routing checks only)
+        if: matrix.app == 'ai-service'
+        run: uv run python -m karen_ai.evaluation.run_golden ../../evals/golden-cases
+
+  terraform:
+    name: Terraform — fmt, validate, offline tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.7
+      - run: node scripts/terraform-validate.mjs
+
+  security:
+    name: Security — secret scan + dependency vulnerabilities
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Secret scanning (gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.28.0 \
+            git /repo --config /repo/.gitleaks.toml --redact --verbose --exit-code 1
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+      - name: npm dependency audit (high+)
+        run: pnpm audit --audit-level high --prod
+      - name: OSV scan of all lockfiles (pnpm + uv)
+        run: |
+          docker run --rm -v "$PWD:/src" ghcr.io/google/osv-scanner:v2.2.4 scan source --config /src/osv-scanner.toml \
+            --lockfile /src/pnpm-lock.yaml \
+            --lockfile /src/apps/ai-service/uv.lock \
+            --lockfile /src/apps/voice-agent/uv.lock
+
+  containers:
+    name: Container build — ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {
+              name: api,
+              file: infra/docker/node-service.Dockerfile,
+              args: 'APP=api HEALTH_PORT=4100',
+              context: .,
+            }
+          - {
+              name: temporal-worker,
+              file: infra/docker/node-service.Dockerfile,
+              args: 'APP=temporal-worker HEALTH_PORT=4300',
+              context: .,
+            }
+          - {
+              name: provider-worker,
+              file: infra/docker/node-service.Dockerfile,
+              args: 'APP=provider-worker HEALTH_PORT=4200',
+              context: .,
+            }
+          - {
+              name: web,
+              file: infra/docker/nextjs.Dockerfile,
+              args: 'APP=web NEXT_PUBLIC_API_BASE_URL=https://api.example.invalid',
+              context: .,
+            }
+          - {
+              name: admin,
+              file: infra/docker/nextjs.Dockerfile,
+              args: 'APP=admin NEXT_PUBLIC_API_BASE_URL=https://api.example.invalid',
+              context: .,
+            }
+          - {
+              name: ai-service,
+              file: apps/ai-service/Dockerfile,
+              args: '',
+              context: apps/ai-service,
+            }
+          - {
+              name: voice-agent,
+              file: apps/voice-agent/Dockerfile,
+              args: '',
+              context: apps/voice-agent,
+            }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - name: Build (no push)
+        env:
+          BUILD_ARGS: ${{ matrix.args }}
+          DOCKERFILE: ${{ matrix.file }}
+          CONTEXT: ${{ matrix.context }}
+          NAME: ${{ matrix.name }}
+        run: |
+          args=()
+          for a in $BUILD_ARGS; do args+=(--build-arg "$a"); done
+          docker buildx build --load -f "$DOCKERFILE" "${args[@]}" -t "karen/$NAME:ci" "$CONTEXT"

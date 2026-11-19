@@ -1,0 +1,227 @@
+// KAREN business database (PostgreSQL 17 + pgvector). PostgreSQL is the authoritative source
+// of business state; Redis is never authoritative (architecture §8).
+//
+// Schema ownership (docs/database/conventions.md):
+//   identity  — users, external identity links, staff role grants      (owner: api/identity)
+//   consent   — consent grants, legal acceptances                       (owner: api/consent)
+//   audit     — append-only audit events (DB trigger blocks UPDATE/DELETE) (owner: api/audit)
+//   platform  — transactional outbox, API idempotency records            (owner: api/platform)
+// Future schemas (memory, tasks, approvals, conversations, providers, notifications, billing)
+// are documented in docs/database/future-entities.md and arrive with their features.
+//
+// Conventions: UUID v4 PKs generated in the DB, snake_case tables/columns, timestamptz,
+// created_at/updated_at on mutable rows, `version` for optimistic concurrency, every
+// user-owned row carries user_id with an index leading on it.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+  runtime             = "nodejs"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["identity", "consent", "audit", "platform"]
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETION_REQUESTED
+
+  @@schema("identity")
+}
+
+enum StaffRole {
+  support_agent
+  ops_admin
+  security_admin
+
+  @@schema("identity")
+}
+
+model User {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  displayName String?    @map("display_name") @db.VarChar(120)
+  locale      String     @default("en-IN") @db.VarChar(35)
+  timezone    String     @default("Asia/Kolkata") @db.VarChar(64)
+  status      UserStatus @default(ACTIVE)
+  version     Int        @default(0)
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  externalIdentities ExternalIdentity[]
+  staffRoles         StaffRoleGrant[]
+  consentGrants      ConsentGrant[]
+  legalAcceptances   LegalAcceptance[]
+
+  @@map("users")
+  @@schema("identity")
+}
+
+/// Maps an OIDC (issuer, subject) pair to the internal user. Never keyed by e-mail.
+model ExternalIdentity {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  issuer     String   @db.VarChar(512)
+  subject    String   @db.VarChar(255)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([issuer, subject])
+  @@index([userId])
+  @@map("external_identities")
+  @@schema("identity")
+}
+
+/// Staff roles are granted server-side only; token claims never confer staff permissions.
+model StaffRoleGrant {
+  userId    String    @map("user_id") @db.Uuid
+  role      StaffRole
+  grantedBy String?   @map("granted_by") @db.Uuid
+  grantedAt DateTime  @default(now()) @map("granted_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, role])
+  @@map("staff_role_grants")
+  @@schema("identity")
+}
+
+enum ConsentPurpose {
+  AI_PROCESSING
+  MEMORY_STORAGE
+  CONNECTOR_ACCESS
+  PROACTIVE_SUGGESTIONS
+  COMMUNICATIONS
+  ACTION_EXECUTION
+  PRODUCT_ANALYTICS
+
+  @@schema("consent")
+}
+
+enum ConsentStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+
+  @@schema("consent")
+}
+
+model ConsentGrant {
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String         @map("user_id") @db.Uuid
+  purpose       ConsentPurpose
+  /// Narrowing scope, e.g. "*" or a provider/capability identifier.
+  scope         String         @default("*") @db.VarChar(255)
+  providerId    String?        @map("provider_id") @db.VarChar(64)
+  policyVersion String         @map("policy_version") @db.VarChar(32)
+  status        ConsentStatus  @default(ACTIVE)
+  /// sha256 of the consent receipt shown to the user (proof of what was agreed).
+  receiptHash   String         @map("receipt_hash") @db.VarChar(80)
+  grantedAt     DateTime       @default(now()) @map("granted_at") @db.Timestamptz(3)
+  expiresAt     DateTime?      @map("expires_at") @db.Timestamptz(3)
+  revokedAt     DateTime?      @map("revoked_at") @db.Timestamptz(3)
+  version       Int            @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, status])
+  @@map("consent_grants")
+  @@schema("consent")
+}
+
+model LegalAcceptance {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  documentType    String   @map("document_type") @db.VarChar(64)
+  documentVersion String   @map("document_version") @db.VarChar(32)
+  locale          String   @db.VarChar(35)
+  acceptedAt      DateTime @default(now()) @map("accepted_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, documentType, documentVersion])
+  @@map("legal_acceptances")
+  @@schema("consent")
+}
+
+enum ActorType {
+  USER
+  STAFF
+  SYSTEM
+  SERVICE
+
+  @@schema("audit")
+}
+
+enum AuditOutcome {
+  SUCCESS
+  DENIED
+  FAILURE
+
+  @@schema("audit")
+}
+
+/// Append-only. UPDATE/DELETE are rejected by a trigger (see migration). Metadata must be
+/// pre-redacted by the writer; never store tokens, prompts or sensitive personal data here.
+model AuditEvent {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  occurredAt  DateTime     @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  actorType   ActorType    @map("actor_type")
+  /// Internal user UUID or service name. Not an e-mail.
+  actorRef    String?      @map("actor_ref") @db.VarChar(128)
+  action      String       @db.VarChar(128)
+  subjectType String?      @map("subject_type") @db.VarChar(64)
+  subjectId   String?      @map("subject_id") @db.VarChar(128)
+  outcome     AuditOutcome
+  requestId   String?      @map("request_id") @db.VarChar(128)
+  traceId     String?      @map("trace_id") @db.VarChar(64)
+  metadata    Json         @default("{}")
+
+  @@index([actorRef, occurredAt(sort: Desc)])
+  @@index([subjectType, subjectId, occurredAt(sort: Desc)])
+  @@index([requestId])
+  @@map("audit_events")
+  @@schema("audit")
+}
+
+/// Transactional outbox: written in the same transaction as the state change it describes,
+/// relayed to SQS/EventBridge by a worker (architecture §8). Relay arrives with first consumer.
+model OutboxEvent {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  aggregateType String    @map("aggregate_type") @db.VarChar(64)
+  aggregateId   String    @map("aggregate_id") @db.VarChar(128)
+  eventType     String    @map("event_type") @db.VarChar(128)
+  eventVersion  Int       @default(1) @map("event_version")
+  payload       Json
+  occurredAt    DateTime  @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  publishedAt   DateTime? @map("published_at") @db.Timestamptz(3)
+  attempts      Int       @default(0)
+
+  @@index([publishedAt, occurredAt])
+  @@map("outbox_events")
+  @@schema("platform")
+}
+
+/// Server-side idempotency for client-retried POSTs (e.g. task creation client_request_id).
+model IdempotencyRecord {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String   @map("user_id") @db.Uuid
+  scope              String   @db.VarChar(64)
+  key                String   @db.VarChar(128)
+  requestFingerprint String   @map("request_fingerprint") @db.VarChar(80)
+  responseStatus     Int?     @map("response_status")
+  responseBody       Json?    @map("response_body")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt          DateTime @map("expires_at") @db.Timestamptz(3)
+
+  @@unique([userId, scope, key])
+  @@index([expiresAt])
+  @@map("idempotency_records")
+  @@schema("platform")
+}

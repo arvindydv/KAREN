@@ -1,0 +1,19 @@
+# Local Terraform working state - never commit.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan*
+crash.log
+crash.*.log
+
+# Account-specific / possibly sensitive inputs. Commit only the *.example files.
+backend.hcl
+terraform.tfvars
+*.auto.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# .terraform.lock.hcl IS committed (pins provider checksums).

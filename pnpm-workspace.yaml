@@ -1,0 +1,20 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+  # Python services (ai-service, voice-agent) are managed by uv, not pnpm.
+  - '!apps/ai-service'
+  - '!apps/voice-agent'
+
+# Supply-chain hygiene: only these packages may run install scripts.
+onlyBuiltDependencies:
+  - '@prisma/engines'
+  - 'prisma'
+  - '@swc/core'
+  - 'esbuild'
+  - 'sharp'
+  - 'unrs-resolver'
+  - '@temporalio/core-bridge'
+  - 'protobufjs'
+
+# Refuse to install releases published less than 7 days ago (minutes).
+minimumReleaseAge: 10080
