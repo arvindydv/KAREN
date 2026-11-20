@@ -1,17 +1,17 @@
 import { create } from 'zustand';
+import type { SessionSnapshot } from '../auth/session-manager';
 
 /**
- * Non-sensitive client session state. Tokens are NOT stored here (see secure-storage.ts);
- * this only tracks whether we believe the user is signed in, for navigation.
+ * Non-sensitive client session state mirrored from the SessionManager, for navigation and UI.
+ * Tokens are NEVER stored here (see secure-storage.ts).
  */
-type SessionStatus = 'unknown' | 'signed_out' | 'signed_in';
-
-interface SessionState {
-  status: SessionStatus;
-  setStatus: (status: SessionStatus) => void;
+interface SessionState extends SessionSnapshot {
+  sync: (snapshot: SessionSnapshot) => void;
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
   status: 'unknown',
-  setStatus: (status) => set({ status }),
+  accountStatus: null,
+  refreshProblem: null,
+  sync: (snapshot) => set(snapshot),
 }));

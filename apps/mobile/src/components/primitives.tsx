@@ -1,5 +1,17 @@
-import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, Text, View, type ViewStyle } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  View,
+  type TextInputProps,
+  type ViewStyle,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/theme';
 
@@ -214,10 +226,363 @@ export function LoadingState({ label = 'Loading' }: { label?: string }) {
 }
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const t = useTheme();
   return (
     <View accessibilityRole="alert" style={{ gap: 12 }}>
-      <Body>{message}</Body>
-      {onRetry ? <PrimaryButton label="Try again" onPress={onRetry} /> : null}
+      <Text
+        style={{
+          color: t.colors.danger,
+          fontSize: t.typography.scale.body.size,
+          lineHeight: t.typography.scale.body.lineHeight,
+        }}
+      >
+        {message}
+      </Text>
+      {onRetry ? <SecondaryButton label="Try again" onPress={onRetry} /> : null}
     </View>
+  );
+}
+
+/** Nothing to show yet — say so plainly. */
+export function EmptyState({ title, message }: { title: string; message?: string }) {
+  const t = useTheme();
+  return (
+    <View style={{ gap: t.spacing.xs, paddingVertical: t.spacing.md }}>
+      <Body>{title}</Body>
+      {message ? <Body muted>{message}</Body> : null}
+    </View>
+  );
+}
+
+/** The server refused this for the signed-in user (403). */
+export function DeniedState({ message }: { message?: string }) {
+  return (
+    <View accessibilityRole="alert" style={{ gap: 8 }}>
+      <Body>You don’t have access to this.</Body>
+      <Body muted>{message ?? 'If you think this is a mistake, contact support.'}</Body>
+    </View>
+  );
+}
+
+export function Caption({ children }: { children: ReactNode }) {
+  const t = useTheme();
+  return (
+    <Text style={{ color: t.colors.textSecondary, fontSize: 13, lineHeight: 18 }}>{children}</Text>
+  );
+}
+
+/** Inline notice. `warning` for e.g. "Draft — not legally reviewed"; `success` for confirmations. */
+export function Banner({
+  tone = 'info',
+  children,
+}: {
+  tone?: 'info' | 'warning' | 'success';
+  children: ReactNode;
+}) {
+  const t = useTheme();
+  const color =
+    tone === 'warning'
+      ? t.colors.warning
+      : tone === 'success'
+        ? t.colors.success
+        : t.colors.highlight;
+  return (
+    <View
+      accessibilityRole={tone === 'info' ? 'text' : 'alert'}
+      style={{
+        borderLeftWidth: 4,
+        borderLeftColor: color,
+        backgroundColor: t.glass.fill,
+        borderRadius: t.radius.md,
+        padding: t.spacing.md,
+      }}
+    >
+      <Text style={{ color: t.colors.textPrimary, fontSize: 14, lineHeight: 20 }}>{children}</Text>
+    </View>
+  );
+}
+
+export function SecondaryButton({
+  label,
+  onPress,
+  disabled = false,
+  hint,
+  destructive = false,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  hint?: string;
+  destructive?: boolean;
+}) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint={hint}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        minHeight: Math.max(48, t.minTouchTarget),
+        borderRadius: t.radius.pill,
+        borderWidth: 1,
+        borderColor: destructive ? t.colors.danger : t.glass.border,
+        backgroundColor: t.glass.fill,
+        opacity: disabled ? 0.5 : pressed ? 0.8 : 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: t.spacing.lg,
+      })}
+    >
+      <Text
+        style={{
+          color: destructive ? t.colors.danger : t.colors.textPrimary,
+          fontSize: t.typography.scale.body.size,
+          fontWeight: '600',
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+/** Text-styled button (links between screens). Keeps a 44pt touch target. */
+export function TextButton({
+  label,
+  onPress,
+  hint,
+  disabled = false,
+}: {
+  label: string;
+  onPress: () => void;
+  hint?: string;
+  disabled?: boolean;
+}) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint={hint}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      hitSlop={8}
+      style={{ minHeight: t.minTouchTarget, justifyContent: 'center', opacity: disabled ? 0.5 : 1 }}
+    >
+      <Text style={{ color: t.colors.highlight, fontSize: 15, fontWeight: '600' }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+export function TextField({
+  label,
+  error,
+  hint,
+  secure = false,
+  ...input
+}: Omit<TextInputProps, 'secureTextEntry' | 'style'> & {
+  label: string;
+  error?: string | null;
+  hint?: string;
+  secure?: boolean;
+}) {
+  const t = useTheme();
+  const [hidden, setHidden] = useState(true);
+  return (
+    <View style={{ gap: 6 }}>
+      <Text style={{ color: t.colors.textPrimary, fontSize: 14, fontWeight: '600' }}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <TextInput
+          accessibilityLabel={label}
+          accessibilityHint={hint}
+          placeholderTextColor={t.colors.textSecondary}
+          secureTextEntry={secure && hidden}
+          autoCorrect={false}
+          {...input}
+          style={{
+            flex: 1,
+            minHeight: Math.max(48, t.minTouchTarget),
+            borderRadius: t.radius.md,
+            borderWidth: 1,
+            borderColor: error ? t.colors.danger : t.glass.border,
+            backgroundColor: t.glass.fill,
+            color: t.colors.textPrimary,
+            paddingHorizontal: t.spacing.md,
+            fontSize: t.typography.scale.body.size,
+          }}
+        />
+        {secure ? (
+          <TextButton
+            label={hidden ? 'Show' : 'Hide'}
+            hint={hidden ? `Show ${label.toLowerCase()}` : `Hide ${label.toLowerCase()}`}
+            onPress={() => setHidden((h) => !h)}
+          />
+        ) : null}
+      </View>
+      {hint ? <Caption>{hint}</Caption> : null}
+      {error ? (
+        <Text accessibilityRole="alert" style={{ color: t.colors.danger, fontSize: 13 }}>
+          {error}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+/** Scrollable, keyboard-safe screen for forms and long content. */
+export function FormScreen({ children }: { children: ReactNode }) {
+  const t = useTheme();
+  return (
+    <View style={{ flex: 1, backgroundColor: t.colors.background }}>
+      <SpaceBackground />
+      <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ padding: t.spacing.xl, gap: t.spacing.lg, flexGrow: 1 }}
+          >
+            {children}
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
+  );
+}
+
+export function ToggleRow({
+  label,
+  description,
+  value,
+  onChange,
+  disabled = false,
+  disabledReason,
+}: {
+  label: string;
+  description?: string;
+  value: boolean;
+  onChange: (next: boolean) => void;
+  disabled?: boolean;
+  disabledReason?: string;
+}) {
+  const t = useTheme();
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: t.spacing.md,
+        minHeight: t.minTouchTarget,
+      }}
+    >
+      <View style={{ flex: 1, gap: 2 }}>
+        <Body>{label}</Body>
+        {description ? <Caption>{description}</Caption> : null}
+        {disabled && disabledReason ? <Caption>{disabledReason}</Caption> : null}
+      </View>
+      <Switch
+        accessibilityRole="switch"
+        accessibilityLabel={label}
+        accessibilityHint={disabled ? disabledReason : undefined}
+        accessibilityState={{ checked: value, disabled }}
+        value={value}
+        disabled={disabled}
+        onValueChange={onChange}
+        trackColor={{ true: t.colors.accent, false: t.colors.border }}
+      />
+    </View>
+  );
+}
+
+/** Single-choice group with radio semantics. */
+export function ChoiceGroup<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: readonly { value: T; label: string }[];
+  value: T | null;
+  onChange: (next: T) => void;
+}) {
+  const t = useTheme();
+  return (
+    <View accessibilityRole="radiogroup" accessibilityLabel={label} style={{ gap: 8 }}>
+      <Text style={{ color: t.colors.textPrimary, fontSize: 14, fontWeight: '600' }}>{label}</Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {options.map((o) => {
+          const selected = o.value === value;
+          return (
+            <Pressable
+              key={o.value}
+              accessibilityRole="radio"
+              accessibilityLabel={o.label}
+              accessibilityState={{ checked: selected }}
+              onPress={() => onChange(o.value)}
+              style={{
+                minHeight: t.minTouchTarget,
+                minWidth: t.minTouchTarget,
+                justifyContent: 'center',
+                paddingHorizontal: t.spacing.md,
+                borderRadius: t.radius.pill,
+                borderWidth: 1,
+                borderColor: selected ? t.colors.accent : t.glass.border,
+                backgroundColor: selected ? t.colors.accent : t.glass.fill,
+              }}
+            >
+              <Text
+                style={{
+                  color: selected ? t.colors.accentText : t.colors.textPrimary,
+                  fontWeight: '600',
+                }}
+              >
+                {o.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+/** Tappable list row for navigation (settings menus). */
+export function LinkRow({
+  label,
+  description,
+  onPress,
+}: {
+  label: string;
+  description?: string;
+  onPress: () => void;
+}) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint={description}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        minHeight: Math.max(52, t.minTouchTarget),
+        paddingVertical: t.spacing.sm,
+        flexDirection: 'row',
+        alignItems: 'center',
+        opacity: pressed ? 0.7 : 1,
+      })}
+    >
+      <View style={{ flex: 1, gap: 2 }}>
+        <Body>{label}</Body>
+        {description ? <Caption>{description}</Caption> : null}
+      </View>
+      <Text style={{ color: t.colors.textSecondary, fontSize: 20 }}>›</Text>
+    </Pressable>
   );
 }

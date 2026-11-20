@@ -76,3 +76,15 @@ Each service reads **its own** `apps/<service>/.env` locally (`pnpm setup:env` c
 ## docker-compose (local only)
 
 Postgres `karen` / `karen_local_only` — a fixed, local-only credential bound to 127.0.0.1.
+
+## Web and admin BFF (server-only — never `NEXT_PUBLIC_*`)
+
+| Variable                                 | App         | Local default           | Deployed                    | Notes                                                                                 |
+| ---------------------------------------- | ----------- | ----------------------- | --------------------------- | ------------------------------------------------------------------------------------- |
+| `API_INTERNAL_BASE_URL`                  | web, admin  | `http://localhost:4100` | API service address         | the BFF is the only thing that talks to the API                                       |
+| `APP_ENV`                                | web, admin  | `local`                 | required                    | only `local`/`test` allow plain-http cookie names (`karen_session`, `karen_staff`)    |
+| `WEB_PUBLIC_ORIGIN` / `ADMIN_APP_ORIGIN` | web / admin | request origin          | **required**                | exact origin for the Origin check on state-changing requests                          |
+| `INTERNAL_SERVICE_HMAC_SECRET` (secret)  | web, admin  | unset                   | **required**                | signs the end-user IP forwarded to the API so per-IP limits are per user, not per BFF |
+| `BFF_TRUSTED_PROXY_HOPS`                 | web, admin  | `1`                     | ALB = 1, Cloudflare+ALB = 2 | which `X-Forwarded-For` entry is the client                                           |
+
+`NEXT_PUBLIC_API_BASE_URL` is no longer used by web or admin (the browser never calls the API).

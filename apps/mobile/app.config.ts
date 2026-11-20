@@ -22,6 +22,14 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     'expo-secure-store',
+    // Optional local app lock only (never server authentication).
+    [
+      'expo-local-authentication',
+      {
+        faceIDPermission:
+          'KAREN uses Face ID to unlock the app on this device when you turn on app lock.',
+      },
+    ],
     ['expo-splash-screen', { backgroundColor: '#060A1C', dark: { backgroundColor: '#060A1C' } }],
   ],
   experiments: { typedRoutes: true },

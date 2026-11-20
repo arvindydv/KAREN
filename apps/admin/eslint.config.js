@@ -6,7 +6,7 @@ const config = [
   ...nextVitals,
   ...createReactConfig({
     tsconfigRootDir: import.meta.dirname,
-    ignores: ['next-env.d.ts', 'playwright-report/**'],
+    ignores: ['next-env.d.ts', 'playwright-report/**', 'test-results/**'],
   }),
 ];
 

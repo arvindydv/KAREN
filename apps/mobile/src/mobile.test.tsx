@@ -1,20 +1,58 @@
-import { describe, expect, it } from '@jest/globals';
-import { render, screen } from '@testing-library/react-native';
-import LaunchScreen from '../app/index';
+import { describe, expect, it, jest } from '@jest/globals';
+import { fireEvent, render, screen } from '@testing-library/react-native';
+import WelcomeScreen from '../app/(auth)/index';
 import { parseMobileEnv } from './lib/env';
+import { describeError, passwordReasonText, toApiError } from './lib/api-error';
 import { createInMemoryCredentialStore } from './lib/secure-storage';
+import { passwordProblem } from './lib/validation';
 import { buildTheme } from './theme/theme';
 
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
+
 describe('mobile foundation', () => {
-  it('renders the launch screen accessibly', async () => {
-    await render(<LaunchScreen />);
+  it('renders the welcome screen accessibly with sign-up and sign-in', async () => {
+    await render(<WelcomeScreen />);
     expect(screen.getByRole('header')).toHaveTextContent(/Taken care of/);
     expect(screen.getByText('KAREN')).toBeTruthy();
-    // Sign-up is not built yet: the CTA is visibly disabled and says so to screen readers.
-    const cta = screen.getByRole('button', { name: /get started/i });
-    expect(cta).toBeDisabled();
-    expect(cta.props.accessibilityHint).toMatch(/next release/i);
-    expect(screen.getByText(/sign-up coming soon/i)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Create account' }));
+    expect(mockPush).toHaveBeenCalledWith('/sign-up');
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+    expect(mockPush).toHaveBeenCalledWith('/sign-in');
+  });
+
+  it('maps API errors to safe, friendly text', () => {
+    const weak = toApiError(400, {
+      error: {
+        code: 'WEAK_PASSWORD',
+        message: 'Password rejected',
+        correlation_id: 'c',
+        retryable: false,
+        details: [{ path: 'password', message: 'COMMONLY_USED' }],
+      },
+    });
+    expect(describeError(weak)).toMatch(/too common/);
+    expect(passwordReasonText('TOO_SHORT')).toMatch(/15 characters/);
+    expect(
+      describeError(
+        toApiError(412, {
+          error: {
+            code: 'PRECONDITION_FAILED',
+            message: 'x',
+            correlation_id: 'c',
+            retryable: false,
+          },
+        }),
+      ),
+    ).toMatch(/latest version/);
+    expect(describeError(toApiError(502, undefined))).toBe('Request failed (502).');
+  });
+
+  it('checks password length in code points (15–256), with no composition rules', () => {
+    expect(passwordProblem('short')).toMatch(/at least 15/);
+    expect(passwordProblem('a'.repeat(15))).toBeNull();
+    expect(passwordProblem('मेरा पासवर्ड बहुत लंबा है')).toBeNull();
+    expect(passwordProblem('x'.repeat(257))).toMatch(/at most 256/);
   });
 
   it('validates public env and refuses plain-http API in production', () => {

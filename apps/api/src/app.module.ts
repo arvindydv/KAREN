@@ -1,10 +1,11 @@
 import { createLogger } from '@karen/observability';
 import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { ClientIpThrottlerGuard } from './common/client-ip-throttler.guard.js';
 import { HttpExceptionFilter } from './common/http-exception.filter.js';
 import { isNotSensitiveRoute } from './common/rate-limit.js';
 import { ConfigModule } from './config/config.module.js';
@@ -93,7 +94,7 @@ export class AppModule {
       ],
       providers: [
         // Guard order: rate limit first (cheap), then AuthGuard/PermissionsGuard from AuthModule.
-        { provide: APP_GUARD, useClass: ThrottlerGuard },
+        { provide: APP_GUARD, useClass: ClientIpThrottlerGuard },
         { provide: APP_FILTER, useClass: HttpExceptionFilter },
       ],
     };

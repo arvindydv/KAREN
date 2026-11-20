@@ -115,8 +115,9 @@ locals {
       PROVIDER_WEBHOOK_SECRETS = local.s["provider-worker/PROVIDER_WEBHOOK_SECRETS"]
     })
     "voice-agent" = merge(local.common_secrets, local.livekit_secrets)
-    web           = { SENTRY_DSN = local.s["shared/SENTRY_DSN"] }
-    admin         = { SENTRY_DSN = local.s["shared/SENTRY_DSN"] }
+    # BFFs sign the end-user IP they forward to the API (per-IP limits per user, not per BFF).
+    web   = { SENTRY_DSN = local.s["shared/SENTRY_DSN"], INTERNAL_SERVICE_HMAC_SECRET = local.s["shared/INTERNAL_SERVICE_HMAC_SECRET"] }
+    admin = { SENTRY_DSN = local.s["shared/SENTRY_DSN"], INTERNAL_SERVICE_HMAC_SECRET = local.s["shared/INTERNAL_SERVICE_HMAC_SECRET"] }
   }
 
   # ---------------------------------------------------- plain environment --
@@ -183,8 +184,19 @@ locals {
       HEALTH_PORT    = "8200"
       AI_SERVICE_URL = local.ai_service_url
     })
-    web   = merge(local.base_env, { PORT = "3000", NEXT_PUBLIC_API_BASE_URL = "https://${var.api_hostname}" })
-    admin = merge(local.base_env, { PORT = "3000", NEXT_PUBLIC_API_BASE_URL = "https://${var.api_hostname}" })
+    # BFFs (ADR-0016): the browser never calls the API; the BFF reaches it over service discovery.
+    web = merge(local.base_env, {
+      PORT                   = "3000"
+      API_INTERNAL_BASE_URL  = local.api_internal_url
+      WEB_PUBLIC_ORIGIN      = var.web_hostname == null ? "" : "https://${var.web_hostname}"
+      BFF_TRUSTED_PROXY_HOPS = tostring(var.api_trusted_proxy_hops)
+    })
+    admin = merge(local.base_env, {
+      PORT                   = "3000"
+      API_INTERNAL_BASE_URL  = local.api_internal_url
+      ADMIN_APP_ORIGIN       = var.admin_hostname == null ? "" : "https://${var.admin_hostname}"
+      BFF_TRUSTED_PROXY_HOPS = tostring(var.api_trusted_proxy_hops)
+    })
   }
 
   # ------------------------------------------------- IAM data permissions --
