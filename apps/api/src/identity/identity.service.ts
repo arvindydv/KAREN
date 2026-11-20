@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { ROLE_PERMISSIONS, type Permission, type Role } from '@karen/api-contracts';
+import { accountAccessLevel } from '@karen/domain';
 import { pseudonymizeUserId } from '@karen/observability';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { AuthenticatedPrincipal } from '../auth/principal.js';
 import { ApiError } from '../common/api-error.js';
 import { API_ENV } from '../config/config.module.js';
@@ -20,7 +21,9 @@ interface IdentityLink {
 
 @Injectable()
 export class IdentityService {
+  private readonly logger = new Logger(IdentityService.name);
   private readonly pseudonymKey: string;
+  private readonly allowDevProvisioning: boolean;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -28,14 +31,22 @@ export class IdentityService {
   ) {
     // Config validation guarantees a real key outside local/test.
     this.pseudonymKey = env.LOG_PSEUDONYMIZATION_KEY ?? LOCAL_PSEUDONYMIZATION_KEY;
+    this.allowDevProvisioning =
+      env.AUTH_MODE === 'local-dev' && (env.APP_ENV === 'local' || env.APP_ENV === 'test');
   }
 
   /**
-   * Map a verified (issuer, subject) to the internal user, provisioning the identity link on
-   * first sight. Roles come exclusively from server-side grants — never from token claims.
+   * Map a verified (issuer, subject) to an EXISTING internal user. Authentication never
+   * creates accounts (Phase 01 M1, ADR-0015): accounts are provisioned explicitly by
+   * AccountService (registration) or, in local/test only, by the dev token route. Unknown
+   * identities are denied. Roles come exclusively from server-side grants, never token claims.
    */
   async resolvePrincipal(issuer: string, subject: string): Promise<AuthenticatedPrincipal> {
-    const link = await this.findOrProvision(issuer, subject);
+    const link = await this.lookup(issuer, subject);
+    if (!link) {
+      this.logger.warn({ reason: 'identity_not_provisioned' }, 'Rejected verified token');
+      throw new ApiError('UNAUTHENTICATED', 'Authentication is required.');
+    }
     const { status, grants } = await this.prisma.withUserScope(link.userId, async (tx) => {
       const user = await tx.user.findUniqueOrThrow({
         where: { id: link.userId },
@@ -50,10 +61,12 @@ export class IdentityService {
       const staff = await tx.staffRoleGrant.findMany({ where: { userId: link.userId } });
       return { status: user.status, grants: staff };
     });
-    // Deny by default: only ACTIVE accounts may act. Suspended / deletion-requested users keep
-    // valid IdP tokens, so this check must happen server-side on every request.
-    if (status !== 'ACTIVE') {
-      throw new ApiError('FORBIDDEN', 'This account is not active.');
+    // Deny by default: only ACTIVE accounts get full access. Pending, locked, suspended,
+    // deletion-requested and deleted accounts may still hold unexpired credentials, so this is
+    // checked server-side on every request. (The restricted `deletion_pending` level gets its
+    // own routes in M7; until then it is denied like the others.)
+    if (accountAccessLevel(status) !== 'full') {
+      throw new ApiError('ACCOUNT_INACTIVE', 'This account is not active.');
     }
     const roles: Role[] = ['user', ...grants.map((g) => g.role)];
     const permissions = [...new Set<Permission>(roles.flatMap((r) => ROLE_PERMISSIONS[r]))];
@@ -83,14 +96,22 @@ export class IdentityService {
       : null;
   }
 
-  private async findOrProvision(issuer: string, subject: string): Promise<IdentityLink> {
+  /**
+   * LOCAL/TEST ONLY: explicitly provisions an ACTIVE account for a local-dev issuer subject.
+   * Called by the dev token route — never by the authentication path. Idempotent and
+   * race-safe (unique (issuer, subject)). Refuses outside AUTH_MODE=local-dev + APP_ENV=local|test.
+   */
+  async provisionLocalDevIdentity(issuer: string, subject: string): Promise<IdentityLink> {
+    if (!this.allowDevProvisioning) {
+      throw new ApiError('NOT_FOUND', 'Not found.');
+    }
     const existing = await this.lookup(issuer, subject);
     if (existing) return existing;
     // The user id is generated here so the new rows can be written inside their own RLS scope.
     const userId = randomUUID();
     try {
       return await this.prisma.withUserScope(userId, async (tx) => {
-        await tx.user.create({ data: { id: userId } });
+        await tx.user.create({ data: { id: userId, status: 'ACTIVE' } });
         const link = await tx.externalIdentity.create({ data: { issuer, subject, userId } });
         return { identityId: link.id, userId, lastSeenAt: link.lastSeenAt };
       });

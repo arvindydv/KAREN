@@ -28,7 +28,12 @@ try {
       existing?.userId ??
       (await prisma.withTransaction(async (tx) => {
         const user = await tx.user.create({
-          data: { displayName: u.display_name, locale: u.locale, timezone: u.timezone },
+          data: {
+            displayName: u.display_name,
+            locale: u.locale,
+            timezone: u.timezone,
+            status: 'ACTIVE',
+          },
         });
         await tx.externalIdentity.create({
           data: { userId: user.id, issuer: LOCAL_DEV_ISSUER, subject: u.external_subject },

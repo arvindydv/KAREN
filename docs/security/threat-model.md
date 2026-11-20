@@ -1,5 +1,7 @@
 # Security architecture and threat model (foundation)
 
+> Identity (Phase 01): see `identity-threat-model.md` for first-party authentication, sessions, recovery, consent and staff identity threats, residual risks and ASVS traceability.
+
 Scope: the foundation as implemented on 2026-11-19. Re-review per feature (product spec §30 DoD).
 
 ## Trust boundaries

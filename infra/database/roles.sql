@@ -46,6 +46,11 @@ GRANT SELECT, INSERT, UPDATE ON identity.external_identities TO karen_api_runtim
 GRANT SELECT ON identity.staff_role_grants TO karen_api_runtime;   -- writes: security-admin path
 GRANT EXECUTE ON FUNCTION identity.current_user_id() TO karen_api_runtime;
 GRANT EXECUTE ON FUNCTION identity.lookup_external_identity(text, text) TO karen_api_runtime;
+-- First-party credentials (ADR-0015). No DELETE: account erasure is the M7 deletion worker's
+-- role, not the request path. Pre-auth reads go only through lookup_password_login.
+GRANT SELECT, INSERT, UPDATE ON identity.user_emails TO karen_api_runtime;
+GRANT SELECT, INSERT, UPDATE ON identity.password_credentials TO karen_api_runtime;
+GRANT EXECUTE ON FUNCTION identity.lookup_password_login(text) TO karen_api_runtime;
 
 -- consent (RLS: own rows only; revocation is an UPDATE, never a DELETE)
 GRANT SELECT, INSERT, UPDATE ON consent.consent_grants TO karen_api_runtime;

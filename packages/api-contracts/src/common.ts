@@ -8,6 +8,8 @@ export const API_ERROR_CODES = [
   'VALIDATION_FAILED',
   'UNAUTHENTICATED',
   'FORBIDDEN',
+  /** Authenticated, but the account's status forbids this (pending, locked, suspended…). */
+  'ACCOUNT_INACTIVE',
   'NOT_FOUND',
   'CONFLICT',
   'PAYLOAD_TOO_LARGE',

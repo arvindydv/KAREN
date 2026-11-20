@@ -1,6 +1,6 @@
 # 0004 — Provider-neutral OIDC, server-held roles, isolated local-dev issuer
 
-- Status: Accepted · Date: 2026-11-19
+- Status: Accepted · Date: 2026-11-19 · **Partially superseded by [0015](0015-first-party-identity.md)** (2026-11-20): the external-IdP premise is replaced by first-party identity; verifier rules, DB-held roles and the local-dev issuer remain.
 
 ## Context
 

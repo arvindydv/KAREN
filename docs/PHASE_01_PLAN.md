@@ -1,0 +1,139 @@
+# Phase 01 — Identity, onboarding, profile, consent, admin security: plan & status
+
+Baseline: `main` @ `2d83cf9` (PR #1 merged; hosted CI 16/16 green on that commit).
+**Phase 00 stays open** — Gate 00 is independent of this plan (`docs/PHASE_00_REPORT.md`).
+Statuses: `NOT_STARTED` · `IN_PROGRESS` · `DONE_LOCAL` · `EXTERNALLY_BLOCKED` · `VERIFIED` · `RELEASE_READY`.
+
+## 1. Direction change
+
+KAREN owns authentication (ADR-0015). No hosted identity service for users or staff; Google/Apple
+deferred but kept possible (`identity.external_identities`). Sessions/tokens: ADR-0016. Staff
+realm: ADR-0017.
+
+## 2. Repository audit (2026-11-20)
+
+| Area          | Found                                                                                                                                                                                                                                                                                                                                                   |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| API auth      | Global `AuthGuard` → `TokenVerifier` (jose, asymmetric allow-list, JWKS) → `IdentityService.resolvePrincipal` **which auto-provisioned users**; `PermissionsGuard` with audited denials                                                                                                                                                                 |
+| Local dev     | In-memory ES256 issuer, `POST /dev/auth/token`, refused outside local/test (tested)                                                                                                                                                                                                                                                                     |
+| Identity data | `identity.users` (status ACTIVE/SUSPENDED/DELETION_REQUESTED), `external_identities`, `staff_role_grants` (keyed by consumer user id)                                                                                                                                                                                                                   |
+| Consent data  | `consent.consent_grants`, `consent.legal_acceptances`; `ConsentService.hasActiveConsent` (deny by default); no endpoints                                                                                                                                                                                                                                |
+| RLS           | Owner-only policies, runtime role without BYPASSRLS/DDL/DELETE, transaction-local `karen.user_id`; tests run as the runtime role                                                                                                                                                                                                                        |
+| Clients       | Web/admin `getSession`/`getStaffSession` always `null` (fail closed); mobile SecureStore abstraction; CSP `script-src 'unsafe-inline'` in web and admin                                                                                                                                                                                                 |
+| Docs          | ADR-0004 (provider-neutral OIDC), ADR-0014 (admin: Cloudflare Access + staff OIDC). "ADR-0015" existed only as a section in PHASE_00_REPORT §5 (Cognito). **No ADR-0015/0016 files existed.** The "previous Phase 01 planning document" referenced in the instruction is **not in the repository**; its issue list was taken from the instruction text. |
+
+### 2.1 Components that change because Cognito / hosted staff IdP are removed
+
+| Component                                                                                                             | Change                                                                                 | Milestone      |
+| --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------- |
+| `IdentityService.resolvePrincipal` auto-provisioning                                                                  | **Removed** (lookup-only; unknown → 401)                                               | **M1 done**    |
+| `apps/api/src/config/env.ts` Cognito rules (`OIDC_AUDIENCE_CLAIM=client_id`, `OIDC_REQUIRED_TOKEN_USE`, issuer regex) | Remove with `AUTH_MODE=oidc`                                                           | M3             |
+| `token-verifier.ts` `audienceClaim`/`requiredTokenUse` + Cognito test block                                           | Replace by first-party access-token verifier (`typ`, `realm`, `sid`)                   | M3             |
+| `AuthModule` `oidc` branch, `remoteJwks`                                                                              | Replace by local key set (KMS public keys)                                             | M3             |
+| `apps/api/.env.example`, `docs/development/environment-variables.md` OIDC rows                                        | Replace                                                                                | M3             |
+| `infra/terraform/environments/*/{main,variables}.tf` `oidc_*` + "ADR-0015: Amazon Cognito" comments                   | Replace with signing-key/pepper secrets; no Cognito resources exist                    | M3 (no deploy) |
+| `apps/web/src/lib/session.ts`, `apps/admin/src/lib/staff-session.ts`                                                  | Real BFF sessions                                                                      | M3/M8/M9       |
+| ADR-0014 layers 1–2 (Cloudflare Access + staff OIDC client)                                                           | Amended by ADR-0017                                                                    | M0 done        |
+| `karen_phases.md` Phase 01 "Tech" line, A02/B01 items, ADR-0015 references                                            | Annotated (this PR)                                                                    | M0 done        |
+| `karen_architecture.md` §3/§10 "OIDC provider (Auth0, Cognito, or Clerk evaluated)"                                   | **Not edited** (requires explicit authorisation per CLAUDE.md); superseded by ADR-0015 | owner action   |
+| `docs/PHASE_00_REPORT.md` §5 + Phase 00 item 25 "ADR-0015 trial"                                                      | Trial no longer needed; Phase 00 owner to close item as superseded                     | owner action   |
+
+## 3. Reassessment of previously identified problems
+
+| Problem                                     | Reassessment under first-party auth                                                                | Resolution                                                                                          |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Auto-provisioning inside the auth guard     | Still dangerous (pre-account takeover, unbounded row creation by any valid token)                  | **Fixed M1**; test proves a valid token for an unknown subject creates nothing                      |
+| Conflicting auth API names                  | `/v1/identity/bootstrap` obsolete; `/v1/consent/*` vs `/v1/me/*`                                   | Canonical inventory: identity-architecture §7                                                       |
+| Inconsistent consent table names            | Roadmap `consent.grants/receipts/requests` vs existing `consent.consent_grants`                    | Keep existing names; add `consent_receipts`, `notices`, `data_rights_requests` (§3 of architecture) |
+| Incomplete user statuses / consent purposes | Statuses lacked pending/locked/deleted; purposes lack location, audio, family, notifications split | Statuses **fixed M1**; purpose catalog extended in M6 (legal review needed)                         |
+| Avatar upload without malware scanning      | Unchanged; Phase 00 restriction stands                                                             | **Deferred**: initials placeholder only until a scanning pipeline exists                            |
+| Logout / revocation limits                  | Previously impossible (IdP-held refresh tokens); now ours                                          | ADR-0016 (M3)                                                                                       |
+| Missing deletion execution paths            | Unchanged                                                                                          | M7 Temporal workflow + deletion DB role                                                             |
+| `unsafe-inline` script CSP                  | Unchanged; more important now that the web app holds a session cookie                              | Nonce CSP in M3/M9 before any authenticated page ships                                              |
+| Cognito + hosted staff IdP reliance         | Removed by decision                                                                                | ADR-0015/0017                                                                                       |
+
+## 4. Milestones (dependency-ordered)
+
+```text
+M0 ─► M1 ─► M2 ─► M3 ─┬─► M4 ─► M5
+                      ├─► M6 ─► M7 (needs M3 re-auth, M6 receipts, Temporal)
+                      └─► M8 (needs M3 session core)
+M4..M8 ─► M9 (web/mobile E2E) ─► M10 (hardening, benchmarks, Gate 01 evidence)
+```
+
+The dependency review confirms M1 first: every later milestone needs the account state machine,
+credential storage and the removal of implicit provisioning.
+
+| Milestone | Scope                                                                                                                                                                                            | Status         | Evidence / blockers                                                                                                                      |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| M0        | ADRs 0015–0017, architecture, threat model, plan, roadmap deltas                                                                                                                                 | **DONE_LOCAL** | This PR (docs). Legal/infra items in §6 remain.                                                                                          |
+| M1        | Account state machine, e-mail canonicalization, credentials schema, Argon2id + pepper + gate, opaque-token primitive, explicit provisioning, guard auto-provisioning removed, `ACCOUNT_INACTIVE` | **DONE_LOCAL** | §5                                                                                                                                       |
+| M2        | Register / verify / resend / login / forgot / reset APIs, account throttling, outbox e-mails                                                                                                     | NOT_STARTED    | Needs transactional e-mail provider decision (local adapter + Mailpit-style sink until then) — EXTERNALLY_BLOCKED for real delivery only |
+| M3        | Sessions, refresh rotation/reuse, logout(-all), devices, BFF cookie, access-token verifier, remove OIDC/Cognito config                                                                           | NOT_STARTED    | KMS key for signing: local key file adapter until AWS access                                                                             |
+| M4        | Profile, preferences, addresses, e-mail change, password change                                                                                                                                  | NOT_STARTED    | Avatar deferred (no malware scanning)                                                                                                    |
+| M5        | Onboarding (web + mobile), skip/resume                                                                                                                                                           | NOT_STARTED    | Copy/translations need product + Hindi review                                                                                            |
+| M6        | Notices, purpose catalog, grants, receipts (hash chain), enforcement                                                                                                                             | NOT_STARTED    | **Legal**: notice texts, purposes, legal bases                                                                                           |
+| M7        | Export/deletion workflows, retention exceptions                                                                                                                                                  | NOT_STARTED    | **Legal**: cancellation window, retention schedule                                                                                       |
+| M8        | Staff realm, WebAuthn, RBAC/JIT, break-glass, audit                                                                                                                                              | NOT_STARTED    | Physical security keys for testing                                                                                                       |
+| M9        | Web Playwright + mobile flows, a11y, localization                                                                                                                                                | NOT_STARTED    | Physical iOS/Android devices for SecureStore/biometric validation                                                                        |
+| M10       | ASVS requirement-level verification, load/abuse tests, runbooks, Gate 01 evidence                                                                                                                | NOT_STARTED    | Staging environment (Phase 00 gate)                                                                                                      |
+
+## 5. M1 evidence
+
+| Control                                                | Implementation                                                  | Test                                                                                     |
+| ------------------------------------------------------ | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Account state machine (app)                            | `packages/domain/src/identity.ts`                               | `packages/domain/src/identity.test.ts`                                                   |
+| Account state machine (DB) ≡ app                       | trigger in `20261120131000_identity_credentials`                | `apps/api/test/identity.int.test.ts` "agrees with the domain on every (from, to) pair"   |
+| Deny-by-default status column                          | default `PENDING_VERIFICATION`; insert only PENDING/ACTIVE      | same file                                                                                |
+| E-mail canonicalization                                | `canonicalizeEmail`                                             | `identity.test.ts` (IDN, case, folding, malformed)                                       |
+| Case-insensitive unique e-mail                         | unique index + CHECK constraints                                | registration race test; CHECK test                                                       |
+| NIST password policy                                   | `security/password/password-policy.ts`                          | `password-policy.test.ts`                                                                |
+| Argon2id, salt, params versioning, pepper, rehash      | `security/password/password-hasher.ts`                          | `password-hasher.test.ts` (incl. reference KAT), rotation test in `identity.int.test.ts` |
+| Hashing DoS bound                                      | `security/concurrency-gate.ts`                                  | `concurrency-gate.test.ts`, hasher saturation test                                       |
+| Enumeration timing parity                              | `AccountService.checkPasswordCredential` dummy verify           | `identity.int.test.ts` "timing parity"                                                   |
+| Opaque token primitive (type-separated, verifier-only) | `security/opaque-token.ts`                                      | `opaque-token.test.ts`                                                                   |
+| Explicit provisioning; no guard auto-provisioning      | `AccountService.createPasswordAccount`, `IdentityService`       | `app.int.test.ts` "never provisions an account from a verified token alone"              |
+| Non-ACTIVE accounts denied                             | `accountAccessLevel` in `resolvePrincipal` → `ACCOUNT_INACTIVE` | `app.int.test.ts` (SUSPENDED/LOCKED/DELETION_REQUESTED/DELETED)                          |
+| Status transitions: optimistic concurrency + audit     | `AccountService.transitionStatus`                               | `identity.int.test.ts` race + audit tests                                                |
+| RLS / grants on new tables (runtime role)              | migration + `infra/database/roles.sql`                          | `identity.int.test.ts` RLS block (no cross-user read/update, no DELETE, no enumeration)  |
+| Pepper required when deployed                          | `config/env.ts`                                                 | `env.test.ts`                                                                            |
+
+No public endpoint is added in M1 — `AccountService` is exercised by integration tests and is wired
+to HTTP in M2. **Not done in M1:** coverage instrumentation/upload (Phase 00 item, still
+IN_PROGRESS), breached-password corpus, any client UI.
+
+## 6. Items needing decisions or external validation
+
+| Item                                                                                                                                          | Owner              | Type             |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| Breached-password source: offline Pwned Passwords dataset (licence terms to be confirmed) vs k-anonymity range API (external call at sign-up) | security + product | decision         |
+| Transactional e-mail provider (SES in ap-south-1 is infrastructure, allowed) + DKIM/SPF/DMARC                                                 | ops                | infra validation |
+| Signing keys in KMS (ECC_NIST_P256) and pepper secrets in Secrets Manager                                                                     | ops                | infra validation |
+| Privacy notice, terms, AI disclosure texts (EN/HI); consent purposes and legal bases under DPDP Act 2023 and Rules                            | legal              | legal approval   |
+| Deletion cancellation window, retention schedule, backup retention statement                                                                  | legal + ops        | legal approval   |
+| Minors / verifiable guardian consent design                                                                                                   | legal              | legal approval   |
+| CAPTCHA / bot-challenge provider (if any) for login abuse                                                                                     | security           | decision         |
+| `karen_architecture.md` §3/§10 update to reference ADR-0015                                                                                   | architecture owner | authorisation    |
+
+## 7. Requirements traceability (roadmap → milestone → acceptance tests)
+
+| Roadmap item (karen_phases.md)                            | Milestone                        | Acceptance test (planned unless marked)                                     |
+| --------------------------------------------------------- | -------------------------------- | --------------------------------------------------------------------------- |
+| F01-01 signup paths (e-mail + password)                   | M1+M2                            | M1: provisioning/race/policy tests ✔; M2: register→verify API tests         |
+| F01-01 Google / Apple / passkeys                          | deferred                         | — (ADR-0015 §7 linking rules)                                               |
+| F01-01 e-mail canonicalization, duplicate handling        | M1                               | `identity.test.ts`, registration race ✔                                     |
+| F01-01 password policy, verification, throttles           | M1+M2                            | `password-policy.test.ts` ✔; throttle tests M2                              |
+| F01-01 `/v1/identity/bootstrap`                           | dropped                          | superseded by registration (ADR-0015)                                       |
+| F01-01 refresh rotation, secure storage, biometric unlock | M3+M9                            | refresh race/reuse integration tests; mobile store tests; device validation |
+| F01-01 reset/recovery, lost device                        | M2+M3                            | replay/expiry/concurrent-reset tests                                        |
+| F01-01 logout current/all                                 | M3                               | revocation-during-request tests                                             |
+| F01-01 enumeration/CSRF/XSS/fixation, proxy IP trust      | M1–M3, M9                        | dummy-verify ✔; BFF CSRF + CSP tests                                        |
+| F01-02 onboarding (language, assist vs act, skip/resume)  | M5                               | idempotent step transitions, multi-device resume, Playwright                |
+| F01-03 profile/ETag, locale, devices, account status      | M4/M3                            | 412 on stale `If-Match`; cross-user negative tests                          |
+| F01-03 avatar upload                                      | deferred                         | blocked on malware scanning                                                 |
+| F01-04 notices, purposes, receipts, dashboard             | M6                               | receipt tamper-detection test; revoke stops processing test                 |
+| F01-04 export / deletion / propagation / retention        | M7                               | Temporal replay + worker-restart tests; per-store deletion checks           |
+| F01-04 minors / guardian                                  | design only                      | legal review                                                                |
+| F01-05 separate staff audience, MFA, JIT, audit           | M8                               | consumer↔staff token cross-use tests; WebAuthn ceremony tests               |
+| F01-05 cross-user RLS tests with real app role            | M1 (new tables) + each milestone | `identity.int.test.ts` RLS block ✔                                          |
+| Gate 01 (web + physical devices, no unauthorized reads)   | M9–M10                           | EXTERNALLY_BLOCKED on devices + staging                                     |

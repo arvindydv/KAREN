@@ -2,7 +2,8 @@ import { Body, Controller, HttpCode, Inject, Post, VERSION_NEUTRAL } from '@nest
 import { ApiExcludeController } from '@nestjs/swagger';
 import { z } from 'zod';
 import { Public } from './decorators.js';
-import { LocalDevIssuer } from './local-dev-issuer.js';
+import { LOCAL_DEV_ISSUER, LocalDevIssuer } from './local-dev-issuer.js';
+import { IdentityService } from '../identity/identity.service.js';
 import { ApiError } from '../common/api-error.js';
 import { SensitiveRateLimit } from '../common/rate-limit.js';
 import { API_ENV } from '../config/config.module.js';
@@ -22,6 +23,7 @@ export class DevAuthController {
   constructor(
     @Inject(LOCAL_DEV_ISSUER_TOKEN_KEY) private readonly issuer: LocalDevIssuer | null,
     @Inject(API_ENV) private readonly env: ApiEnv,
+    private readonly identity: IdentityService,
   ) {}
 
   @Public()
@@ -37,6 +39,8 @@ export class DevAuthController {
     }
     const parsed = requestSchema.safeParse(body);
     if (!parsed.success) throw new ApiError('VALIDATION_FAILED', 'subject must match dev|<slug>.');
+    // Explicit provisioning (local/test only). The auth guard itself never creates accounts.
+    await this.identity.provisionLocalDevIdentity(LOCAL_DEV_ISSUER, parsed.data.subject);
     const expiresIn = 3600;
     return {
       access_token: await this.issuer.issue(parsed.data.subject, expiresIn),

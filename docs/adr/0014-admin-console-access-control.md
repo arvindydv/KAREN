@@ -1,6 +1,6 @@
 # 0014 — Admin console access control
 
-- Status: Accepted · Date: 2026-11-20
+- Status: Accepted · Date: 2026-11-20 · **Amended by [0017](0017-staff-identity-realm.md)**: layers 1–2 no longer use a hosted IdP (Cloudflare Access/company IdP, staff OIDC client); staff identity is a first-party realm with mandatory WebAuthn. Layers 3–4 unchanged.
 - Refines: ADR-0012 row "Admin access control at the edge"; depends on the IdP choice (ADR-0004).
 
 ## Context

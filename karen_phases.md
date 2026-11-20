@@ -184,8 +184,10 @@
 ## PHASE 01 — Authentication, onboarding, profile, consent, user lifecycle
 
 **User journey:** opens app → chooses language → creates/signs into account → verifies identity → reads privacy notice → picks allowed permissions → personalizes KAREN → sees permission-scoped empty home → can recover, export or delete account.  
-**Tech:** Cognito OIDC/PKCE (subject to ADR-0015), NestJS/Fastify, Prisma/Postgres, Zod/OpenAPI, KMS, Expo AuthSession + SecureStore, Next.js BFF/session cookies, Playwright/Detox or Maestro, FCM/APNs token collection later.  
+**Tech (updated 2026-11-20, ADR-0015/0016/0017):** first-party identity in `apps/api` (Argon2id + pepper, opaque BFF web sessions, mobile short-lived access JWT + rotating refresh), no hosted IdP; Google/Apple deferred. ~~Cognito OIDC/PKCE (subject to ADR-0015)~~, NestJS/Fastify, Prisma/Postgres, Zod/OpenAPI, KMS, Expo AuthSession + SecureStore, Next.js BFF/session cookies, Playwright/Detox or Maestro, FCM/APNs token collection later.  
 **Suggested tables:** `identity.users`, `identity.external_identities`, `identity.devices`, `identity.profiles`, `identity.user_preferences`, `consent.notices`, `consent.grants`, `consent.receipts`, `consent.requests`, `consent.data_subject_requests`, `audit.events`.
+
+> **Phase 01 plan, status and traceability:** `docs/PHASE_01_PLAN.md` (milestones M0–M10). Architecture: `docs/architecture/identity-architecture.md`.
 
 ### F01-01 — Authentication and signup
 
@@ -194,7 +196,7 @@
 - [ ] Email/phone canonicalization, duplicate-account and federated identity linking with authenticated proof; guard against accidental account takeover.
 - [ ] Password policy if supported, email verification, expired OTP, retry/resend throttles, lockout/captcha as risk controls—not blanket friction.
 - [ ] OAuth 2.0 authorization code + PKCE, strict redirect URI, state/nonce, token validation (`iss`, `aud`, `exp`, `nbf`, `kid`), key rotation and logout propagation.
-- [ ] Backend `POST /v1/identity/bootstrap` idempotently maps OIDC subject to local UUID and default role; never accept client-supplied admin role.
+- [ ] ~~Backend `POST /v1/identity/bootstrap`~~ — superseded (ADR-0015): registration provisions accounts explicitly; guard auto-provisioning removed (M1, DONE_LOCAL). Never accept client-supplied admin role.
 - [ ] Sign in on web/mobile; refresh token rotation, secure storage, biometric unlock for local app access (not a replacement for server auth).
 - [ ] Password reset/account recovery, lost device, passkey management, session expiry, invalid token, network-offline and suspended-account UX.
 - [ ] Sign out current device / all devices; revoke refresh tokens, clear local sensitive caches and stale notification endpoints.

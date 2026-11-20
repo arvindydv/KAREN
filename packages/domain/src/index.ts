@@ -5,3 +5,4 @@ export * from './provider.js';
 export * from './privacy.js';
 export * from './idempotency.js';
 export * from './workflows.js';
+export * from './identity.js';
