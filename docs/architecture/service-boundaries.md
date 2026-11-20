@@ -15,7 +15,7 @@ Rule (architecture §7): each service owns its data; others use its API or publi
 
 ## API domain modules
 
-Implemented now: `auth` (guards, verifier, dev issuer), `identity`, `consent`, `audit`, `policy`, `admin`, `health`, `infrastructure/{database,redis,ai}`.
+Implemented now: `auth` (guards, verifier, dev issuer), `identity` (incl. `AccountService`: explicit provisioning, credential checks, status transitions — ADR-0015), `security` (password hashing/policy, concurrency gate, opaque tokens; no DB access), `consent`, `audit`, `policy`, `admin`, `health`, `infrastructure/{database,redis,ai}`.
 Planned modules and their future schemas (no code yet — see docs/database/future-entities.md): `conversations`, `memory`, `goals`, `tasks`, `approvals`, `providers` (connections registry), `notifications`, `billing` (AI usage + entitlements).
 
 Enforced by `apps/api/.dependency-cruiser.cjs` (run in `pnpm lint`):
