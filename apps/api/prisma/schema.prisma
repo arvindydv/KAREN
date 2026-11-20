@@ -170,18 +170,22 @@ enum AuditOutcome {
 /// Append-only. UPDATE/DELETE are rejected by a trigger (see migration). Metadata must be
 /// pre-redacted by the writer; never store tokens, prompts or sensitive personal data here.
 model AuditEvent {
-  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  occurredAt  DateTime     @default(now()) @map("occurred_at") @db.Timestamptz(3)
-  actorType   ActorType    @map("actor_type")
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  occurredAt     DateTime     @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  actorType      ActorType    @map("actor_type")
   /// Internal user UUID or service name. Not an e-mail.
-  actorRef    String?      @map("actor_ref") @db.VarChar(128)
-  action      String       @db.VarChar(128)
-  subjectType String?      @map("subject_type") @db.VarChar(64)
-  subjectId   String?      @map("subject_id") @db.VarChar(128)
-  outcome     AuditOutcome
-  requestId   String?      @map("request_id") @db.VarChar(128)
-  traceId     String?      @map("trace_id") @db.VarChar(64)
-  metadata    Json         @default("{}")
+  actorRef       String?      @map("actor_ref") @db.VarChar(128)
+  action         String       @db.VarChar(128)
+  subjectType    String?      @map("subject_type") @db.VarChar(64)
+  subjectId      String?      @map("subject_id") @db.VarChar(128)
+  outcome        AuditOutcome
+  /// Which policy produced the decision and its version, e.g. "rbac:v1", "execution-policy:v1".
+  policyDecision String?      @map("policy_decision") @db.VarChar(128)
+  /// Machine-readable reason, e.g. "missing_permission", "consent_absent". Never free text.
+  reasonCode     String?      @map("reason_code") @db.VarChar(64)
+  requestId      String?      @map("request_id") @db.VarChar(128)
+  traceId        String?      @map("trace_id") @db.VarChar(64)
+  metadata       Json         @default("{}")
 
   @@index([actorRef, occurredAt(sort: Desc)])
   @@index([subjectType, subjectId, occurredAt(sort: Desc)])
