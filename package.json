@@ -52,8 +52,8 @@
     "verify:py": "pnpm lint:py && pnpm typecheck:py && pnpm test:py"
   },
   "devDependencies": {
-    "prettier": "3.10.0",
-    "turbo": "2.11.10",
+    "prettier": "3.10.1",
+    "turbo": "2.11.11",
     "typescript": "6.0.3"
   }
 }
