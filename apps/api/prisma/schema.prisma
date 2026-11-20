@@ -60,6 +60,7 @@ model User {
   externalIdentities ExternalIdentity[]
   email              UserEmail?
   passwordCredential PasswordCredential?
+  challenges         VerificationChallenge[]
   staffRoles         StaffRoleGrant[]
   consentGrants      ConsentGrant[]
   legalAcceptances   LegalAcceptance[]
@@ -119,6 +120,39 @@ model PasswordCredential {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("password_credentials")
+  @@schema("identity")
+}
+
+enum ChallengePurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+
+  @@schema("identity")
+}
+
+/// One-time e-mail code bound to an opaque handle held by the client that started the flow
+/// (ADR-0015 pre-account-takeover defence). Stores only verifiers: SHA-256 of the handle and
+/// an HMAC of (handle, code) under OTP_HMAC_KEY. Never the code itself.
+model VerificationChallenge {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  purpose        ChallengePurpose
+  handleVerifier String           @unique @map("handle_verifier") @db.VarChar(80)
+  codeMac        String           @map("code_mac") @db.VarChar(80)
+  attempts       Int              @default(0)
+  maxAttempts    Int              @default(5) @map("max_attempts")
+  sendCount      Int              @default(1) @map("send_count")
+  expiresAt      DateTime         @map("expires_at") @db.Timestamptz(3)
+  /// consumed | superseded | attempts_exhausted
+  closedAt       DateTime?        @map("closed_at") @db.Timestamptz(3)
+  closeReason    String?          @map("close_reason") @db.VarChar(32)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@map("verification_challenges")
   @@schema("identity")
 }
 

@@ -43,7 +43,7 @@ flowchart LR
   PG[(PostgreSQL\nidentity / consent / audit\nRLS, runtime role)]
   R[(Redis\nrate limits · revocation set)]
   SM[(Secrets Manager / KMS\npeppers · signing keys)]
-  MAIL[Transactional e-mail\nprovider — infrastructure only]
+  MAIL[Brevo SMTP relay\ntransactional e-mail — infrastructure only, ADR-0018]
   TW[temporal-worker\nexport/deletion workflows]
 
   B -->|HTTPS| Edge --> Web -->|session token| G
@@ -53,7 +53,7 @@ flowchart LR
   ID --> PG
   G --> R
   SEC -. boot .-> SM
-  ID -->|outbox| MAIL
+  ID -->|post-commit, STARTTLS| MAIL
   TW -->|signed internal calls| API
 ```
 
@@ -66,7 +66,7 @@ Boundaries and what crosses them:
 | BFF/mobile → API             | Session token / access JWT                     | Global AuthGuard; realm + audience separation; per-request liveness check                                        |
 | API → PostgreSQL             | Runtime role (no BYPASSRLS, no DDL, no DELETE) | RLS per user (`karen.user_id` transaction-local); pre-auth reads only via exact-match SECURITY DEFINER functions |
 | API → Redis                  | Rate counters, revocation set                  | Never authoritative; sensitive limiter fails closed (ADR-0013)                                                   |
-| API → e-mail provider        | Recipient, template id, one-time code/link     | Outbox; provider sees codes (accepted risk); no account data beyond what the message needs                       |
+| API → Brevo (e-mail)         | Recipient, template id, one-time code          | Post-commit in-memory dispatch (codes never at rest), STARTTLS; provider sees codes (accepted risk, ADR-0018)    |
 | Staff realm ↔ consumer realm | Nothing                                        | Separate tables, cookies, audiences; cross-realm tests (ADR-0017)                                                |
 
 ## 3. Data model
@@ -177,13 +177,14 @@ sequenceDiagram
   participant C as Client
   participant A as API
   participant DB as PostgreSQL
-  participant O as Outbox→Mail
+  participant O as MailService→Brevo
   C->>A: POST /v1/auth/register {email, password, locale}
   A->>A: canonicalize, policy check, Argon2id hash (gate)
   alt e-mail free
-    A->>DB: tx: users(PENDING), user_emails, password_credentials, challenge, audit, outbox
+    A->>DB: tx: users(PENDING), user_emails, password_credentials, challenge, audit
+    A-->>O: after commit: verification code mail (per-address budget)
   else e-mail taken
-    A->>DB: tx: decoy challenge (never verifiable), outbox "you already have an account" mail
+    A-->>O: "you already have an account" mail; respond with a decoy handle (matches nothing)
   end
   A-->>C: 202 {registration_handle (kev_…), expires_at}  — identical shape in both cases
   O-->>C: e-mail: 6-digit code (15 min)
@@ -193,9 +194,10 @@ sequenceDiagram
   A-->>C: 200 → client proceeds to login (no auto-session in Phase 01)
 ```
 
-A newer registration for the same still-unverified address supersedes the old credential only when
-the newer registrant proves the mailbox (the old pending credential is replaced inside the verify
-transaction, never at registration time).
+Implemented (M2): a second registration for an existing address never changes that account. The
+mailbox owner reclaims an address an attacker registered (unverified) through **forgot password**:
+completing a reset proves mailbox ownership, replaces the credential, marks the e-mail verified,
+activates the account and closes every other open code (test: "pre-account takeover").
 
 ### 6.2 Login (M2/M3)
 
@@ -273,28 +275,28 @@ Auth levels: **P** public · **S** authenticated session (ACTIVE) · **R** recen
 **D** deletion-pending session allowed · **T** staff realm · **TS** staff step-up · **C** consent
 gate. All routes `/v1`, Zod contracts in `@karen/api-contracts`, errors in the standard envelope.
 
-| Route                                                                       | Auth              | Idempotency                             | Milestone |
-| --------------------------------------------------------------------------- | ----------------- | --------------------------------------- | --------- |
-| `POST /auth/register`                                                       | P                 | natural (canonical e-mail)              | M2        |
-| `POST /auth/verify-email`, `POST /auth/verify-email/resend`                 | P                 | challenge consume is single-use         | M2        |
-| `POST /auth/login`                                                          | P                 | none (each success = new session)       | M2/M3     |
-| `POST /auth/password/forgot`, `POST /auth/password/reset`                   | P                 | single-use challenge                    | M2        |
-| `POST /auth/token/refresh`                                                  | P (refresh token) | 10 s retry window                       | M3        |
-| `POST /auth/logout`, `POST /auth/logout-all`                                | S                 | idempotent                              | M3        |
-| `GET /me`                                                                   | S                 | —                                       | existing  |
-| `GET /me/sessions`, `DELETE /me/sessions/:id`                               | S / R             | idempotent delete                       | M3        |
-| `GET /me/devices`, `DELETE /me/devices/:id`                                 | S / R             | idempotent delete                       | M3        |
-| `GET/PATCH /me/profile`                                                     | S                 | `If-Match` (ETag = version) → 412       | M4        |
-| `GET/PATCH /me/preferences`                                                 | S                 | `If-Match` → 412                        | M4        |
-| `POST /me/email-change`, `POST /me/email-change/confirm`                    | R                 | single-use challenge                    | M4        |
-| `POST /me/password`                                                         | R                 | credential version                      | M4        |
-| `GET/PUT /me/onboarding`                                                    | S                 | step transitions idempotent             | M5        |
-| `GET /consent/notices`, `GET /consent/notices/:kind/:version`               | P                 | —                                       | M6        |
-| `GET /me/consents`, `PUT /me/consents/:purpose`, `GET /me/consents/history` | S                 | `Idempotency-Key` + per-purpose version | M6        |
-| `GET /me/consents/receipts/:id/verify`                                      | S                 | —                                       | M6        |
-| `POST /me/data-rights/export`, `POST /me/data-rights/deletion`              | R / D             | one active request per kind             | M7        |
-| `GET /me/data-rights/:id`, `POST /me/data-rights/:id/cancel`                | S / D             | idempotent                              | M7        |
-| `/staff/auth/*`, `/staff/*`                                                 | T / TS            | per route                               | M8        |
+| Route                                                                       | Auth              | Idempotency                             | Milestone           |
+| --------------------------------------------------------------------------- | ----------------- | --------------------------------------- | ------------------- |
+| `POST /auth/register`                                                       | P                 | natural (canonical e-mail)              | **M2 ✔**            |
+| `POST /auth/verify-email`, `POST /auth/challenges/resend`                   | P                 | single-use; resend rotates the code     | **M2 ✔**            |
+| `POST /auth/login`                                                          | P                 | none (each success = new session)       | M3 (needs sessions) |
+| `POST /auth/password/forgot`, `POST /auth/password/reset`                   | P                 | single-use challenge                    | **M2 ✔**            |
+| `POST /auth/token/refresh`                                                  | P (refresh token) | 10 s retry window                       | M3                  |
+| `POST /auth/logout`, `POST /auth/logout-all`                                | S                 | idempotent                              | M3                  |
+| `GET /me`                                                                   | S                 | —                                       | existing            |
+| `GET /me/sessions`, `DELETE /me/sessions/:id`                               | S / R             | idempotent delete                       | M3                  |
+| `GET /me/devices`, `DELETE /me/devices/:id`                                 | S / R             | idempotent delete                       | M3                  |
+| `GET/PATCH /me/profile`                                                     | S                 | `If-Match` (ETag = version) → 412       | M4                  |
+| `GET/PATCH /me/preferences`                                                 | S                 | `If-Match` → 412                        | M4                  |
+| `POST /me/email-change`, `POST /me/email-change/confirm`                    | R                 | single-use challenge                    | M4                  |
+| `POST /me/password`                                                         | R                 | credential version                      | M4                  |
+| `GET/PUT /me/onboarding`                                                    | S                 | step transitions idempotent             | M5                  |
+| `GET /consent/notices`, `GET /consent/notices/:kind/:version`               | P                 | —                                       | M6                  |
+| `GET /me/consents`, `PUT /me/consents/:purpose`, `GET /me/consents/history` | S                 | `Idempotency-Key` + per-purpose version | M6                  |
+| `GET /me/consents/receipts/:id/verify`                                      | S                 | —                                       | M6                  |
+| `POST /me/data-rights/export`, `POST /me/data-rights/deletion`              | R / D             | one active request per kind             | M7                  |
+| `GET /me/data-rights/:id`, `POST /me/data-rights/:id/cancel`                | S / D             | idempotent                              | M7                  |
+| `/staff/auth/*`, `/staff/*`                                                 | T / TS            | per route                               | M8                  |
 
 Naming resolution: the roadmap's `/v1/consent/grants`, `/v1/consent/requests`,
 `/v1/data-rights/export` and `/v1/identity/bootstrap` are replaced by the user-scoped `/v1/me/...`
@@ -303,18 +305,19 @@ is dropped (ADR-0015 §1).
 
 **Error codes** (existing + Phase 01): `VALIDATION_FAILED`, `UNAUTHENTICATED`, `FORBIDDEN`,
 `ACCOUNT_INACTIVE` (M1), `CONSENT_REQUIRED`, `CONFLICT`, `RATE_LIMITED`, `DEPENDENCY_UNAVAILABLE`;
-planned: `INVALID_CREDENTIALS`, `REAUTHENTICATION_REQUIRED`, `SESSION_REVOKED`,
-`CHALLENGE_EXPIRED_OR_INVALID`, `PRECONDITION_FAILED` (412), `WEAK_PASSWORD` (400 with reasons).
+M2: `WEAK_PASSWORD` (400, reasons in `details`), `CHALLENGE_INVALID` (400; invalid, expired, used and
+exhausted are deliberately indistinguishable). Planned: `INVALID_CREDENTIALS`,
+`REAUTHENTICATION_REQUIRED`, `SESSION_REVOKED`, `PRECONDITION_FAILED` (412).
 
 ## 8. Dependency failure behaviour
 
-| Dependency down   | Behaviour                                                                                                                                                                                      |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Redis             | Sensitive (auth) routes: 503 retryable (fail closed, ADR-0013). Session liveness: falls back to PostgreSQL. Other routes: per-process rate limit fallback. **Login/registration unavailable.** |
-| PostgreSQL        | All authenticated and auth routes 503; liveness stays up; nothing is authorized from cache.                                                                                                    |
-| E-mail provider   | Outbox retries with backoff; registration still returns 202; user can resend; verification/reset cannot complete — surfaced as "e-mail delayed", never as success.                             |
-| KMS / signing key | No new mobile access tokens (refresh → 503); web sessions unaffected (opaque); existing JWTs verify from cached public keys.                                                                   |
-| Hashing capacity  | 503 retryable `DEPENDENCY_UNAVAILABLE`; parameters are never lowered under load.                                                                                                               |
+| Dependency down         | Behaviour                                                                                                                                                                                      |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Redis                   | Sensitive (auth) routes: 503 retryable (fail closed, ADR-0013). Session liveness: falls back to PostgreSQL. Other routes: per-process rate limit fallback. **Login/registration unavailable.** |
+| PostgreSQL              | All authenticated and auth routes 503; liveness stays up; nothing is authorized from cache.                                                                                                    |
+| E-mail provider (Brevo) | Bounded in-process retries (1/4/15 s); registration/forgot still return 202; user can resend (rotates code); nothing is reported as delivered that the relay did not accept.                   |
+| KMS / signing key       | No new mobile access tokens (refresh → 503); web sessions unaffected (opaque); existing JWTs verify from cached public keys.                                                                   |
+| Hashing capacity        | 503 retryable `DEPENDENCY_UNAVAILABLE`; parameters are never lowered under load.                                                                                                               |
 
 ## 9. Consistency
 

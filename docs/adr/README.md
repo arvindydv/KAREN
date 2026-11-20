@@ -22,3 +22,4 @@ Copy `0000-template.md`, take the next number, and link the ADR from the PR that
 | [0015](0015-first-party-identity.md)                            | First-party identity: KAREN owns authentication; Argon2id + pepper; account state machine; no hosted IdP            | Accepted                     |
 | [0016](0016-sessions-and-tokens.md)                             | Opaque BFF web sessions; mobile short access JWT + rotating refresh with reuse detection; revocation                | Accepted                     |
 | [0017](0017-staff-identity-realm.md)                            | Separate staff realm, mandatory WebAuthn, JIT elevation, offline bootstrap, break-glass                             | Accepted                     |
+| [0018](0018-transactional-email-brevo.md)                       | Brevo SMTP for transactional e-mail; OTPs HMAC-verified, dispatched post-commit, never at rest                      | Accepted                     |

@@ -2,6 +2,8 @@ import type { ApiErrorCode } from '@karen/api-contracts';
 
 const STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   VALIDATION_FAILED: 400,
+  WEAK_PASSWORD: 400,
+  CHALLENGE_INVALID: 400,
   UNAUTHENTICATED: 401,
   FORBIDDEN: 403,
   ACCOUNT_INACTIVE: 403,
