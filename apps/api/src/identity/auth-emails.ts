@@ -115,3 +115,55 @@ export function newSignInMail(to: string, platform: 'web' | 'ios' | 'android'): 
     ),
   };
 }
+
+export function emailChangeCodeMail(to: string, code: string, expiresAt: Date): OutgoingMail {
+  const m = minutes(expiresAt);
+  return {
+    to,
+    template: 'auth.email_change_code',
+    subject: `${code} is your code to change your KAREN e-mail`,
+    text:
+      `Enter ${code} in KAREN to make this your account e-mail address. It expires in ${m} minutes.\n\n` +
+      `If you did not ask for this, ignore this e-mail — nothing will change.`,
+    html: wrap(
+      'Confirm your new e-mail address',
+      `<p>Enter this code in KAREN to make this your account e-mail address:</p>${codeBlock(code)}` +
+        `<p>It expires in ${m} minutes. If you did not ask for this, ignore this e-mail — nothing will change.</p>`,
+    ),
+  };
+}
+
+/** Masks an address for notices sent to the OLD address ("a***@example.com"). */
+export function maskEmail(address: string): string {
+  const at = address.lastIndexOf('@');
+  if (at <= 0) return '***';
+  // Only an alphanumeric first character and the (punycode, [a-z0-9.-]) domain are shown, so the
+  // result is safe to place in HTML without escaping.
+  const first = /^[A-Za-z0-9]/.test(address) ? address[0] : '*';
+  return `${first}***${address.slice(at).replace(/[^@a-z0-9.-]/gi, '')}`;
+}
+
+/** Sent to the CURRENT address when a change is requested and when it completes. */
+export function emailChangeNoticeMail(
+  to: string,
+  stage: 'requested' | 'completed',
+  newAddressMasked: string,
+): OutgoingMail {
+  const what =
+    stage === 'requested'
+      ? `Someone signed in to your KAREN account asked to change its e-mail to ${newAddressMasked}.`
+      : `The e-mail for your KAREN account was changed to ${newAddressMasked}. Other devices were signed out.`;
+  return {
+    to,
+    template: `auth.email_change_${stage}`,
+    subject:
+      stage === 'requested'
+        ? 'E-mail change requested for your KAREN account'
+        : 'Your KAREN e-mail address was changed',
+    text: `${what}\n\nIf this was not you, reset your password now and contact KAREN support.`,
+    html: wrap(
+      stage === 'requested' ? 'E-mail change requested' : 'E-mail address changed',
+      `<p>${what}</p><p>If this was not you, reset your password now and contact KAREN support.</p>`,
+    ),
+  };
+}

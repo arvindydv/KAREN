@@ -23,6 +23,7 @@ const LOCAL_OTP_KEY = 'local-only-otp-hmac-key-not-a-secret-0000';
 const KIND: Record<ChallengePurpose, OpaqueTokenKind> = {
   EMAIL_VERIFICATION: 'verification',
   PASSWORD_RESET: 'reset',
+  EMAIL_CHANGE: 'emailChange',
 };
 
 export interface IssuedChallenge {
@@ -36,6 +37,8 @@ export interface IssuedChallenge {
 export interface ChallengeContext {
   challengeId: string;
   userId: string;
+  /** EMAIL_CHANGE only. */
+  targetEmail?: { display: string; canonical: string } | undefined;
 }
 
 export type ChallengeCheck<T> = { ok: true; userId: string; value: T } | { ok: false };
@@ -50,6 +53,8 @@ interface ChallengeRow {
   send_count: number;
   expires_at: Date;
   closed_at: Date | null;
+  target_email: string | null;
+  target_email_canonical: string | null;
 }
 
 /**
@@ -82,6 +87,8 @@ export class ChallengeService {
     tx: TransactionClient,
     userId: string,
     purpose: ChallengePurpose,
+    /** EMAIL_CHANGE only: the new address the code is sent to. */
+    target?: { display: string; canonical: string },
   ): Promise<IssuedChallenge> {
     await tx.verificationChallenge.updateMany({
       where: { userId, purpose, closedAt: null },
@@ -98,6 +105,8 @@ export class ChallengeService {
         codeMac: this.mac(verifier, code),
         maxAttempts: CHALLENGE_MAX_ATTEMPTS,
         expiresAt,
+        targetEmail: target?.display ?? null,
+        targetEmailCanonical: target?.canonical ?? null,
       },
     });
     return { handle: token, code, expiresAt };
@@ -161,7 +170,14 @@ export class ChallengeService {
         );
         return { ok: false };
       }
-      const value = await onSuccess(tx, { challengeId: row.id, userId: row.user_id });
+      const value = await onSuccess(tx, {
+        challengeId: row.id,
+        userId: row.user_id,
+        targetEmail:
+          row.target_email && row.target_email_canonical
+            ? { display: row.target_email, canonical: row.target_email_canonical }
+            : undefined,
+      });
       if (value === REFUSE) return { ok: false };
       return { ok: true, userId: row.user_id, value };
     });
@@ -182,7 +198,12 @@ export class ChallengeService {
   async rotate(
     handle: string,
     purpose: ChallengePurpose,
-  ): Promise<{ userId: string; code: string; expiresAt: Date } | null> {
+  ): Promise<{
+    userId: string;
+    code: string;
+    expiresAt: Date;
+    targetEmail: string | null;
+  } | null> {
     const located = await this.locate(handle, purpose);
     if (!located) return null;
     return this.prisma.withUserScope(located.userId, async (tx) => {
@@ -200,7 +221,7 @@ export class ChallengeService {
           expiresAt,
         },
       });
-      return { userId: row.user_id, code, expiresAt };
+      return { userId: row.user_id, code, expiresAt, targetEmail: row.target_email };
     });
   }
 
@@ -216,6 +237,7 @@ export class ChallengeService {
   static purposeOf(handle: string): ChallengePurpose | null {
     if (parseOpaqueToken('verification', handle)) return 'EMAIL_VERIFICATION';
     if (parseOpaqueToken('reset', handle)) return 'PASSWORD_RESET';
+    if (parseOpaqueToken('emailChange', handle)) return 'EMAIL_CHANGE';
     return null;
   }
 
@@ -238,7 +260,7 @@ export class ChallengeService {
   private async lockRow(tx: TransactionClient, id: string): Promise<ChallengeRow | undefined> {
     const rows = await tx.$queryRaw<ChallengeRow[]>`
       SELECT id, user_id, purpose::text AS purpose, code_mac, attempts, max_attempts, send_count,
-             expires_at, closed_at
+             expires_at, closed_at, target_email, target_email_canonical
       FROM identity.verification_challenges WHERE id = ${id}::uuid FOR UPDATE`;
     return rows[0];
   }

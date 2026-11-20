@@ -8,6 +8,7 @@ import { type AccountStatus, assertAccountTransition, canonicalizeEmail } from '
 import { Injectable } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service.js';
 import { ApiError } from '../common/api-error.js';
+import { isValidTimeZone } from '../common/locale.js';
 import type { ChallengePurpose } from '../generated/prisma/client.js';
 import type { TransactionClient } from '../infrastructure/database/prisma.service.js';
 import { MailService } from '../infrastructure/mail/mail.service.js';
@@ -15,6 +16,7 @@ import { evaluatePassword } from '../security/password/password-policy.js';
 import { AccountService } from './account.service.js';
 import {
   accountExistsMail,
+  emailChangeCodeMail,
   passwordChangedMail,
   passwordResetCodeMail,
   verificationCodeMail,
@@ -128,9 +130,11 @@ export class AuthFlowsService {
       // Unknown, closed or exhausted: same response, nothing sent.
       return challengeResponse(handle, this.challenges.decoy('EMAIL_VERIFICATION').expiresAt);
     }
-    const email = await this.accounts.emailOf(rotated.userId);
-    if (await this.budget.take(email.canonical)) {
-      this.mail.dispatch(mailFor(purpose, email.display, rotated.code, rotated.expiresAt));
+    // E-mail change codes go to the NEW address; everything else to the account's address.
+    const current = await this.accounts.emailOf(rotated.userId);
+    const to = rotated.targetEmail ?? current.display;
+    if (await this.budget.take(to.toLowerCase())) {
+      this.mail.dispatch(mailFor(purpose, to, rotated.code, rotated.expiresAt));
     }
     return challengeResponse(handle, rotated.expiresAt);
   }
@@ -311,13 +315,13 @@ function weakPassword(reasons: string[], path: string): ApiError {
 }
 
 function mailFor(purpose: ChallengePurpose, to: string, code: string, expiresAt: Date) {
-  return purpose === 'PASSWORD_RESET'
-    ? passwordResetCodeMail(to, code, expiresAt)
-    : verificationCodeMail(to, code, expiresAt);
+  if (purpose === 'PASSWORD_RESET') return passwordResetCodeMail(to, code, expiresAt);
+  if (purpose === 'EMAIL_CHANGE') return emailChangeCodeMail(to, code, expiresAt);
+  return verificationCodeMail(to, code, expiresAt);
 }
 
 function validTimezone(tz: string): string {
-  if (!Intl.supportedValuesOf('timeZone').includes(tz) && tz !== 'UTC') {
+  if (!isValidTimeZone(tz)) {
     throw new ApiError('VALIDATION_FAILED', 'Unknown time zone.', {
       details: [{ path: 'timezone', message: 'unknown_time_zone' }],
     });

@@ -70,7 +70,7 @@ credential storage and the removal of implicit provisioning.
 | M1        | Account state machine, e-mail canonicalization, credentials schema, Argon2id + pepper + gate, opaque-token primitive, explicit provisioning, guard auto-provisioning removed, `ACCOUNT_INACTIVE` | **DONE_LOCAL**                     | §5                                                                                                                                             |
 | M2        | Register / verify / resend / forgot / reset APIs, OTP challenges, Brevo e-mail (ADR-0018), per-address budget                                                                                    | **DONE_LOCAL** (login moved to M3) | §5.1. Brevo SMTP auth verified; inbox delivery NOT VERIFIED (`pnpm --filter @karen/api mail:smoke <to>`); sender domain + legal review pending |
 | M3        | Login, sessions, refresh rotation/reuse, logout(-all), devices, revocation on reset/status, OIDC/Cognito removal (code, config, Terraform)                                                       | **DONE_LOCAL**                     | §5.2. Web cookie/BFF lands with the web UI (M9). KMS signing NOT VERIFIED (Secrets Manager keys)                                               |
-| M4        | Profile, preferences, addresses, e-mail change, password change                                                                                                                                  | NOT_STARTED                        | Avatar deferred (no malware scanning)                                                                                                          |
+| M4        | Profile (ETag/If-Match), preferences, saved places, e-mail change (code to new address), password change                                                                                         | **DONE_LOCAL**                     | §5.3. Avatar deferred (no malware-scanning pipeline). Connected-accounts overview: none exist yet (Phase 05)                                   |
 | M5        | Onboarding (web + mobile), skip/resume                                                                                                                                                           | NOT_STARTED                        | Copy/translations need product + Hindi review                                                                                                  |
 | M6        | Notices, purpose catalog, grants, receipts (hash chain), enforcement                                                                                                                             | NOT_STARTED                        | **Legal**: notice texts, purposes, legal bases                                                                                                 |
 | M7        | Export/deletion workflows, retention exceptions                                                                                                                                                  | NOT_STARTED                        | **Legal**: cancellation window, retention schedule                                                                                             |
@@ -142,6 +142,22 @@ outbox (ADR-0018). Session revocation on reset lands with sessions in M3.
 | Verified token for a non-existent user/session never provisions anything                                                | `test/app.int.test.ts`                                  |
 | Deployed config requires shared signing keys; removed OIDC mode refused                                                 | `src/config/env.test.ts`                                |
 | Terraform: no OIDC/Cognito; new secrets in Secrets Manager                                                              | `node scripts/terraform-validate.mjs` (all 3 envs)      |
+
+### 5.3 M4 evidence (`apps/api/test/profile.int.test.ts` unless noted)
+
+| Control                                                                                                                                                        | Test                                                  |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| ETag on read; If-Match required (428) and enforced (412); audit lists field names only                                                                         | "reads with an ETag…"                                 |
+| Concurrent writes with one version: exactly one wins                                                                                                           | "concurrent writes…"                                  |
+| No mass assignment (status/email/id), no control characters, valid zones/currencies                                                                            | "refuses mass assignment…"                            |
+| Time zone aliases accepted (`Asia/Kolkata`) — regression for an M2 bug                                                                                         | `src/common/locale.test.ts`, `auth-flows.int.test.ts` |
+| Preferences: conservative defaults (optional notifications off); racing first saves → one 412                                                                  | "defaults are conservative…"                          |
+| Places: ownership (other user → 404), If-Match, hard delete, 20-limit under concurrency                                                                        | "saved places"                                        |
+| E-mail change: current password, code to the NEW address, notice to the old, other sessions revoked, other users cannot redeem the code, taken address → decoy | "e-mail change"                                       |
+| Password change: current password, policy, only OTHER sessions revoked, notice                                                                                 | "password change"                                     |
+
+**Found and fixed in M4:** `Intl.supportedValuesOf('timeZone')` omits ICU aliases, so `Asia/Kolkata`
+(the default zone) was rejected at registration since M2. Now validated with `Intl.DateTimeFormat`.
 
 ## 6. Items needing decisions or external validation
 

@@ -18,6 +18,10 @@ export const API_ERROR_CODES = [
   'ACCOUNT_INACTIVE',
   'NOT_FOUND',
   'CONFLICT',
+  /** `If-Match` does not match the current version (someone else changed it). */
+  'PRECONDITION_FAILED',
+  /** This change needs `If-Match` with the version you read. */
+  'PRECONDITION_REQUIRED',
   'PAYLOAD_TOO_LARGE',
   'RATE_LIMITED',
   'CONSENT_REQUIRED',

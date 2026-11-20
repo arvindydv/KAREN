@@ -34,6 +34,11 @@ milestone; **Mx** = designed, implemented in that milestone; **RESIDUAL** = acce
 | T24 | Sensitive data in logs                      | Never log passwords/codes/tokens/e-mails; `user_ref` pseudonyms; audit holds UUIDs + reason codes only                                                                          | **M1** audit rows asserted free of e-mail; log-capture test M10                                     |
 | T25 | Misconfigured infrastructure                | Config validation at boot; local-dev auth refused outside local/test; staff disabled by default                                                                                 | Existing + pepper rules **M1**                                                                      |
 
+Additional M4 controls: sensitive account changes (e-mail, password) require the current
+password, share the sign-in throttle, revoke other sessions and notify by e-mail; e-mail change
+codes go only to the new address and are bound to the requesting account; changing to an address
+owned by another account returns an indistinguishable decoy.
+
 ## 2. Residual risks
 
 - **R1** The runtime DB role can call `lookup_password_login` for any e-mail it already knows and obtain

@@ -48,14 +48,19 @@ enum StaffRole {
 }
 
 model User {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  displayName String?    @map("display_name") @db.VarChar(120)
-  locale      String     @default("en-IN") @db.VarChar(35)
-  timezone    String     @default("Asia/Kolkata") @db.VarChar(64)
-  status      UserStatus @default(PENDING_VERIFICATION)
-  version     Int        @default(0)
-  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  displayName   String?    @map("display_name") @db.VarChar(120)
+  /// How KAREN addresses the user (M4).
+  preferredName String?    @map("preferred_name") @db.VarChar(60)
+  /// ISO 3166-1 alpha-2 / ISO 4217 (M4). Optional; never inferred from location.
+  country       String?    @db.Char(2)
+  currency      String?    @db.Char(3)
+  locale        String     @default("en-IN") @db.VarChar(35)
+  timezone      String     @default("Asia/Kolkata") @db.VarChar(64)
+  status        UserStatus @default(PENDING_VERIFICATION)
+  version       Int        @default(0)
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   externalIdentities ExternalIdentity[]
   email              UserEmail?
@@ -63,6 +68,8 @@ model User {
   challenges         VerificationChallenge[]
   devices            Device[]
   sessions           Session[]
+  preferences        UserPreferences?
+  places             SavedPlace[]
   staffRoles         StaffRoleGrant[]
   consentGrants      ConsentGrant[]
   legalAcceptances   LegalAcceptance[]
@@ -128,6 +135,7 @@ model PasswordCredential {
 enum ChallengePurpose {
   EMAIL_VERIFICATION
   PASSWORD_RESET
+  EMAIL_CHANGE
 
   @@schema("identity")
 }
@@ -136,20 +144,23 @@ enum ChallengePurpose {
 /// (ADR-0015 pre-account-takeover defence). Stores only verifiers: SHA-256 of the handle and
 /// an HMAC of (handle, code) under OTP_HMAC_KEY. Never the code itself.
 model VerificationChallenge {
-  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId         String           @map("user_id") @db.Uuid
-  purpose        ChallengePurpose
-  handleVerifier String           @unique @map("handle_verifier") @db.VarChar(80)
-  codeMac        String           @map("code_mac") @db.VarChar(80)
-  attempts       Int              @default(0)
-  maxAttempts    Int              @default(5) @map("max_attempts")
-  sendCount      Int              @default(1) @map("send_count")
-  expiresAt      DateTime         @map("expires_at") @db.Timestamptz(3)
+  id                   String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String           @map("user_id") @db.Uuid
+  purpose              ChallengePurpose
+  handleVerifier       String           @unique @map("handle_verifier") @db.VarChar(80)
+  codeMac              String           @map("code_mac") @db.VarChar(80)
+  attempts             Int              @default(0)
+  maxAttempts          Int              @default(5) @map("max_attempts")
+  sendCount            Int              @default(1) @map("send_count")
+  expiresAt            DateTime         @map("expires_at") @db.Timestamptz(3)
   /// consumed | superseded | attempts_exhausted
-  closedAt       DateTime?        @map("closed_at") @db.Timestamptz(3)
-  closeReason    String?          @map("close_reason") @db.VarChar(32)
-  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  closedAt             DateTime?        @map("closed_at") @db.Timestamptz(3)
+  closeReason          String?          @map("close_reason") @db.VarChar(32)
+  /// EMAIL_CHANGE only: the address being verified (display + canonical).
+  targetEmail          String?          @map("target_email") @db.VarChar(254)
+  targetEmailCanonical String?          @map("target_email_canonical") @db.VarChar(254)
+  createdAt            DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -232,6 +243,53 @@ model RefreshCredential {
   @@unique([sessionId, generation])
   @@index([userId])
   @@map("refresh_credentials")
+  @@schema("identity")
+}
+
+/// User preferences (M4). Conservative defaults: optional notifications OFF.
+model UserPreferences {
+  userId             String   @id @map("user_id") @db.Uuid
+  language           String   @default("en") @db.VarChar(16)
+  script             String   @default("latin") @db.VarChar(16)
+  dateFormat         String   @default("dmy") @map("date_format") @db.VarChar(8)
+  timeFormat         String   @default("12h") @map("time_format") @db.VarChar(8)
+  theme              String   @default("system") @db.VarChar(16)
+  textSize           String   @default("default") @map("text_size") @db.VarChar(16)
+  reducedMotion      Boolean  @default(false) @map("reduced_motion")
+  highContrast       Boolean  @default(false) @map("high_contrast")
+  notifyProductEmail Boolean  @default(false) @map("notify_product_email")
+  notifyPush         Boolean  @default(false) @map("notify_push")
+  quietHoursStart    String?  @map("quiet_hours_start") @db.VarChar(5)
+  quietHoursEnd      String?  @map("quiet_hours_end") @db.VarChar(5)
+  version            Int      @default(0)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+  @@schema("identity")
+}
+
+/// Saved addresses (M4). Typed by the user; no coordinates (precise location needs consent, M6).
+model SavedPlace {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  kind       String   @db.VarChar(8)
+  label      String   @db.VarChar(40)
+  line1      String   @db.VarChar(200)
+  line2      String?  @db.VarChar(200)
+  city       String   @db.VarChar(100)
+  region     String?  @db.VarChar(100)
+  postalCode String?  @map("postal_code") @db.VarChar(12)
+  country    String   @db.Char(2)
+  version    Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("saved_places")
   @@schema("identity")
 }
 
