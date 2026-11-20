@@ -85,35 +85,30 @@ describe('API (integration: real PostgreSQL + Redis)', () => {
     expect(links).toBe(1);
   });
 
-  it('enforces staff permissions server-side and audits denials', async () => {
-    const subject = unique();
-    const t = await token(subject);
+  it('consumer credentials never reach staff routes — even with a legacy staff grant (ADR-0017)', async () => {
+    const t = await token(unique());
     const me = await request(app.getHttpServer())
       .get('/v1/me')
       .set('authorization', `Bearer ${t}`)
       .expect(200);
-    const denied = await request(app.getHttpServer())
+    await request(app.getHttpServer())
       .get('/v1/admin/system/status')
       .set('authorization', `Bearer ${t}`)
-      .expect(403);
-    expect(denied.body.error.code).toBe('FORBIDDEN');
-    const audit = await prisma.auditEvent.findFirst({
-      where: { actorRef: me.body.id as string, action: 'authz.permission_denied' },
-    });
-    expect(audit).toMatchObject({
-      outcome: 'DENIED',
-      policyDecision: 'rbac:v1',
-      reasonCode: 'missing_permission',
-    });
-
+      .expect(401);
+    // The pre-M8 consumer-side grant table no longer confers any staff access.
     await prisma.staffRoleGrant.create({
-      data: { userId: me.body.id as string, role: 'support_agent' },
+      data: { userId: me.body.id as string, role: 'security_admin' },
     });
-    const ok = await request(app.getHttpServer())
+    await request(app.getHttpServer())
       .get('/v1/admin/system/status')
+      .set('authorization', `Bearer ${t}`)
+      .expect(401);
+    const again = await request(app.getHttpServer())
+      .get('/v1/me')
       .set('authorization', `Bearer ${t}`)
       .expect(200);
-    expect(ok.body).toMatchObject({ environment: 'test', execution_paused: false });
+    expect(again.body.roles).toEqual(['user']);
+    expect(again.body.permissions).not.toContain('ops:read');
   });
 
   it('denies valid tokens of every non-ACTIVE account status (ACCOUNT_INACTIVE)', async () => {

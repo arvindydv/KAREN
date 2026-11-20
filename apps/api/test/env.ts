@@ -23,6 +23,12 @@ export const testEnv = (overrides: Record<string, string> = {}): ApiEnv =>
     API_BODY_LIMIT_BYTES: '4096',
     ALLOW_DRAFT_NOTICES: 'true',
     DATA_RIGHTS_DISPATCH: 'manual',
+    STAFF_AUTH_ENABLED: 'true',
+    STAFF_DATABASE_URL:
+      process.env.TEST_STAFF_DATABASE_URL ??
+      'postgresql://karen_staff_local:karen_staff_local_only@localhost:5442/karen_test',
+    STAFF_WEBAUTHN_RP_ID: 'localhost',
+    STAFF_WEBAUTHN_ORIGINS: 'http://localhost:3001',
     INTERNAL_SERVICE_HMAC_SECRET: 'test-only-internal-hmac-secret-0123456789',
     ...overrides,
   });

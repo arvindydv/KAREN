@@ -23,7 +23,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["identity", "consent", "audit", "platform"]
+  schemas  = ["identity", "consent", "audit", "platform", "staff"]
 }
 
 /// Account lifecycle (ADR-0015). Transitions are enforced by @karen/domain
@@ -469,6 +469,141 @@ model DataRightsRequest {
   @@index([userId, requestedAt(sort: Desc)])
   @@map("data_rights_requests")
   @@schema("consent")
+}
+
+// ── Staff realm (Phase 01 M8, ADR-0017) ───────────────────────────────────────────────────
+// Separate identities, credentials, sessions and roles. Reached ONLY through the staff DB role
+// (karen_staff_runtime); the consumer request path's role has no privileges on this schema.
+
+/// A staff identity. Not a consumer account; the same person may have both, unlinked.
+model StaffAccount {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email          String   @db.VarChar(254)
+  emailCanonical String   @unique @map("email_canonical") @db.VarChar(254)
+  displayName    String   @map("display_name") @db.VarChar(120)
+  /// invited → active (after WebAuthn enrollment) → disabled
+  status         String   @default("invited") @db.VarChar(16)
+  version        Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  password    StaffPasswordCredential?
+  webauthn    StaffWebauthnCredential[]
+  sessions    StaffSession[]
+  roles       StaffRoleAssignment[]
+  elevations  StaffElevation[]
+  enrollments StaffEnrollment[]
+
+  @@map("accounts")
+  @@schema("staff")
+}
+
+model StaffPasswordCredential {
+  staffId           String   @id @map("staff_id") @db.Uuid
+  passwordHash      String   @map("password_hash")
+  pepperId          String?  @map("pepper_id") @db.VarChar(32)
+  scheme            String   @db.VarChar(32)
+  passwordChangedAt DateTime @default(now()) @map("password_changed_at") @db.Timestamptz(3)
+  version           Int      @default(0)
+
+  account StaffAccount @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@map("password_credentials")
+  @@schema("staff")
+}
+
+/// WebAuthn credential (security key / passkey). Public key only; the private key never leaves
+/// the authenticator. `counter` detects cloned authenticators.
+model StaffWebauthnCredential {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId      String    @map("staff_id") @db.Uuid
+  credentialId String    @unique @map("credential_id") @db.VarChar(1024)
+  publicKey    Bytes     @map("public_key")
+  counter      BigInt    @default(0)
+  transports   String[]  @default([]) @db.VarChar(16)
+  deviceType   String    @map("device_type") @db.VarChar(32)
+  backedUp     Boolean   @map("backed_up")
+  name         String    @db.VarChar(64)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastUsedAt   DateTime? @map("last_used_at") @db.Timestamptz(3)
+
+  account StaffAccount @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+  @@map("webauthn_credentials")
+  @@schema("staff")
+}
+
+model StaffSession {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId           String    @map("staff_id") @db.Uuid
+  tokenVerifier     String    @unique @map("token_verifier") @db.VarChar(80)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastSeenAt        DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  idleExpiresAt     DateTime  @map("idle_expires_at") @db.Timestamptz(3)
+  absoluteExpiresAt DateTime  @map("absolute_expires_at") @db.Timestamptz(3)
+  /// Last fresh WebAuthn assertion (sign-in or step-up).
+  stepUpAt          DateTime  @map("step_up_at") @db.Timestamptz(3)
+  revokedAt         DateTime? @map("revoked_at") @db.Timestamptz(3)
+  revokeReason      String?   @map("revoke_reason") @db.VarChar(48)
+
+  account StaffAccount @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId, revokedAt])
+  @@map("sessions")
+  @@schema("staff")
+}
+
+/// Standing (minimal) role grants. Elevated access is time-boxed via StaffElevation.
+model StaffRoleAssignment {
+  staffId   String   @map("staff_id") @db.Uuid
+  role      String   @db.VarChar(32)
+  grantedBy String?  @map("granted_by") @db.Uuid
+  grantedAt DateTime @default(now()) @map("granted_at") @db.Timestamptz(3)
+
+  account StaffAccount @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@id([staffId, role])
+  @@map("role_grants")
+  @@schema("staff")
+}
+
+/// Just-in-time elevation: requested with a reason + ticket, approved by ANOTHER security admin,
+/// expires automatically.
+model StaffElevation {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId         String    @map("staff_id") @db.Uuid
+  role            String    @db.VarChar(32)
+  reason          String    @db.VarChar(500)
+  ticketRef       String    @map("ticket_ref") @db.VarChar(64)
+  status          String    @default("pending") @db.VarChar(16)
+  durationMinutes Int       @map("duration_minutes")
+  requestedAt     DateTime  @default(now()) @map("requested_at") @db.Timestamptz(3)
+  decidedBy       String?   @map("decided_by") @db.Uuid
+  decidedAt       DateTime? @map("decided_at") @db.Timestamptz(3)
+  expiresAt       DateTime? @map("expires_at") @db.Timestamptz(3)
+
+  account StaffAccount @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId, status])
+  @@map("elevations")
+  @@schema("staff")
+}
+
+/// One-time WebAuthn enrollment link (bootstrap or invitation). Token stored as a verifier.
+model StaffEnrollment {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId       String    @map("staff_id") @db.Uuid
+  tokenVerifier String    @unique @map("token_verifier") @db.VarChar(80)
+  createdBy     String?   @map("created_by") @db.Uuid
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz(3)
+  consumedAt    DateTime? @map("consumed_at") @db.Timestamptz(3)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  account StaffAccount @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@map("enrollments")
+  @@schema("staff")
 }
 
 enum ActorType {

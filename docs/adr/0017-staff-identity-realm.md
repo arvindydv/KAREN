@@ -48,3 +48,26 @@ undocumented super-admin.
 - Staff recovery after losing all authenticators requires another `security_admin` (two-person) —
   never self-service by e-mail.
 - `ROLE_PERMISSIONS` in `@karen/api-contracts` splits into consumer and staff permission sets.
+
+## Implementation notes (Phase 01 M8, 2026-11-20)
+
+- **Schema `staff`** (accounts, password_credentials, webauthn_credentials, sessions, role_grants,
+  elevations, enrollments) reached ONLY through the `karen_staff_runtime` DB role on a separate
+  connection pool (`STAFF_DATABASE_URL`). The consumer role has no privileges on `staff.*`; the
+  staff role has none on consumer tables — it reads a consumer account's status only through
+  `identity.staff_account_status()`. Both directions are integration-tested.
+- **WebAuthn** via `@simplewebauthn/server` 14.1.0 (pinned; MIT): attestation `none`, user
+  verification required, ES256/RS256, origin allowlist + RP id from config, ceremony state in
+  Redis (5 min, single use via GETDEL), counter must advance (clone detection), credentials are
+  bound to the account.
+- **Sign-in** = password + assertion, every time; no OTP/e-mail fallback for staff.
+- **Sessions** `kst_` opaque, 15 min idle / 8 h absolute; step-up window 5 min.
+- **Bootstrap** `pnpm --filter @karen/api staff:bootstrap -- --email … --name …` (advisory-locked,
+  refused once any staff account exists). **Invitations** need `staff:manage` + step-up.
+- **Elevation**: any staff member may request (reason + ticket + 5–240 min, step-up); a DIFFERENT
+  security admin approves (API check + DB CHECK). Elevations expire automatically.
+- **Legacy `identity.staff_role_grants`** no longer confers anything (consumer principals are
+  always `user`); the table is dropped in a later contract migration once confirmed unused.
+- **Edge layer** (network allowlist / Verified Access) remains required before `enable_admin`.
+- Tests use a byte-accurate software authenticator; **physical security keys and browsers are
+  NOT VERIFIED** (M9 Playwright virtual authenticator + manual device check).

@@ -89,3 +89,33 @@ GRANT INSERT ON audit.audit_events TO karen_api_runtime;
 -- Objects created by future migrations get NO automatic grants: each new table must be
 -- added to this file deliberately (reviewed with the migration), so default privileges
 -- are intentionally not used.
+
+-- ── Staff realm (Phase 01 M8, ADR-0017) ───────────────────────────────────────────────────
+-- karen_staff_runtime: used ONLY by the API's staff-realm connection pool. It cannot touch
+-- consumer tables (identity/consent/platform), and the consumer runtime role cannot touch staff.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'karen_staff_runtime') THEN
+    CREATE ROLE karen_staff_runtime NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS;
+  END IF;
+END
+$$;
+ALTER ROLE karen_staff_runtime NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS;
+
+REVOKE ALL ON SCHEMA staff FROM PUBLIC;
+REVOKE ALL ON SCHEMA staff FROM karen_api_runtime;
+REVOKE ALL ON ALL TABLES IN SCHEMA staff FROM karen_api_runtime;
+REVOKE ALL ON ALL TABLES IN SCHEMA staff, identity, consent, audit, platform FROM karen_staff_runtime;
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA staff, identity, consent, audit, platform FROM karen_staff_runtime;
+
+GRANT USAGE ON SCHEMA staff, audit, identity TO karen_staff_runtime;
+-- No DELETE anywhere: revocation, disablement and expiry are UPDATEs (kept for audit).
+GRANT SELECT, INSERT, UPDATE ON staff.accounts, staff.password_credentials,
+  staff.webauthn_credentials, staff.sessions, staff.elevations, staff.enrollments
+  TO karen_staff_runtime;
+GRANT SELECT, INSERT ON staff.role_grants TO karen_staff_runtime;
+-- Role removal is the one hard delete (a removed grant must not linger); audited by the API.
+GRANT DELETE ON staff.role_grants TO karen_staff_runtime;
+GRANT INSERT ON audit.audit_events TO karen_staff_runtime;
+-- Support lookups see account STATUS only, never profile/e-mail/content.
+GRANT EXECUTE ON FUNCTION identity.staff_account_status(uuid) TO karen_staff_runtime;

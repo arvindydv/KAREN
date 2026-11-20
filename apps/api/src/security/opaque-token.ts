@@ -15,6 +15,9 @@ export const OPAQUE_TOKEN_KINDS = {
   verification: 'kev',
   reset: 'kpr',
   emailChange: 'kec',
+  staffSession: 'kst',
+  staffEnrollment: 'ken',
+  webauthnCeremony: 'kwc',
 } as const;
 export type OpaqueTokenKind = keyof typeof OPAQUE_TOKEN_KINDS;
 

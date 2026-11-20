@@ -296,7 +296,7 @@ gate. All routes `/v1`, Zod contracts in `@karen/api-contracts`, errors in the s
 | `GET /me/consents/receipts/verify`, `GET /me/legal`, `POST /me/legal/acceptances`                                                                                                       | S                             | acceptance idempotent                                           | **M6 ✔**  |
 | `GET /me/data-rights[/:id]`, `POST /me/data-rights/export`, `GET /me/data-rights/:id/download`, `POST /me/data-rights/deletion` (+ current password), `POST /me/data-rights/:id/cancel` | S / D                         | one open request per kind; steps idempotent                     | **M7 ✔**  |
 | `/internal/v1/data-rights/:id/{export,expire-export,erase}`                                                                                                                             | signed internal (worker only) | idempotent; ALB-blocked                                         | **M7 ✔**  |
-| `/staff/auth/*`, `/staff/*`                                                                                                                                                             | T / TS                        | per route                                                       | M8        |
+| `/staff/auth/{login,enroll,step-up}/{options,verify}`, `/staff/auth/{me,logout}`, `/staff/{invitations,elevations,accounts/:id/*,users/:id/status}`, `/admin/system/status`             | T / TS (step-up)              | ceremonies single-use                                           | **M8 ✔**  |
 
 Naming resolution: the roadmap's `/v1/consent/grants`, `/v1/consent/requests`,
 `/v1/data-rights/export` and `/v1/identity/bootstrap` are replaced by the user-scoped `/v1/me/...`

@@ -93,6 +93,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -178,6 +179,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -263,6 +265,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -348,6 +351,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -433,6 +437,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -706,6 +711,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -791,6 +797,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -876,6 +883,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -961,6 +969,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -1046,6 +1055,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -1205,6 +1215,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -1290,6 +1301,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -1375,6 +1387,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -1460,6 +1473,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -1545,6 +1559,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -1724,6 +1739,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -1809,6 +1825,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -1894,6 +1911,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -1979,6 +1997,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -2064,6 +2083,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -2217,6 +2237,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -2302,6 +2323,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -2387,6 +2409,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -2472,6 +2495,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -2557,6 +2581,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -2716,6 +2741,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -2801,6 +2827,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -2886,6 +2913,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -2971,6 +2999,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -3056,6 +3085,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -3215,6 +3245,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -3300,6 +3331,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -3385,6 +3417,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -3470,6 +3503,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -3555,6 +3589,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -3714,6 +3749,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -3799,6 +3835,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -3884,6 +3921,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -3969,6 +4007,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -4054,6 +4093,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -4172,6 +4212,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -4257,6 +4298,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -4342,6 +4384,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -4427,6 +4470,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -4512,6 +4556,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -4635,6 +4680,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -4720,6 +4766,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -4805,6 +4852,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -4890,6 +4938,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -4975,6 +5024,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -5152,6 +5202,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -5237,6 +5288,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -5322,6 +5374,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -5407,6 +5460,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -5492,6 +5546,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -5624,6 +5679,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -5709,6 +5765,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -5794,6 +5851,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -5879,6 +5937,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -5964,6 +6023,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -6135,6 +6195,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -6220,6 +6281,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -6305,6 +6367,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -6390,6 +6453,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -6475,6 +6539,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -6607,6 +6672,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -6692,6 +6758,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -6777,6 +6844,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -6862,6 +6930,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -6947,6 +7016,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -7138,6 +7208,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -7223,6 +7294,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -7308,6 +7380,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -7393,6 +7466,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -7478,6 +7552,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -7727,6 +7802,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -7812,6 +7888,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -7897,6 +7974,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -7982,6 +8060,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -8067,6 +8146,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -8277,6 +8357,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -8362,6 +8443,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -8447,6 +8529,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -8532,6 +8615,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -8617,6 +8701,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -8925,6 +9010,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -9010,6 +9096,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -9095,6 +9182,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -9180,6 +9268,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -9265,6 +9354,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -9461,6 +9551,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -9546,6 +9637,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -9631,6 +9723,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -9716,6 +9809,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -9801,6 +9895,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -10052,6 +10147,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -10137,6 +10233,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -10222,6 +10319,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -10307,6 +10405,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -10392,6 +10491,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -10663,6 +10763,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -10748,6 +10849,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -10833,6 +10935,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -10918,6 +11021,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -11003,6 +11107,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -11123,6 +11228,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -11208,6 +11314,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -11293,6 +11400,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -11378,6 +11486,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -11463,6 +11572,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -11632,6 +11742,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -11717,6 +11828,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -11802,6 +11914,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -11887,6 +12000,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -11972,6 +12086,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -12126,6 +12241,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -12211,6 +12327,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -12296,6 +12413,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -12381,6 +12499,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -12466,6 +12585,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -12623,6 +12743,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -12708,6 +12829,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -12793,6 +12915,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -12878,6 +13001,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -12963,6 +13087,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -13132,6 +13257,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -13217,6 +13343,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -13302,6 +13429,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -13387,6 +13515,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -13472,6 +13601,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -13644,6 +13774,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -13729,6 +13860,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -13814,6 +13946,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -13899,6 +14032,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -13984,6 +14118,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -14167,6 +14302,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -14252,6 +14388,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -14337,6 +14474,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -14422,6 +14560,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -14507,6 +14646,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -14675,6 +14815,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -14760,6 +14901,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -14845,6 +14987,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -14930,6 +15073,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -15015,6 +15159,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -15339,6 +15484,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -15424,6 +15570,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -15509,6 +15656,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -15594,6 +15742,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -15679,6 +15828,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -15891,6 +16041,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -15976,6 +16127,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -16061,6 +16213,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -16146,6 +16299,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -16231,6 +16385,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -16364,6 +16519,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -16449,6 +16605,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -16534,6 +16691,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -16619,6 +16777,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -16704,6 +16863,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -16862,6 +17022,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -16947,6 +17108,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -17032,6 +17194,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -17117,6 +17280,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -17202,6 +17366,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -17396,6 +17561,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -17481,6 +17647,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -17566,6 +17733,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -17651,6 +17819,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -17736,6 +17905,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -17928,6 +18098,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -18013,6 +18184,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -18098,6 +18270,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -18183,6 +18356,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -18268,6 +18442,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -18469,6 +18644,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -18554,6 +18730,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -18639,6 +18816,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -18724,6 +18902,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -18809,6 +18988,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -19002,6 +19182,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -19087,6 +19268,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -19172,6 +19354,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -19257,6 +19440,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -19342,6 +19526,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -19534,6 +19719,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -19619,6 +19805,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -19704,6 +19891,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -19789,6 +19977,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -19874,6 +20063,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -20066,6 +20256,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -20151,6 +20342,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -20236,6 +20428,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -20321,6 +20514,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -20406,6 +20600,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -20620,6 +20815,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -20705,6 +20901,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -20790,6 +20987,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -20875,6 +21073,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -20960,6 +21159,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -21171,6 +21371,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -21256,6 +21457,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -21341,6 +21543,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -21426,6 +21629,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -21511,6 +21715,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -21713,6 +21918,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -21798,6 +22004,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -21883,6 +22090,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -21968,6 +22176,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -22053,6 +22262,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -22167,6 +22377,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -22252,6 +22463,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -22337,6 +22549,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -22422,6 +22635,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -22507,6 +22721,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -22738,6 +22953,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -22823,6 +23039,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -22908,6 +23125,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -22993,6 +23211,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -23078,6 +23297,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -23290,6 +23510,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -23375,6 +23596,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -23460,6 +23682,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -23545,6 +23768,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -23630,6 +23854,7 @@
                             "UNAUTHENTICATED",
                             "INVALID_CREDENTIALS",
                             "FORBIDDEN",
+                            "STEP_UP_REQUIRED",
                             "ACCOUNT_INACTIVE",
                             "NOT_FOUND",
                             "CONFLICT",
@@ -23860,485 +24085,6 @@
         },
         "tags": [
           "health"
-        ]
-      }
-    },
-    "/v1/admin/system/status": {
-      "get": {
-        "operationId": "AdminController_systemStatus_v1",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "environment": {
-                      "type": "string"
-                    },
-                    "execution_paused": {
-                      "type": "boolean"
-                    },
-                    "ai_gateway_mode": {
-                      "type": "string",
-                      "enum": [
-                        "mock",
-                        "live",
-                        "unknown"
-                      ]
-                    },
-                    "generated_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                    }
-                  },
-                  "required": [
-                    "environment",
-                    "execution_paused",
-                    "ai_gateway_mode",
-                    "generated_at"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "string",
-                          "enum": [
-                            "VALIDATION_FAILED",
-                            "WEAK_PASSWORD",
-                            "CHALLENGE_INVALID",
-                            "UNAUTHENTICATED",
-                            "INVALID_CREDENTIALS",
-                            "FORBIDDEN",
-                            "ACCOUNT_INACTIVE",
-                            "NOT_FOUND",
-                            "CONFLICT",
-                            "PRECONDITION_FAILED",
-                            "PRECONDITION_REQUIRED",
-                            "PAYLOAD_TOO_LARGE",
-                            "RATE_LIMITED",
-                            "CONSENT_REQUIRED",
-                            "APPROVAL_REQUIRED",
-                            "PROVIDER_CAPABILITY_UNAVAILABLE",
-                            "DEPENDENCY_UNAVAILABLE",
-                            "INTERNAL_ERROR"
-                          ]
-                        },
-                        "message": {
-                          "type": "string"
-                        },
-                        "correlation_id": {
-                          "type": "string"
-                        },
-                        "retryable": {
-                          "type": "boolean"
-                        },
-                        "next_options": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "details": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "path": {
-                                "type": "string"
-                              },
-                              "message": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "path",
-                              "message"
-                            ],
-                            "additionalProperties": false
-                          }
-                        }
-                      },
-                      "required": [
-                        "code",
-                        "message",
-                        "correlation_id",
-                        "retryable"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Missing or invalid access token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "string",
-                          "enum": [
-                            "VALIDATION_FAILED",
-                            "WEAK_PASSWORD",
-                            "CHALLENGE_INVALID",
-                            "UNAUTHENTICATED",
-                            "INVALID_CREDENTIALS",
-                            "FORBIDDEN",
-                            "ACCOUNT_INACTIVE",
-                            "NOT_FOUND",
-                            "CONFLICT",
-                            "PRECONDITION_FAILED",
-                            "PRECONDITION_REQUIRED",
-                            "PAYLOAD_TOO_LARGE",
-                            "RATE_LIMITED",
-                            "CONSENT_REQUIRED",
-                            "APPROVAL_REQUIRED",
-                            "PROVIDER_CAPABILITY_UNAVAILABLE",
-                            "DEPENDENCY_UNAVAILABLE",
-                            "INTERNAL_ERROR"
-                          ]
-                        },
-                        "message": {
-                          "type": "string"
-                        },
-                        "correlation_id": {
-                          "type": "string"
-                        },
-                        "retryable": {
-                          "type": "boolean"
-                        },
-                        "next_options": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "details": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "path": {
-                                "type": "string"
-                              },
-                              "message": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "path",
-                              "message"
-                            ],
-                            "additionalProperties": false
-                          }
-                        }
-                      },
-                      "required": [
-                        "code",
-                        "message",
-                        "correlation_id",
-                        "retryable"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Authenticated but not permitted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "string",
-                          "enum": [
-                            "VALIDATION_FAILED",
-                            "WEAK_PASSWORD",
-                            "CHALLENGE_INVALID",
-                            "UNAUTHENTICATED",
-                            "INVALID_CREDENTIALS",
-                            "FORBIDDEN",
-                            "ACCOUNT_INACTIVE",
-                            "NOT_FOUND",
-                            "CONFLICT",
-                            "PRECONDITION_FAILED",
-                            "PRECONDITION_REQUIRED",
-                            "PAYLOAD_TOO_LARGE",
-                            "RATE_LIMITED",
-                            "CONSENT_REQUIRED",
-                            "APPROVAL_REQUIRED",
-                            "PROVIDER_CAPABILITY_UNAVAILABLE",
-                            "DEPENDENCY_UNAVAILABLE",
-                            "INTERNAL_ERROR"
-                          ]
-                        },
-                        "message": {
-                          "type": "string"
-                        },
-                        "correlation_id": {
-                          "type": "string"
-                        },
-                        "retryable": {
-                          "type": "boolean"
-                        },
-                        "next_options": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "details": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "path": {
-                                "type": "string"
-                              },
-                              "message": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "path",
-                              "message"
-                            ],
-                            "additionalProperties": false
-                          }
-                        }
-                      },
-                      "required": [
-                        "code",
-                        "message",
-                        "correlation_id",
-                        "retryable"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "string",
-                          "enum": [
-                            "VALIDATION_FAILED",
-                            "WEAK_PASSWORD",
-                            "CHALLENGE_INVALID",
-                            "UNAUTHENTICATED",
-                            "INVALID_CREDENTIALS",
-                            "FORBIDDEN",
-                            "ACCOUNT_INACTIVE",
-                            "NOT_FOUND",
-                            "CONFLICT",
-                            "PRECONDITION_FAILED",
-                            "PRECONDITION_REQUIRED",
-                            "PAYLOAD_TOO_LARGE",
-                            "RATE_LIMITED",
-                            "CONSENT_REQUIRED",
-                            "APPROVAL_REQUIRED",
-                            "PROVIDER_CAPABILITY_UNAVAILABLE",
-                            "DEPENDENCY_UNAVAILABLE",
-                            "INTERNAL_ERROR"
-                          ]
-                        },
-                        "message": {
-                          "type": "string"
-                        },
-                        "correlation_id": {
-                          "type": "string"
-                        },
-                        "retryable": {
-                          "type": "boolean"
-                        },
-                        "next_options": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "details": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "path": {
-                                "type": "string"
-                              },
-                              "message": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "path",
-                              "message"
-                            ],
-                            "additionalProperties": false
-                          }
-                        }
-                      },
-                      "required": [
-                        "code",
-                        "message",
-                        "correlation_id",
-                        "retryable"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "string",
-                          "enum": [
-                            "VALIDATION_FAILED",
-                            "WEAK_PASSWORD",
-                            "CHALLENGE_INVALID",
-                            "UNAUTHENTICATED",
-                            "INVALID_CREDENTIALS",
-                            "FORBIDDEN",
-                            "ACCOUNT_INACTIVE",
-                            "NOT_FOUND",
-                            "CONFLICT",
-                            "PRECONDITION_FAILED",
-                            "PRECONDITION_REQUIRED",
-                            "PAYLOAD_TOO_LARGE",
-                            "RATE_LIMITED",
-                            "CONSENT_REQUIRED",
-                            "APPROVAL_REQUIRED",
-                            "PROVIDER_CAPABILITY_UNAVAILABLE",
-                            "DEPENDENCY_UNAVAILABLE",
-                            "INTERNAL_ERROR"
-                          ]
-                        },
-                        "message": {
-                          "type": "string"
-                        },
-                        "correlation_id": {
-                          "type": "string"
-                        },
-                        "retryable": {
-                          "type": "boolean"
-                        },
-                        "next_options": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "details": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "path": {
-                                "type": "string"
-                              },
-                              "message": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "path",
-                              "message"
-                            ],
-                            "additionalProperties": false
-                          }
-                        }
-                      },
-                      "required": [
-                        "code",
-                        "message",
-                        "correlation_id",
-                        "retryable"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "admin"
         ]
       }
     }

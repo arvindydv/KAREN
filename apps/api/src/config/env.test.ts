@@ -168,4 +168,30 @@ describe('API environment validation', () => {
       loadApiEnv({ ...base, DATA_DELETION_GRACE_SECONDS: '2' }).DATA_DELETION_GRACE_SECONDS,
     ).toBe(2);
   });
+
+  it('keeps the staff realm off by default and refuses unsafe staff configuration', () => {
+    expect(loadApiEnv(base).STAFF_AUTH_ENABLED).toBe(false);
+    expect(() => loadApiEnv({ ...base, STAFF_AUTH_ENABLED: 'true' })).toThrow(/STAFF_DATABASE_URL/);
+    const staff = {
+      STAFF_AUTH_ENABLED: 'true',
+      STAFF_DATABASE_URL: 'postgresql://s:p@localhost:5442/karen',
+      STAFF_WEBAUTHN_RP_ID: 'admin.karen.example',
+      STAFF_WEBAUTHN_ORIGINS: 'https://admin.karen.example',
+    };
+    expect(loadApiEnv({ ...base, ...staff }).STAFF_WEBAUTHN_ORIGINS).toEqual([
+      'https://admin.karen.example',
+    ]);
+    expect(() => loadApiEnv({ ...base, ...staff, STAFF_DATABASE_URL: base.DATABASE_URL })).toThrow(
+      /separate staff DB role/,
+    );
+    expect(() =>
+      loadApiEnv({
+        ...base,
+        ...deployed,
+        ...staff,
+        APP_ENV: 'staging',
+        STAFF_WEBAUTHN_ORIGINS: 'http://admin.local',
+      }),
+    ).toThrow(/https/);
+  });
 });

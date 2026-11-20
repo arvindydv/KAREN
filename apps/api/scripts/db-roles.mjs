@@ -10,6 +10,8 @@ import pg from 'pg';
 
 export const LOCAL_API_ROLE = 'karen_api_local';
 export const LOCAL_API_PASSWORD = 'karen_api_local_only';
+export const LOCAL_STAFF_ROLE = 'karen_staff_local';
+export const LOCAL_STAFF_PASSWORD = 'karen_staff_local_only';
 
 const ROLES_SQL = fileURLToPath(new URL('../../../infra/database/roles.sql', import.meta.url));
 
@@ -36,6 +38,16 @@ export async function applyDatabaseRoles(ownerUrl, appEnv) {
       ALTER ROLE ${LOCAL_API_ROLE} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS;
       GRANT karen_api_runtime TO ${LOCAL_API_ROLE};
       GRANT CONNECT ON DATABASE "${client.database}" TO ${LOCAL_API_ROLE};
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${LOCAL_STAFF_ROLE}') THEN
+          CREATE ROLE ${LOCAL_STAFF_ROLE} LOGIN PASSWORD '${LOCAL_STAFF_PASSWORD}';
+        END IF;
+      END
+      $$;
+      ALTER ROLE ${LOCAL_STAFF_ROLE} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS;
+      GRANT karen_staff_runtime TO ${LOCAL_STAFF_ROLE};
+      GRANT CONNECT ON DATABASE "${client.database}" TO ${LOCAL_STAFF_ROLE};
     `);
   } finally {
     await client.end();

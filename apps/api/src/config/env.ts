@@ -130,6 +130,20 @@ export const apiEnvShape = {
     .default(604_800),
   /** How long a ready export can be downloaded. */
   DATA_EXPORT_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(168),
+  /**
+   * Staff realm (M8, ADR-0017). OFF by default: staff routes do not exist until the controls
+   * (WebAuthn enrollment, separate DB role) are configured. Never reuses consumer identities.
+   */
+  STAFF_AUTH_ENABLED: booleanFlag(false),
+  /** Staff realm DB connection (karen_staff_runtime member) — separate from DATABASE_URL. */
+  STAFF_DATABASE_URL: optionalString,
+  /** WebAuthn relying-party id = the admin host (e.g. admin.karen.example; `localhost` locally). */
+  STAFF_WEBAUTHN_RP_ID: optionalString,
+  /** Exact admin origins allowed in WebAuthn client data (https when deployed). */
+  STAFF_WEBAUTHN_ORIGINS: csv,
+  STAFF_SESSION_IDLE_MINUTES: z.coerce.number().int().min(5).max(60).default(15),
+  STAFF_SESSION_ABSOLUTE_HOURS: z.coerce.number().int().min(1).max(12).default(8),
+  STAFF_STEP_UP_MAX_AGE_SECONDS: z.coerce.number().int().min(60).max(900).default(300),
   AI_SERVICE_URL: z.string().url().default('http://localhost:8100'),
   KAREN_EXECUTION_PAUSED: booleanFlag(false),
 };
@@ -183,6 +197,22 @@ export function loadApiEnv(source: Record<string, string | undefined> = process.
       requiredWhenDeployed('PASSWORD_PEPPER_CURRENT_ID'),
       requiredWhenDeployed('OTP_HMAC_KEY'),
       requiredWhenDeployed('CONSENT_RECEIPT_KEY'),
+      (env) =>
+        env.STAFF_AUTH_ENABLED &&
+        (!env.STAFF_DATABASE_URL ||
+          !env.STAFF_WEBAUTHN_RP_ID ||
+          env.STAFF_WEBAUTHN_ORIGINS.length === 0)
+          ? 'STAFF_DATABASE_URL, STAFF_WEBAUTHN_RP_ID and STAFF_WEBAUTHN_ORIGINS are required when STAFF_AUTH_ENABLED=true'
+          : undefined,
+      (env) =>
+        env.STAFF_AUTH_ENABLED && env.STAFF_DATABASE_URL === env.DATABASE_URL
+          ? 'STAFF_DATABASE_URL must use the separate staff DB role, not DATABASE_URL'
+          : undefined,
+      (env) =>
+        isDeployedEnv(env.APP_ENV) &&
+        env.STAFF_WEBAUTHN_ORIGINS.some((o) => !o.startsWith('https://'))
+          ? 'STAFF_WEBAUTHN_ORIGINS must be https:// origins when deployed'
+          : undefined,
       (env) =>
         isDeployedEnv(env.APP_ENV) && env.DATA_RIGHTS_DISPATCH !== 'temporal'
           ? 'DATA_RIGHTS_DISPATCH must be temporal when deployed'
