@@ -33,7 +33,7 @@ import {
 } from './auth-emails.js';
 import { ChallengeService, REFUSE } from './challenge.service.js';
 import { EmailSendBudget } from './email-send-budget.js';
-import { LoginThrottle } from './login-throttle.js';
+import { ReauthService } from './reauth.service.js';
 import { SessionService } from './session.service.js';
 
 const stale = () =>
@@ -72,7 +72,7 @@ export class ProfileService {
     private readonly accounts: AccountService,
     private readonly challenges: ChallengeService,
     private readonly sessions: SessionService,
-    private readonly throttle: LoginThrottle,
+    private readonly reauth: ReauthService,
     private readonly mail: MailService,
     private readonly budget: EmailSendBudget,
     private readonly audit: AuditService,
@@ -271,7 +271,7 @@ export class ProfileService {
         details: [{ path: 'new_email', message: 'unchanged' }],
       });
     }
-    await this.reauthenticate(userId, current.canonical, currentPassword);
+    await this.reauth.verify(userId, currentPassword);
 
     // An address owned by another account gets an indistinguishable decoy (no oracle).
     const taken = await this.accounts.findAccountByEmail(next.canonical);
@@ -369,8 +369,7 @@ export class ProfileService {
     currentPassword: string,
     newPassword: string,
   ): Promise<PasswordChanged> {
-    const email = await this.accounts.emailOf(userId);
-    await this.reauthenticate(userId, email.canonical, currentPassword);
+    const email = await this.reauth.verify(userId, currentPassword);
     const policy = evaluatePassword(newPassword, { email: email.canonical });
     if (!policy.ok) {
       throw new ApiError('WEAK_PASSWORD', 'Choose a longer or less common password.', {
@@ -412,27 +411,6 @@ export class ProfileService {
     });
     this.mail.dispatch(passwordChangedMail(email.display));
     return { status: 'password_changed', revoked_sessions: revoked };
-  }
-
-  /** Current-password check for sensitive changes: throttled exactly like sign-in. */
-  private async reauthenticate(userId: string, canonicalEmail: string, password: string) {
-    await this.throttle.assertAllowed(canonicalEmail);
-    const check = await this.accounts.checkPasswordCredential(canonicalEmail, password);
-    if (check.outcome !== 'VALID' || check.userId !== userId) {
-      await this.throttle.recordFailure(canonicalEmail);
-      await this.audit.recordBestEffort({
-        actorType: 'USER',
-        actorRef: userId,
-        action: 'identity.reauth.failed',
-        subjectType: 'user',
-        subjectId: userId,
-        outcome: 'DENIED',
-        policyDecision: 'reauth:v1',
-        reasonCode: 'invalid_credentials',
-      });
-      throw new ApiError('INVALID_CREDENTIALS', 'Your current password is incorrect.');
-    }
-    await this.throttle.reset(canonicalEmail);
   }
 
   private async missingOrStale(tx: TransactionClient, userId: string, placeId: string) {

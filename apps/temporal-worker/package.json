@@ -14,6 +14,7 @@
     "test:integration": "tsc -p tsconfig.build.json && vitest run --project integration"
   },
   "dependencies": {
+    "@karen/ai-model-contracts": "workspace:*",
     "@karen/config": "workspace:*",
     "@karen/domain": "workspace:*",
     "@karen/observability": "workspace:*",

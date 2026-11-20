@@ -24,3 +24,4 @@ Copy `0000-template.md`, take the next number, and link the ADR from the PR that
 | [0017](0017-staff-identity-realm.md)                            | Separate staff realm, mandatory WebAuthn, JIT elevation, offline bootstrap, break-glass                             | Accepted                     |
 | [0018](0018-transactional-email-brevo.md)                       | Brevo SMTP for transactional e-mail; OTPs HMAC-verified, dispatched post-commit, never at rest                      | Accepted                     |
 | [0019](0019-consent-notices-and-receipts.md)                    | Purpose consent, immutable versioned notices, append-only hash-chained receipts, server-side enforcement            | Accepted                     |
+| [0020](0020-data-rights-workflows.md)                           | Export/deletion as id-only Temporal workflows calling signed internal API steps; one-transaction guarded erasure    | Accepted                     |

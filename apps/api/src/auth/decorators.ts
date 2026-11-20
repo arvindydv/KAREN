@@ -6,6 +6,13 @@ import type { AuthenticatedPrincipal } from './principal.js';
 
 export const IS_PUBLIC = 'karen:isPublic';
 export const REQUIRED_PERMISSIONS = 'karen:requiredPermissions';
+export const ALLOW_DELETION_PENDING = 'karen:allowDeletionPending';
+
+/**
+ * Lets a session of an account in DELETION_REQUESTED reach this route (view/cancel the pending
+ * deletion, sign out). Every other route refuses such sessions with ACCOUNT_INACTIVE.
+ */
+export const AllowDeletionPending = () => SetMetadata(ALLOW_DELETION_PENDING, true);
 
 /** Opt a route out of authentication (health checks, dev token issuance). Use sparingly. */
 export const Public = () => SetMetadata(IS_PUBLIC, true);

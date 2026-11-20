@@ -156,4 +156,16 @@ describe('API environment validation', () => {
     );
     expect(loadApiEnv({ ...base, ALLOW_DRAFT_NOTICES: 'true' }).ALLOW_DRAFT_NOTICES).toBe(true);
   });
+
+  it('runs data-rights workflows durably when deployed, with a real cancellation window', () => {
+    expect(() =>
+      loadApiEnv({ ...base, ...deployed, APP_ENV: 'staging', DATA_RIGHTS_DISPATCH: 'manual' }),
+    ).toThrow(/DATA_RIGHTS_DISPATCH/);
+    expect(() =>
+      loadApiEnv({ ...base, ...deployed, APP_ENV: 'staging', DATA_DELETION_GRACE_SECONDS: '60' }),
+    ).toThrow(/at least one day/);
+    expect(
+      loadApiEnv({ ...base, DATA_DELETION_GRACE_SECONDS: '2' }).DATA_DELETION_GRACE_SECONDS,
+    ).toBe(2);
+  });
 });

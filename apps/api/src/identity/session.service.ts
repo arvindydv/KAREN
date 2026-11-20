@@ -104,6 +104,7 @@ export class SessionService {
     client: ClientKind,
     device: DeviceInput,
     authMethod: string,
+    accountStatus: 'ACTIVE' | 'DELETION_REQUESTED' = 'ACTIVE',
   ): Promise<{ response: SignedInResponse; newDevice: boolean; hadOtherDevices: boolean }> {
     const now = Date.now();
     const sessionId = randomUUID();
@@ -179,6 +180,7 @@ export class SessionService {
       user_id: userId,
       session_id: sessionId,
       session_expires_at: absolute.toISOString(),
+      account_status: accountStatus,
     };
     if (webToken) {
       response.session_token = webToken.token;

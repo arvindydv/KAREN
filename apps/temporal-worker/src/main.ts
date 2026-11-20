@@ -7,6 +7,7 @@ import { TASK_QUEUES } from '@karen/domain';
 import { createLogger } from '@karen/observability';
 import { initTelemetry } from '@karen/observability/tracing';
 import { NativeConnection, Worker } from '@temporalio/worker';
+import { createDataRightsActivities } from './activities/data-rights-activities.js';
 import { createTaskActivities } from './activities/task-activities.js';
 import { loadWorkerEnv } from './env.js';
 import { startHealthServer } from './health.js';
@@ -35,7 +36,13 @@ const worker = await Worker.create({
   namespace: env.TEMPORAL_NAMESPACE,
   taskQueue: TASK_QUEUES.TASKS,
   workflowsPath: createRequire(import.meta.url).resolve('./workflows/index.js'),
-  activities: createTaskActivities(),
+  activities: {
+    ...createTaskActivities(),
+    ...createDataRightsActivities({
+      apiBaseUrl: env.API_INTERNAL_URL,
+      secret: env.INTERNAL_SERVICE_HMAC_SECRET,
+    }),
+  },
   maxConcurrentActivityTaskExecutions: env.TEMPORAL_MAX_CONCURRENT_ACTIVITIES,
   maxConcurrentWorkflowTaskExecutions: env.TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS,
   shutdownGraceTime: '30 seconds',

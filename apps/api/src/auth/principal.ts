@@ -11,6 +11,8 @@ export interface AuthenticatedPrincipal {
   authTime: Date;
   roles: Role[];
   permissions: Permission[];
+  /** True for a DELETION_REQUESTED account's restricted session (M7). */
+  restricted: boolean;
   /** Pseudonymous reference for logs/traces/AI calls. */
   userRef: string;
 }

@@ -28,8 +28,9 @@ locals {
     alb_to_web             = { from = "alb", to = "web", port = var.ports.web, desc = "ALB to web" }
     alb_to_admin           = { from = "alb", to = "admin", port = var.ports.admin, desc = "ALB to admin" }
 
-    api_to_ai_service   = { from = "api", to = "ai_service", port = var.ports.ai_service, desc = "api to ai-service" }
-    voice_to_ai_service = { from = "voice_agent", to = "ai_service", port = var.ports.ai_service, desc = "voice-agent to ai-service" }
+    api_to_ai_service      = { from = "api", to = "ai_service", port = var.ports.ai_service, desc = "api to ai-service" }
+    temporal_worker_to_api = { from = "temporal_worker", to = "api", port = var.ports.api, desc = "temporal-worker to api signed internal data-rights steps" }
+    voice_to_ai_service    = { from = "voice_agent", to = "ai_service", port = var.ports.ai_service, desc = "voice-agent to ai-service" }
 
     api_to_rds             = { from = "api", to = "rds", port = 5432, desc = "api to PostgreSQL" }
     ai_service_to_rds      = { from = "ai_service", to = "rds", port = 5432, desc = "ai-service to PostgreSQL" }

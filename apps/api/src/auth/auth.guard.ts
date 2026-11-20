@@ -17,7 +17,7 @@ import {
   AccessTokenError,
   type AccessTokenService,
 } from '../security/access-token.js';
-import { IS_PUBLIC, REQUIRED_PERMISSIONS } from './decorators.js';
+import { ALLOW_DELETION_PENDING, IS_PUBLIC, REQUIRED_PERMISSIONS } from './decorators.js';
 
 const bearer = (header: string | undefined): string | undefined => {
   const match = /^Bearer\s+(\S+)$/i.exec(header ?? '');
@@ -67,9 +67,15 @@ export class AuthGuard implements CanActivate {
       }
     }
     if (!owner) throw new ApiError('UNAUTHENTICATED', 'Authentication is required.');
+    const allowDeletionPending =
+      this.reflector.getAllAndOverride<boolean>(ALLOW_DELETION_PENDING, [
+        context.getHandler(),
+        context.getClass(),
+      ]) === true;
     request.principal = await this.identity.resolvePrincipalForSession(
       owner.userId,
       owner.sessionId,
+      { allowDeletionPending },
     );
     return true;
   }

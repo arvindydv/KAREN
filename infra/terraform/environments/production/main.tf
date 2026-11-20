@@ -123,7 +123,8 @@ locals {
     REDIS_PORT = tostring(module.redis.port)
     REDIS_TLS  = "true"
   }
-  ai_service_url = "http://ai-service.${module.ecs_cluster.service_discovery_namespace_name}:8100"
+  ai_service_url   = "http://ai-service.${module.ecs_cluster.service_discovery_namespace_name}:8100"
+  api_internal_url = "http://api.${module.ecs_cluster.service_discovery_namespace_name}:4100"
 
   base_env = merge(
     {
@@ -158,6 +159,7 @@ locals {
       USER_ARTIFACTS_BUCKET = module.s3_user_artifacts.bucket_name
     })
     "temporal-worker" = merge(local.base_env, local.redis_env, {
+      API_INTERNAL_URL          = local.api_internal_url # signed data-rights steps (ADR-0020)
       TEMPORAL_TLS_ENABLED      = "true"
       EVENT_BUS_NAME            = module.eventbridge.bus_name
       TASK_EVENTS_QUEUE_URL     = module.sqs_task_events.queue_url
@@ -486,7 +488,7 @@ module "service" {
   security_group_ids = [module.security_groups.security_group_ids[local.security_group_keys[each.value]]]
 
   target_group_arn               = lookup(module.alb.target_group_arns, each.value, null)
-  enable_service_discovery       = each.value == "ai-service"
+  enable_service_discovery       = contains(["ai-service", "api"], each.value)
   service_discovery_namespace_id = module.ecs_cluster.service_discovery_namespace_id
   enable_execute_command         = var.enable_execute_command
   stop_timeout                   = contains(["temporal-worker", "provider-worker", "voice-agent"], each.value) ? 120 : 30

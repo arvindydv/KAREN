@@ -47,6 +47,7 @@ export class IdentityService {
   async resolvePrincipalForSession(
     userId: string,
     sessionId: string,
+    options: { allowDeletionPending?: boolean } = {},
   ): Promise<AuthenticatedPrincipal> {
     const resolved = await this.prisma.withUserScope(userId, async (tx) => {
       const session = await this.sessions.resolveLive(tx, userId, sessionId);
@@ -60,10 +61,15 @@ export class IdentityService {
       this.logger.warn({ reason: 'session_not_live' }, 'Rejected credential');
       throw new ApiError('UNAUTHENTICATED', 'Authentication is required.');
     }
-    // Deny by default: only ACTIVE accounts get full access. (The restricted `deletion_pending`
-    // level gets its own routes in M7; until then it is denied like the others.)
-    if (accountAccessLevel(resolved.status) !== 'full') {
-      throw new ApiError('ACCOUNT_INACTIVE', 'This account is not active.');
+    // Deny by default: only ACTIVE accounts get full access. A DELETION_REQUESTED account may
+    // reach only routes marked @AllowDeletionPending (view/cancel the deletion, sign out).
+    const level = accountAccessLevel(resolved.status);
+    const allowed =
+      level === 'full' || (level === 'deletion_pending' && options.allowDeletionPending === true);
+    if (!allowed) {
+      throw new ApiError('ACCOUNT_INACTIVE', 'This account is not active.', {
+        ...(level === 'deletion_pending' ? { nextOptions: ['CANCEL_DELETION'] } : {}),
+      });
     }
     const roles: Role[] = ['user', ...resolved.grants.map((g) => g.role)];
     const permissions = [...new Set<Permission>(roles.flatMap((r) => ROLE_PERMISSIONS[r]))];
@@ -72,8 +78,10 @@ export class IdentityService {
       sessionId,
       client: resolved.session.client,
       authTime: resolved.session.authTime,
-      roles,
-      permissions,
+      // A pending-deletion session never carries staff permissions.
+      roles: level === 'full' ? roles : ['user'],
+      permissions: level === 'full' ? permissions : [],
+      restricted: level !== 'full',
       userRef: pseudonymizeUserId(userId, this.pseudonymKey),
     };
   }

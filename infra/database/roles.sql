@@ -73,6 +73,11 @@ GRANT SELECT, INSERT ON consent.legal_acceptances TO karen_api_runtime;
 -- receipts are append-only (INSERT + SELECT; a trigger also blocks UPDATE/DELETE).
 GRANT SELECT ON consent.notices TO karen_api_runtime;
 GRANT SELECT, INSERT ON consent.consent_receipts TO karen_api_runtime;
+-- M7: data-rights requests (no DELETE — kept as proof). Erasure only through erase_user(),
+-- which refuses anything but a due, scheduled deletion of a DELETION_REQUESTED account.
+GRANT SELECT, INSERT, UPDATE ON consent.data_rights_requests TO karen_api_runtime;
+GRANT EXECUTE ON FUNCTION consent.lookup_data_rights_request(uuid) TO karen_api_runtime;
+GRANT EXECUTE ON FUNCTION identity.erase_user(uuid) TO karen_api_runtime;
 
 -- platform
 GRANT SELECT, INSERT, UPDATE ON platform.idempotency_records TO karen_api_runtime;  -- RLS

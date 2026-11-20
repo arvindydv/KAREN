@@ -22,5 +22,7 @@ export const testEnv = (overrides: Record<string, string> = {}): ApiEnv =>
     API_SENSITIVE_RATE_LIMIT_PER_MINUTE: '1000',
     API_BODY_LIMIT_BYTES: '4096',
     ALLOW_DRAFT_NOTICES: 'true',
+    DATA_RIGHTS_DISPATCH: 'manual',
+    INTERNAL_SERVICE_HMAC_SECRET: 'test-only-internal-hmac-secret-0123456789',
     ...overrides,
   });

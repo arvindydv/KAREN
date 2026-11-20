@@ -83,12 +83,9 @@ export class LoginService {
           ['RESET_PASSWORD'],
         );
       case 'DELETION_REQUESTED':
-        throw this.inactive(
-          userId,
-          'deletion_requested',
-          'This account is scheduled for deletion.',
-          ['CANCEL_DELETION'],
-        );
+        // Restricted session: only the routes that view or cancel the pending deletion accept
+        // it (@AllowDeletionPending). Everything else answers ACCOUNT_INACTIVE.
+        break;
       case 'SUSPENDED':
       case 'DELETED':
         throw this.inactive(userId, 'unavailable', 'This account is not available.', [
@@ -101,6 +98,7 @@ export class LoginService {
       input.client,
       { installationId: input.device.installation_id, name: input.device.name },
       'password',
+      status,
     );
     if (newDevice && hadOtherDevices) {
       const address = await this.accounts.emailOf(userId);

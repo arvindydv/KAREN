@@ -8,7 +8,7 @@ import {
 } from '@karen/api-contracts';
 import { Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CurrentPrincipal } from '../auth/decorators.js';
+import { AllowDeletionPending, CurrentPrincipal } from '../auth/decorators.js';
 import type { AuthenticatedPrincipal } from '../auth/principal.js';
 import { ApiStandardErrors, ApiZodResponse } from '../common/zod.js';
 import { SessionService } from './session.service.js';
@@ -27,6 +27,7 @@ export class SessionsController {
 
   @Post('auth/logout')
   @HttpCode(200)
+  @AllowDeletionPending()
   @ApiOperation({ summary: 'Sign out this session' })
   @ApiZodResponse(200, revokeResultSchema)
   async logout(@CurrentPrincipal() p: AuthenticatedPrincipal): Promise<RevokeResult> {

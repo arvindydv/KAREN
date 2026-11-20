@@ -12,6 +12,7 @@ import { IdentityService } from './identity.service.js';
 import { MeController } from './me.controller.js';
 import { ProfileController } from './profile.controller.js';
 import { ProfileService } from './profile.service.js';
+import { ReauthService } from './reauth.service.js';
 
 @Global()
 @Module({
@@ -26,7 +27,8 @@ import { ProfileService } from './profile.service.js';
     LoginService,
     LoginThrottle,
     ProfileService,
+    ReauthService,
   ],
-  exports: [IdentityService, AccountService, SessionService],
+  exports: [IdentityService, AccountService, SessionService, ReauthService],
 })
 export class IdentityModule {}
