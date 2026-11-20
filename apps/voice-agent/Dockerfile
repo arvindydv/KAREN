@@ -2,7 +2,7 @@
 # KAREN voice agent (LiveKit worker). Build context: apps/voice-agent.
 #   docker build -t karen/voice-agent:dev apps/voice-agent
 
-FROM ghcr.io/astral-sh/uv:0.9.10 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.9 AS uv
 
 FROM python:3.12-slim-trixie AS builder
 COPY --from=uv /uv /usr/local/bin/uv
