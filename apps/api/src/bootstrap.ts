@@ -1,6 +1,10 @@
 import 'reflect-metadata';
 import helmet from '@fastify/helmet';
-import { enterCorrelation, normaliseRequestId } from '@karen/observability';
+import {
+  createHttpServerMetrics,
+  enterCorrelation,
+  normaliseRequestId,
+} from '@karen/observability';
 import { VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
@@ -49,6 +53,17 @@ export async function createApp(
   fastify.addHook('onRequest', (request, reply, done) => {
     enterCorrelation({ request_id: String(request.id) });
     void reply.header('x-request-id', request.id);
+    done();
+  });
+  // p95/p99 latency source: one histogram sample per response, labelled by route TEMPLATE.
+  const httpMetrics = createHttpServerMetrics('karen-api');
+  fastify.addHook('onResponse', (request, reply, done) => {
+    httpMetrics.record({
+      method: request.method,
+      route: request.routeOptions.url,
+      statusCode: reply.statusCode,
+      durationSeconds: reply.elapsedTime / 1000,
+    });
     done();
   });
 

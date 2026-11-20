@@ -5,7 +5,9 @@ import {
   type OnModuleDestroy,
   type OnModuleInit,
 } from '@nestjs/common';
+import { registerDbPoolMetrics } from '@karen/observability';
 import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 import { API_ENV } from '../../config/config.module.js';
 import type { ApiEnv } from '../../config/env.js';
 import { Prisma, PrismaClient } from '../../generated/prisma/client.js';
@@ -23,21 +25,25 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private readonly logger = new Logger(PrismaService.name);
 
   constructor(@Inject(API_ENV) env: ApiEnv) {
+    // The pool is created here (not inside the adapter) so its live counters can be exported
+    // as db.client.connection.* metrics. The adapter ends it on $disconnect.
+    const pool = new pg.Pool({
+      connectionString: env.DATABASE_URL,
+      max: env.DATABASE_POOL_MAX,
+      connectionTimeoutMillis: 5_000,
+      idleTimeoutMillis: 30_000,
+      // Bound every statement so a stuck query cannot pin a request forever.
+      statement_timeout: 15_000,
+      application_name: 'karen-api',
+    });
     super({
-      adapter: new PrismaPg({
-        connectionString: env.DATABASE_URL,
-        max: env.DATABASE_POOL_MAX,
-        connectionTimeoutMillis: 5_000,
-        idleTimeoutMillis: 30_000,
-        // Bound every statement so a stuck query cannot pin a request forever.
-        statement_timeout: 15_000,
-        application_name: 'karen-api',
-      }),
+      adapter: new PrismaPg(pool),
       log: [
         { emit: 'event', level: 'warn' },
         { emit: 'event', level: 'error' },
       ],
     });
+    registerDbPoolMetrics('karen-api', 'api', pool, env.DATABASE_POOL_MAX);
   }
 
   async onModuleInit(): Promise<void> {
