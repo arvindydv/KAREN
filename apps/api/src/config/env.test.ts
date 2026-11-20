@@ -54,6 +54,18 @@ describe('API environment validation', () => {
     ).toThrow(/no trailing slash/);
   });
 
+  it('requires https identity endpoints in deployed environments', () => {
+    const deployedOidc = {
+      ...base,
+      ...deployed,
+      ...oidc,
+      APP_ENV: 'staging',
+      OIDC_ISSUER_URL: 'http://idp.internal/',
+      OIDC_JWKS_URL: 'http://idp.internal/jwks.json',
+    };
+    expect(() => loadApiEnv(deployedOidc)).toThrow(/must use https/);
+  });
+
   it('requires the JWKS to be served by the issuer origin', () => {
     expect(() =>
       loadApiEnv({ ...base, ...oidc, OIDC_JWKS_URL: 'https://keys.attacker.example/jwks.json' }),

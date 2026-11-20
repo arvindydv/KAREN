@@ -93,6 +93,13 @@ export function loadApiEnv(source: Record<string, string | undefined> = process.
         env.OIDC_REQUIRED_TOKEN_USE !== 'access'
           ? 'OIDC_REQUIRED_TOKEN_USE must be "access" when OIDC_AUDIENCE_CLAIM=client_id'
           : undefined,
+      // Outbound security config: identity endpoints are reached over TLS when deployed.
+      (env) =>
+        isDeployedEnv(env.APP_ENV) &&
+        env.AUTH_MODE === 'oidc' &&
+        [env.OIDC_ISSUER_URL, env.OIDC_JWKS_URL].some((u) => u && !u.startsWith('https://'))
+          ? 'OIDC_ISSUER_URL and OIDC_JWKS_URL must use https:// in deployed environments'
+          : undefined,
       // Keys must come from the issuer itself: a JWKS on another host could vouch for anything.
       (env) =>
         env.AUTH_MODE === 'oidc' &&
