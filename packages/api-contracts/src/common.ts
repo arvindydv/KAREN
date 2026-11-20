@@ -6,6 +6,10 @@ export const API_VERSION = 'v1';
 /** Machine-readable error codes (product spec §28 "Standard error shape"). */
 export const API_ERROR_CODES = [
   'VALIDATION_FAILED',
+  /** Proposed password rejected by policy; `details` lists the reasons. */
+  'WEAK_PASSWORD',
+  /** One-time code/handle invalid, expired, used or exhausted (deliberately not distinguished). */
+  'CHALLENGE_INVALID',
   'UNAUTHENTICATED',
   'FORBIDDEN',
   /** Authenticated, but the account's status forbids this (pending, locked, suspended…). */

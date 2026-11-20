@@ -13,7 +13,10 @@ import { ApiError } from '../common/api-error.js';
 import { API_ENV } from '../config/config.module.js';
 import type { ApiEnv } from '../config/env.js';
 import { Prisma } from '../generated/prisma/client.js';
-import { PrismaService } from '../infrastructure/database/prisma.service.js';
+import {
+  PrismaService,
+  type TransactionClient,
+} from '../infrastructure/database/prisma.service.js';
 import { GateSaturatedError } from '../security/concurrency-gate.js';
 import { PasswordHasher, type StoredPasswordHash } from '../security/password/password-hasher.js';
 import {
@@ -24,8 +27,8 @@ import {
 
 const LOCAL_PSEUDONYMIZATION_KEY = 'local-only-pseudonymization-key';
 
-export type CreateAccountResult =
-  | { outcome: 'CREATED'; userId: string }
+export type CreateAccountResult<T = undefined> =
+  | { outcome: 'CREATED'; userId: string; created: T }
   /** Canonical e-mail already belongs to an account. Callers MUST NOT reveal this (M2). */
   | { outcome: 'EMAIL_UNAVAILABLE' }
   | { outcome: 'INVALID_EMAIL'; reason: EmailRejection }
@@ -88,7 +91,11 @@ export class AccountService {
    * Retries after a lost response are therefore safe (the retry sees EMAIL_UNAVAILABLE and
    * the M2 endpoint answers both cases identically).
    */
-  async createPasswordAccount(input: CreateAccountInput): Promise<CreateAccountResult> {
+  async createPasswordAccount<T = undefined>(
+    input: CreateAccountInput,
+    /** Runs inside the creating transaction (e.g. issue the verification challenge atomically). */
+    onCreated?: (tx: TransactionClient, userId: string) => Promise<T>,
+  ): Promise<CreateAccountResult<T>> {
     const email = canonicalizeEmail(input.email);
     if (!email.ok) return { outcome: 'INVALID_EMAIL', reason: email.reason };
     const policy = evaluatePassword(input.password, { email: email.canonical });
@@ -98,8 +105,9 @@ export class AccountService {
     // Hashing also runs for already-registered e-mails, so response timing does not reveal them.
     const credential = await this.gated(() => this.hasher.hash(policy.normalized));
     const userId = randomUUID();
+    let created: T;
     try {
-      await this.prisma.withUserScope(userId, async (tx) => {
+      created = await this.prisma.withUserScope(userId, async (tx) => {
         await tx.user.create({
           data: {
             id: userId,
@@ -131,6 +139,7 @@ export class AccountService {
           },
           tx,
         );
+        return onCreated ? onCreated(tx, userId) : (undefined as T);
       });
     } catch (error) {
       if (isUniqueViolation(error)) {
@@ -147,7 +156,38 @@ export class AccountService {
       }
       throw error;
     }
-    return { outcome: 'CREATED', userId };
+    return { outcome: 'CREATED', userId, created };
+  }
+
+  /** Pre-auth recovery lookup by canonical e-mail (exact match, no enumeration). */
+  async findAccountByEmail(
+    canonicalEmail: string,
+  ): Promise<{ userId: string; status: AccountStatus } | null> {
+    const rows = await this.prisma.$queryRaw<{ user_id: string; status: AccountStatus }[]>`
+      SELECT user_id, status::text AS status FROM identity.lookup_password_login(${canonicalEmail})`;
+    const row = rows[0];
+    return row ? { userId: row.user_id, status: row.status } : null;
+  }
+
+  /** The account's e-mail (display + canonical), read inside the user's RLS scope. */
+  async emailOf(userId: string): Promise<{ display: string; canonical: string }> {
+    const row = await this.prisma.withUserScope(userId, (tx) =>
+      tx.userEmail.findUniqueOrThrow({
+        where: { userId },
+        select: { email: true, emailCanonical: true },
+      }),
+    );
+    return { display: row.email, canonical: row.emailCanonical };
+  }
+
+  /** Run `fn` in a transaction scoped to `userId` (RLS). */
+  withUserTransaction<T>(userId: string, fn: (tx: TransactionClient) => Promise<T>): Promise<T> {
+    return this.prisma.withUserScope(userId, fn);
+  }
+
+  /** Hash an already policy-checked, normalized password (bounded by the hashing gate). */
+  hashNormalizedPassword(normalized: string): Promise<StoredPasswordHash> {
+    return this.gated(() => this.hasher.hash(normalized));
   }
 
   /**

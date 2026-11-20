@@ -19,6 +19,11 @@ const deployed = {
   LOG_PSEUDONYMIZATION_KEY: 'k'.repeat(40),
   PASSWORD_PEPPERS: `p1:${Buffer.alloc(32, 7).toString('base64url')}`,
   PASSWORD_PEPPER_CURRENT_ID: 'p1',
+  OTP_HMAC_KEY: 'o'.repeat(40),
+  EMAIL_TRANSPORT: 'brevo-smtp',
+  BREVO_SMTP_LOGIN: 'login@smtp-brevo.example',
+  BREVO_SMTP_KEY: 'test-only-not-a-key',
+  EMAIL_FROM: 'KAREN <no-reply@example.com>',
 };
 
 describe('API environment validation', () => {
@@ -116,5 +121,25 @@ describe('API environment validation', () => {
     ).toThrow(/CURRENT_ID is required/);
     // Local development may run without a pepper.
     expect(loadApiEnv({ ...base, AUTH_MODE: 'local-dev' }).PASSWORD_PEPPERS).toBeUndefined();
+  });
+
+  it('requires real e-mail delivery and an OTP key when deployed; memory transport is local-only', () => {
+    expect(() =>
+      loadApiEnv({ ...base, ...deployed, APP_ENV: 'staging', EMAIL_TRANSPORT: 'memory' }),
+    ).toThrow(/EMAIL_TRANSPORT must be brevo-smtp/);
+    const { OTP_HMAC_KEY: _o, ...noOtp } = deployed;
+    expect(() => loadApiEnv({ ...base, ...noOtp, APP_ENV: 'staging' })).toThrow(/OTP_HMAC_KEY/);
+    expect(() =>
+      loadApiEnv({ ...base, AUTH_MODE: 'local-dev', EMAIL_TRANSPORT: 'brevo-smtp' }),
+    ).toThrow(/BREVO_SMTP_KEY/);
+    expect(() =>
+      loadApiEnv({
+        ...base,
+        ...deployed,
+        APP_ENV: 'staging',
+        EMAIL_FROM: 'KAREN <a@b>\r\nBcc: x@y',
+      }),
+    ).toThrow(/EMAIL_FROM/);
+    expect(loadApiEnv({ ...base, AUTH_MODE: 'local-dev' }).EMAIL_TRANSPORT).toBe('memory');
   });
 });

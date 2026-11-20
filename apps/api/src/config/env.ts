@@ -74,6 +74,25 @@ export const apiEnvShape = {
   /** Hash requests allowed to wait for a slot; beyond this → retryable 503 (never unbounded). */
   PASSWORD_HASH_MAX_QUEUE: z.coerce.number().int().min(0).max(10_000).default(64),
   PASSWORD_HASH_QUEUE_TIMEOUT_MS: z.coerce.number().int().min(50).max(30_000).default(2_000),
+  /**
+   * Transactional e-mail (OTP codes, security notices). `brevo-smtp` sends via Brevo SMTP
+   * relay; `memory` captures messages in-process (local/test only — refused when deployed).
+   */
+  EMAIL_TRANSPORT: z.enum(['brevo-smtp', 'memory']).default('memory'),
+  BREVO_SMTP_HOST: z.string().min(1).default('smtp-relay.brevo.com'),
+  BREVO_SMTP_PORT: z.coerce.number().int().min(1).max(65_535).default(587),
+  BREVO_SMTP_LOGIN: optionalString,
+  /** Secret (Secrets Manager when deployed). Never logged. */
+  BREVO_SMTP_KEY: optionalString,
+  /** RFC 5322 From, e.g. `KAREN <no-reply@example.com>`; must be a Brevo-verified sender. */
+  EMAIL_FROM: optionalString,
+  /** Max e-mails (OTP + notices) per address per hour; protects against mail bombing. */
+  EMAIL_SEND_LIMIT_PER_HOUR: z.coerce.number().int().min(1).max(100).default(5),
+  /**
+   * HMAC key for one-time-code verifiers (≥ 32 chars). A database-only leak must not let an
+   * attacker brute-force 6-digit codes offline and take over accounts via password reset.
+   */
+  OTP_HMAC_KEY: optionalString,
   AI_SERVICE_URL: z.string().url().default('http://localhost:8100'),
   KAREN_EXECUTION_PAUSED: booleanFlag(false),
 };
@@ -147,6 +166,25 @@ export function loadApiEnv(source: Record<string, string | undefined> = process.
       // A database-only compromise must not yield offline-crackable password hashes.
       requiredWhenDeployed('PASSWORD_PEPPERS'),
       requiredWhenDeployed('PASSWORD_PEPPER_CURRENT_ID'),
+      requiredWhenDeployed('OTP_HMAC_KEY'),
+      (env) =>
+        env.OTP_HMAC_KEY !== undefined && env.OTP_HMAC_KEY.length < 32
+          ? 'OTP_HMAC_KEY must be at least 32 characters'
+          : undefined,
+      (env) =>
+        isDeployedEnv(env.APP_ENV) && env.EMAIL_TRANSPORT !== 'brevo-smtp'
+          ? `EMAIL_TRANSPORT must be brevo-smtp when APP_ENV=${env.APP_ENV}`
+          : undefined,
+      (env) =>
+        env.EMAIL_TRANSPORT === 'brevo-smtp' &&
+        (!env.BREVO_SMTP_LOGIN || !env.BREVO_SMTP_KEY || !env.EMAIL_FROM)
+          ? 'BREVO_SMTP_LOGIN, BREVO_SMTP_KEY and EMAIL_FROM are required when EMAIL_TRANSPORT=brevo-smtp'
+          : undefined,
+      (env) =>
+        env.EMAIL_FROM !== undefined &&
+        !/^[^<>\r\n]*<[^<>@\s]+@[^<>@\s]+>$|^[^<>@\s]+@[^<>@\s]+$/.test(env.EMAIL_FROM)
+          ? 'EMAIL_FROM must be "Name <address>" or a bare address'
+          : undefined,
       (env) => {
         try {
           const keys = parsePepperKeys(env.PASSWORD_PEPPERS);

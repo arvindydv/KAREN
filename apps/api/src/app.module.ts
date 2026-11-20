@@ -15,6 +15,7 @@ import { HealthModule } from './health/health.module.js';
 import { IdentityModule } from './identity/identity.module.js';
 import { AiModule } from './infrastructure/ai/ai.module.js';
 import { DatabaseModule } from './infrastructure/database/database.module.js';
+import { MailModule } from './infrastructure/mail/mail.module.js';
 import { RedisThrottlerStorage } from './infrastructure/redis/redis-throttler.storage.js';
 import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { PolicyModule } from './policy/policy.module.js';
@@ -73,6 +74,7 @@ export class AppModule {
         }),
         DatabaseModule,
         RedisModule,
+        MailModule,
         AiModule,
         AuditModule,
         SecurityModule,
