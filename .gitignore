@@ -80,3 +80,6 @@ Thumbs.db
 apps/api/src/generated/
 .expo-export-check/
 next-env.d.ts
+
+# CI-generated software bill of materials
+sbom/

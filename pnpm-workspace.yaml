@@ -18,3 +18,10 @@ onlyBuiltDependencies:
 
 # Refuse to install releases published less than 7 days ago (minutes).
 minimumReleaseAge: 10080
+
+# Security overrides for transitive dependencies (each must name the advisory and be removed
+# once the parent package ships a fixed range).
+overrides:
+  # GHSA-7589-6fvf-x4pw (ReDoS, high) via prisma -> @prisma/config -> effect@3.20.0.
+  # 3.22.4 (published 2026-10-22) satisfies the 7-day release-age policy.
+  'effect@<3.22.1': '3.22.4'
