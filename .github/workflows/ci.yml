@@ -78,6 +78,8 @@ jobs:
           SHADOW_DATABASE_URL: postgresql://karen:karen_local_only@localhost:5442/karen_shadow
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
+          # Pinned: an unpinned (latest) uv changed `--project` resolution and broke CI.
+          version: '0.9.10'
           enable-cache: true
       - run: uv sync --frozen
         working-directory: apps/ai-service
@@ -139,6 +141,8 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
+          # Pinned: an unpinned (latest) uv changed `--project` resolution and broke CI.
+          version: '0.9.10'
           enable-cache: true
       - run: uv sync --frozen
       - run: uv run ruff check .
