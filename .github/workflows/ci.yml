@@ -226,6 +226,13 @@ jobs:
               context: .,
             }
           - {
+              name: api-migrate,
+              file: infra/docker/node-service.Dockerfile,
+              args: 'APP=api HEALTH_PORT=4100',
+              context: .,
+              target: migrate,
+            }
+          - {
               name: temporal-worker,
               file: infra/docker/node-service.Dockerfile,
               args: 'APP=temporal-worker HEALTH_PORT=4300',
@@ -270,7 +277,9 @@ jobs:
           DOCKERFILE: ${{ matrix.file }}
           CONTEXT: ${{ matrix.context }}
           NAME: ${{ matrix.name }}
+          TARGET: ${{ matrix.target || '' }}
         run: |
           args=()
           for a in $BUILD_ARGS; do args+=(--build-arg "$a"); done
+          if [ -n "$TARGET" ]; then args+=(--target "$TARGET"); fi
           docker buildx build --load -f "$DOCKERFILE" "${args[@]}" -t "karen/$NAME:ci" "$CONTEXT"

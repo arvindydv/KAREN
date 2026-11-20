@@ -14,6 +14,17 @@ RUN pnpm turbo run build --filter=@karen/${APP}...
 # Self-contained production node_modules for just this app (workspace deps packed in).
 RUN pnpm --filter @karen/${APP} deploy --prod --legacy /out
 
+# One-off MIGRATION image (APP=api only): the runtime image excludes the Prisma CLI because it
+# is a devDependency. Built explicitly with `--target migrate`; runs `prisma migrate deploy`
+# with MIGRATION_DATABASE_URL (owner role) — never part of a service task definition.
+#   docker build -f infra/docker/node-service.Dockerfile --build-arg APP=api --target migrate -t karen/api-migrate:<sha> .
+FROM build AS migrate
+WORKDIR /repo/apps/api
+ENV KAREN_DEPLOYED_ARTIFACT=true
+USER node
+ENTRYPOINT ["/repo/apps/api/node_modules/.bin/prisma"]
+CMD ["migrate", "deploy"]
+
 FROM ${NODE_IMAGE} AS runtime
 ARG APP
 # api=4100, provider-worker=4200, temporal-worker=4300
