@@ -135,11 +135,11 @@
 ### F00-01 — Git, branch protection and CI
 
 - [ ] Create GitHub organization/repository/private remote; confirm ownership, CODEOWNERS, contributor access, MFA and recovery admins. — **BLOCKED_EXTERNAL** (private repo `arvindydv/KAREN` exists (personal account); org account, CODEOWNERS and MFA/recovery checks pending)
-- [ ] Push both existing commits and signed/protected release tags; preserve history; confirm clean working tree. — **BLOCKED_EXTERNAL** (`100a037` on origin; 10 new commits await push approval)
+- [ ] Push both existing commits and signed/protected release tags; preserve history; confirm clean working tree. — **BLOCKED_EXTERNAL** (branch `phase-00-hardening` pushed, PR #1 open and green; merge and release tags await approval)
 - [ ] Configure protected `main`: PR required, approvals, no force pushes, mandatory checks, secret scanning and Dependabot/Renovate. — **BLOCKED_EXTERNAL** (GitHub returns 403: private repo needs GitHub Pro or a paid org plan for branch protection; Dependabot config ready)
 - [x] Pin GitHub Actions and reusable workflows to **commit SHAs**; least-privilege `permissions`, concurrency controls, OIDC deployment roles. — **DONE_LOCAL** (all `uses:` SHA-pinned, deploy hardened; actionlint clean)
-- [ ] Run full `pnpm verify`, Python suite, Playwright, integration Postgres/Redis, mocked evals, SBOM/license/secret scans in hosted CI; upload test/JUnit/coverage artifacts. — **BLOCKED_EXTERNAL** (hosted run on `100a037`: 13/15 jobs passed; both failures fixed on branch `phase-00-hardening` (now 16 jobs incl. `api-migrate`); push/PR awaits approval)
-- [x] Confirm CI runner Node 24, pinned pnpm/Python/uv; lockfile-only installs; reproducible clean clone. — **DONE_LOCAL** (fresh clone of `6173b78`: frozen install, `pnpm verify`, `verify:py`, integration all pass; hosted-runner confirmation via previous item)
+- [ ] Run full `pnpm verify`, Python suite, Playwright, integration Postgres/Redis, mocked evals, SBOM/license/secret scans in hosted CI; upload test/JUnit/coverage artifacts. — **IN_PROGRESS** (hosted CI on PR #1, run 44705796262: 16/16 jobs green, JUnit + SBOM artifacts uploaded; remaining local gap: coverage artifacts, which need an approved coverage dependency)
+- [x] Confirm CI runner Node 24, pinned pnpm/Python/uv; lockfile-only installs; reproducible clean clone. — **DONE_LOCAL** (fresh clone passes locally; hosted runner confirmed Node 24 / pnpm 10.28.0 / uv 0.9.10 / frozen lockfiles in run 44705796262)
 - [ ] Add differential CI only after full checks are established; contract-drift check always required. — **BLOCKED_EXTERNAL** (by definition needs a green hosted-CI baseline first; not locally implementable)
 
 ### F00-02 — Environments, infrastructure and operations
@@ -175,7 +175,7 @@
 - [ ] Start Google/Microsoft OAuth verification, LiveKit test account, and **one** viable booking/commerce partner outreach early; record partner lead times and legal conditions. — **BLOCKED_EXTERNAL** (vendor/partner processes)
 - [ ] Select observability/feature flag and transactional-email vendor with cost/retention review; do not add paid tools without a reason. — **BLOCKED_EXTERNAL** (recommendation in report §8.3; awaiting owner sign-off)
 
-**Phase 00 status (2026-11-20, run 3):** 10 DONE_LOCAL · 1 DEFERRED · 20 BLOCKED_EXTERNAL · 0 IN_PROGRESS · 0 NOT_STARTED — no local engineering work left; Gate 00 **NOT PASSED** (hosted CI, staging, IdP/gateway trials, rollback rehearsal); see `docs/PHASE_00_REPORT.md`.
+**Phase 00 status (2026-11-20, run 3, after hosted CI):** 10 DONE_LOCAL · 1 IN_PROGRESS (coverage artifacts) · 1 DEFERRED · 19 BLOCKED_EXTERNAL — hosted CI 16/16 green on PR #1 (not merged); Gate 00 **NOT PASSED** (staging, IdP/gateway trials, rollback rehearsal, branch protection); see `docs/PHASE_00_REPORT.md`.
 
 **Gate 00:** clean clone reproduces test suite; GitHub CI and deployed staging pass smoke checks; user-data access is isolated; real IdP/gateway spikes completed; on-call rollback path rehearsed. Production must remain inaccessible to public users until Phase 01 controls pass.
 
