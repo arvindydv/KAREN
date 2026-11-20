@@ -8,9 +8,13 @@ import { buildTheme } from './theme/theme';
 describe('mobile foundation', () => {
   it('renders the launch screen accessibly', async () => {
     await render(<LaunchScreen />);
-    expect(screen.getByRole('header')).toHaveTextContent('KAREN');
+    expect(screen.getByRole('header')).toHaveTextContent(/Taken care of/);
+    expect(screen.getByText('KAREN')).toBeTruthy();
+    // Sign-up is not built yet: the CTA is visibly disabled and says so to screen readers.
     const cta = screen.getByRole('button', { name: /get started/i });
     expect(cta).toBeDisabled();
+    expect(cta.props.accessibilityHint).toMatch(/next release/i);
+    expect(screen.getByText(/sign-up coming soon/i)).toBeTruthy();
   });
 
   it('validates public env and refuses plain-http API in production', () => {
@@ -35,5 +39,8 @@ describe('mobile foundation', () => {
   it('builds light and dark themes from shared tokens with accessible touch targets', () => {
     expect(buildTheme('dark').colors.background).not.toBe(buildTheme('light').colors.background);
     expect(buildTheme('light').minTouchTarget).toBeGreaterThanOrEqual(44);
+    // Signature theme: deep-space navy background with the bright blue action colour.
+    expect(buildTheme('dark').colors.background).toBe('#060A1C');
+    expect(buildTheme('dark').colors.accent).toBe('#2563EB');
   });
 });

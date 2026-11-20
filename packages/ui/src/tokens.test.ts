@@ -11,6 +11,8 @@ describe('design tokens', () => {
         expect(contrastRatio(c.textSecondary, bg)).toBeGreaterThanOrEqual(4.5);
       }
       expect(contrastRatio(c.accentText, c.accent)).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(c.highlight, c.background)).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(c.highlight, c.surface)).toBeGreaterThanOrEqual(4.5);
     },
   );
 

@@ -20,8 +20,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#F7F8FA' },
-    { media: '(prefers-color-scheme: dark)', color: '#0B0D12' },
+    { media: '(prefers-color-scheme: light)', color: '#F3F5FD' },
+    { media: '(prefers-color-scheme: dark)', color: '#060A1C' },
   ],
 };
 
@@ -37,9 +37,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </a>
         <Providers>
           <SiteHeader />
-          <main id="main" className="mx-auto max-w-5xl px-6 py-12">
-            {children}
-          </main>
+          {/* Pages own their width: the landing page is full-bleed, app pages use <PageContainer>. */}
+          <main id="main">{children}</main>
         </Providers>
       </body>
     </html>

@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@karen/ui/tokens.css';
+@import './landing.css';
 /* Let Tailwind see class names used by shared web primitives. */
 @source '../../node_modules/@karen/ui/dist';
 

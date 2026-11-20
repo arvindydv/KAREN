@@ -15,13 +15,14 @@ const config: ExpoConfig = {
   scheme: 'karen',
   version: '0.1.0',
   orientation: 'portrait',
-  userInterfaceStyle: 'automatic',
+  // KAREN's signature look is the dark "deep space" theme (see src/theme/theme.ts).
+  userInterfaceStyle: 'dark',
   ios: { bundleIdentifier: `ai.karen.app${suffix}`, supportsTablet: false },
   android: { package: `ai.karen.app${suffix}`, allowBackup: false },
   plugins: [
     'expo-router',
     'expo-secure-store',
-    ['expo-splash-screen', { backgroundColor: '#F7F8FA', dark: { backgroundColor: '#0B0D12' } }],
+    ['expo-splash-screen', { backgroundColor: '#060A1C', dark: { backgroundColor: '#060A1C' } }],
   ],
   experiments: { typedRoutes: true },
   extra: { variant },
