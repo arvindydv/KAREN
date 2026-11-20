@@ -72,6 +72,7 @@ locals {
     "api/BREVO_SMTP_LOGIN"          = { description = "Brevo SMTP relay login" }
     "api/BREVO_SMTP_KEY"            = { description = "Brevo SMTP relay key" }
     "api/CONSENT_RECEIPT_KEY"       = { description = "HMAC key for consent receipts (ADR-0019)" }
+    "api/STAFF_DATABASE_URL"        = { description = "Postgres URL for the staff-realm DB role (karen_staff_runtime member; ADR-0017)" }
   }
 
   s = module.secrets.secret_arns
@@ -101,6 +102,7 @@ locals {
       BREVO_SMTP_LOGIN          = local.s["api/BREVO_SMTP_LOGIN"]
       BREVO_SMTP_KEY            = local.s["api/BREVO_SMTP_KEY"]
       CONSENT_RECEIPT_KEY       = local.s["api/CONSENT_RECEIPT_KEY"]
+      STAFF_DATABASE_URL        = local.s["api/STAFF_DATABASE_URL"]
     })
     "ai-service" = merge(local.common_secrets, local.redis_secret, {
       AI_GATEWAY_API_KEY  = local.s["ai-service/AI_GATEWAY_API_KEY"]
@@ -147,11 +149,15 @@ locals {
       PASSWORD_PEPPER_CURRENT_ID = var.identity.password_pepper_current_id == null ? "" : var.identity.password_pepper_current_id
       EMAIL_TRANSPORT            = "brevo-smtp"
       EMAIL_FROM                 = var.identity.email_from == null ? "" : var.identity.email_from
-      AI_SERVICE_URL             = local.ai_service_url
-      TEMPORAL_TLS_ENABLED       = "true"
-      EVENT_BUS_NAME             = module.eventbridge.bus_name
-      USER_ARTIFACTS_BUCKET      = module.s3_user_artifacts.bucket_name
-      EVIDENCE_BUCKET            = module.s3_evidence.bucket_name
+      # Staff realm (ADR-0017) exists only together with the admin app; off by default.
+      STAFF_AUTH_ENABLED     = tostring(var.enable_admin)
+      STAFF_WEBAUTHN_RP_ID   = var.admin_hostname == null ? "" : var.admin_hostname
+      STAFF_WEBAUTHN_ORIGINS = var.admin_hostname == null ? "" : "https://${var.admin_hostname}"
+      AI_SERVICE_URL         = local.ai_service_url
+      TEMPORAL_TLS_ENABLED   = "true"
+      EVENT_BUS_NAME         = module.eventbridge.bus_name
+      USER_ARTIFACTS_BUCKET  = module.s3_user_artifacts.bucket_name
+      EVIDENCE_BUCKET        = module.s3_evidence.bucket_name
     })
     "ai-service" = merge(local.base_env, local.redis_env, {
       PORT                  = "8100"

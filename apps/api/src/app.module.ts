@@ -3,7 +3,6 @@ import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
-import { AdminModule } from './admin/admin.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { HttpExceptionFilter } from './common/http-exception.filter.js';
@@ -23,6 +22,7 @@ import { OnboardingModule } from './onboarding/onboarding.module.js';
 import { TemporalModule } from './infrastructure/temporal/temporal.module.js';
 import { PolicyModule } from './policy/policy.module.js';
 import { SecurityModule } from './security/security.module.js';
+import { StaffModule } from './staff/staff.module.js';
 
 const stripQuery = (url: string | undefined): string => (url ?? '').split('?', 1)[0] ?? '';
 
@@ -89,7 +89,7 @@ export class AppModule {
         PolicyModule,
         AuthModule.forRoot(env),
         HealthModule,
-        AdminModule,
+        StaffModule.forRoot(env),
       ],
       providers: [
         // Guard order: rate limit first (cheap), then AuthGuard/PermissionsGuard from AuthModule.

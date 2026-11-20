@@ -14,8 +14,8 @@ if (env.APP_ENV !== 'local' && env.APP_ENV !== 'test') {
   throw new Error(`Refusing to seed when APP_ENV=${env.APP_ENV}`);
 }
 
-// Seeding writes staff role grants, which the RLS-bound runtime role cannot do by design:
-// connect as the migration/owner role when one is configured.
+// Seeding writes notices (no runtime-role grant) and bypasses per-user scoping: connect as the
+// migration/owner role when one is configured.
 const prisma = new PrismaService({
   ...env,
   DATABASE_URL: process.env.MIGRATION_DATABASE_URL ?? env.DATABASE_URL,
@@ -64,15 +64,8 @@ try {
         });
         return user.id;
       }));
-    for (const role of u.roles.filter((r) => r !== 'user')) {
-      await prisma.staffRoleGrant.upsert({
-        where: {
-          userId_role: { userId, role: role as 'support_agent' | 'ops_admin' | 'security_admin' },
-        },
-        create: { userId, role: role as 'support_agent' | 'ops_admin' | 'security_admin' },
-        update: {},
-      });
-    }
+    // Staff access is a separate realm (ADR-0017): consumer seed users never get staff roles.
+    // Create a local staff admin with `pnpm --filter @karen/api staff:bootstrap`.
     process.stdout.write(`seeded ${u.external_subject} -> ${userId}\n`);
   }
 } finally {

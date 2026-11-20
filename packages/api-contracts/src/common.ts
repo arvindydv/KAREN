@@ -14,6 +14,8 @@ export const API_ERROR_CODES = [
   /** Wrong e-mail/password (deliberately not distinguished). */
   'INVALID_CREDENTIALS',
   'FORBIDDEN',
+  /** Staff: a fresh security-key assertion (step-up) is required for this action. */
+  'STEP_UP_REQUIRED',
   /** Authenticated, but the account's status forbids this (pending, locked, suspended…). */
   'ACCOUNT_INACTIVE',
   'NOT_FOUND',

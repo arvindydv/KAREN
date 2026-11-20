@@ -41,7 +41,7 @@ export class IdentityService {
   /**
    * Resolves the caller from a server-verified session: ONE user-scoped transaction checks the
    * session is live (not revoked/expired), the account status allows access, and loads staff
-   * grants. Roles come exclusively from server-side grants — never from token claims.
+   * grants. Consumer principals only ever carry the `user` role (staff realm: ADR-0017).
    * Authentication never creates accounts (ADR-0015).
    */
   async resolvePrincipalForSession(
@@ -54,8 +54,7 @@ export class IdentityService {
       if (!session) return null;
       const user = await tx.user.findUnique({ where: { id: userId }, select: { status: true } });
       if (!user) return null;
-      const grants = await tx.staffRoleGrant.findMany({ where: { userId } });
-      return { session, status: user.status, grants };
+      return { session, status: user.status };
     });
     if (!resolved) {
       this.logger.warn({ reason: 'session_not_live' }, 'Rejected credential');
@@ -71,7 +70,9 @@ export class IdentityService {
         ...(level === 'deletion_pending' ? { nextOptions: ['CANCEL_DELETION'] } : {}),
       });
     }
-    const roles: Role[] = ['user', ...resolved.grants.map((g) => g.role)];
+    // Consumer sessions are ALWAYS just `user`. Staff access lives in the separate staff realm
+    // (ADR-0017); the legacy identity.staff_role_grants table no longer confers anything.
+    const roles: Role[] = ['user'];
     const permissions = [...new Set<Permission>(roles.flatMap((r) => ROLE_PERMISSIONS[r]))];
     return {
       userId,

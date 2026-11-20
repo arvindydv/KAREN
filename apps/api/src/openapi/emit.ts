@@ -14,6 +14,12 @@ const env = loadApiEnv({
   DATABASE_URL: 'postgresql://openapi:openapi@127.0.0.1:1/openapi',
   REDIS_URL: 'redis://127.0.0.1:1/0',
   API_DOCS_ENABLED: 'false',
+  // The published contract must describe EVERY route, including the staff realm, which is
+  // only mounted when enabled. Inert placeholder values: nothing connects during emission.
+  STAFF_AUTH_ENABLED: 'true',
+  STAFF_DATABASE_URL: 'postgresql://openapi-staff:openapi@127.0.0.1:1/openapi',
+  STAFF_WEBAUTHN_RP_ID: 'localhost',
+  STAFF_WEBAUTHN_ORIGINS: 'http://localhost:3001',
 });
 const { createApp, buildOpenApiDocument } = await import('../bootstrap.js');
 const app = await createApp(env, { logger: false });
