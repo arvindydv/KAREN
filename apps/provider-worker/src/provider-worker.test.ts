@@ -161,9 +161,18 @@ describe('provider activities', () => {
 });
 
 describe('webhook endpoint', () => {
-  const setup = () => {
+  const setup = (failFirstAccepts = 0) => {
     const accepted: string[] = [];
-    const sink: InboundEventSink = { accept: async (_p, e) => void accepted.push(e.eventId) };
+    let failures = failFirstAccepts;
+    const sink: InboundEventSink = {
+      accept: async (_p, e) => {
+        if (failures > 0) {
+          failures -= 1;
+          throw new Error('sink unavailable');
+        }
+        accepted.push(e.eventId);
+      },
+    };
     const fixture0 = fixtures.fixtures[0];
     const app = buildServer({
       registry: new ProviderRegistry({ allowSandbox: true }, [
@@ -200,6 +209,18 @@ describe('webhook endpoint', () => {
       expect(res.statusCode).toBe(401);
       expect(accepted).toHaveLength(0);
     }
+  });
+
+  it('a failed hand-off is not swallowed: 503, claim released, the provider retry is processed', async () => {
+    const { app, accepted } = setup(1);
+    const valid = fixtures.fixtures.find((f) => f.expected === 'ACCEPT');
+    if (!valid) throw new Error('fixture missing');
+    const first = await post(app, valid.body, valid.header);
+    expect(first.statusCode).toBe(503);
+    expect(accepted).toHaveLength(0);
+    const retry = await post(app, valid.body, valid.header);
+    expect(retry.statusCode).toBe(202);
+    expect(accepted).toHaveLength(1);
   });
 
   it('acknowledges but does not re-process a replayed event', async () => {
