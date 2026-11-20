@@ -134,11 +134,11 @@
 
 ### F00-01 — Git, branch protection and CI
 
-- [ ] Create GitHub organization/repository/private remote; confirm ownership, CODEOWNERS, contributor access, MFA and recovery admins. — **BLOCKED_EXTERNAL** (no remote; needs owner authorisation — setup steps in report §9)
-- [ ] Push both existing commits and signed/protected release tags; preserve history; confirm clean working tree. — **BLOCKED_EXTERNAL** (9 local commits ready, clean tree; push needs authorisation)
-- [ ] Configure protected `main`: PR required, approvals, no force pushes, mandatory checks, secret scanning and Dependabot/Renovate. — **BLOCKED_EXTERNAL** (GitHub settings; `.github/dependabot.yml` ready; required checks listed in report §9)
+- [ ] Create GitHub organization/repository/private remote; confirm ownership, CODEOWNERS, contributor access, MFA and recovery admins. — **BLOCKED_EXTERNAL** (private repo `arvindydv/KAREN` exists (personal account); org account, CODEOWNERS and MFA/recovery checks pending)
+- [ ] Push both existing commits and signed/protected release tags; preserve history; confirm clean working tree. — **BLOCKED_EXTERNAL** (`100a037` on origin; 10 new commits await push approval)
+- [ ] Configure protected `main`: PR required, approvals, no force pushes, mandatory checks, secret scanning and Dependabot/Renovate. — **BLOCKED_EXTERNAL** (GitHub returns 403: private repo needs GitHub Pro or a paid org plan for branch protection; Dependabot config ready)
 - [x] Pin GitHub Actions and reusable workflows to **commit SHAs**; least-privilege `permissions`, concurrency controls, OIDC deployment roles. — **DONE_LOCAL** (all `uses:` SHA-pinned, deploy hardened; actionlint clean)
-- [ ] Run full `pnpm verify`, Python suite, Playwright, integration Postgres/Redis, mocked evals, SBOM/license/secret scans in hosted CI; upload test/JUnit/coverage artifacts. — **BLOCKED_EXTERNAL** (local prerequisites done: JUnit, CycloneDX SBOM, license gate added; every suite passes locally; hosted run needs remote)
+- [ ] Run full `pnpm verify`, Python suite, Playwright, integration Postgres/Redis, mocked evals, SBOM/license/secret scans in hosted CI; upload test/JUnit/coverage artifacts. — **BLOCKED_EXTERNAL** (hosted run on `100a037`: 13/15 jobs passed; both failures (effect advisory, uv `--project`) fixed locally; JUnit/SBOM/license gate added; green run needs push)
 - [x] Confirm CI runner Node 24, pinned pnpm/Python/uv; lockfile-only installs; reproducible clean clone. — **DONE_LOCAL** (fresh clone of `6173b78`: frozen install, `pnpm verify`, `verify:py`, integration all pass; hosted-runner confirmation via previous item)
 - [ ] Add differential CI only after full checks are established; contract-drift check always required. — **BLOCKED_EXTERNAL** (by definition needs a green hosted-CI baseline first; not locally implementable)
 

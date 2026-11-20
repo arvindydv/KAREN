@@ -1,6 +1,9 @@
 # KAREN — Phase 00 Report: Foundation Completion & External Feasibility
 
-- **Date:** 2026-11-20 (run 2) · **Branch:** `main`, 9 commits, nothing pushed, no remote.
+- **Date:** 2026-11-20 (run 2) · **Branch:** `main`.
+- **Remote:** `origin` is the private repository `arvindydv/KAREN`. You created it and pushed
+  `100a037` before this run.
+- **Local `main` is 10 commits ahead of `origin/main`. Nothing was pushed in this run.**
   The code is at `6173b78`; this report and the roadmap are committed on top of it.
 - **Roadmap:** `karen_phases.md`, section "PHASE 00 — Complete and production-validate the
   foundation". Task statuses are maintained there.
@@ -74,39 +77,39 @@ Of the 31 tasks:
 
 ## 3. Task-by-task status
 
-| #   | Task (short)                                           | Status           | Evidence / remaining                                                                                                                                                                                                                                             |
-| --- | ------------------------------------------------------ | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | GitHub org/repo/remote, CODEOWNERS, MFA                | BLOCKED_EXTERNAL | Steps in §9.1. CODEOWNERS needs real GitHub handles; none have been invented.                                                                                                                                                                                    |
-| 2   | Push commits, signed tags                              | BLOCKED_EXTERNAL | 9 clean, logically grouped commits ready. Gitleaks over the full history: **no leaks**.                                                                                                                                                                          |
-| 3   | Protected `main`, required checks, Dependabot          | BLOCKED_EXTERNAL | `.github/dependabot.yml` is committed. Exact rules are in §9.2.                                                                                                                                                                                                  |
-| 4   | SHA-pinned actions, least privilege, concurrency, OIDC | **DONE_LOCAL**   | All `uses:` are pinned to commit SHAs. The deploy workflow takes inputs through `env:` and has per-target concurrency. actionlint 1.7.7: 0 findings.                                                                                                             |
-| 5   | Hosted CI, SBOM/license/JUnit artifacts                | BLOCKED_EXTERNAL | **Added this run:** JUnit uploads (Vitest per package, pytest), a CycloneDX SBOM (syft v1.57.1, pinned by digest; 1,910 components locally), and a license gate (1,032 production packages, 6 reasoned exceptions). Hosted run needs #1.                         |
-| 6   | Pinned runtimes, lockfile installs, clean clone        | **DONE_LOCAL**   | **Fresh clone of `6173b78`:** `pnpm install --frozen-lockfile`, `pnpm verify`, `uv sync --frozen`, `pnpm verify:py` and `pnpm test:integration` all pass.                                                                                                        |
-| 7   | Differential CI                                        | BLOCKED_EXTERNAL | Was `NOT_STARTED`. The roadmap says to add it only after hosted CI is green, so it cannot be implemented locally.                                                                                                                                                |
-| 8   | Isolated AWS accounts                                  | BLOCKED_EXTERNAL | §9.3.                                                                                                                                                                                                                                                            |
-| 9   | Terraform remote state, plan review                    | BLOCKED_EXTERNAL | `pnpm infra:validate` passes (3 environments × 4 offline tests).                                                                                                                                                                                                 |
-| 10  | Provision VPC/RDS/Redis/WAF/ECS                        | BLOCKED_EXTERNAL | IaC exists.                                                                                                                                                                                                                                                      |
-| 11  | Least-privilege DB roles                               | **DONE_LOCAL**   | `infra/database/roles.sql` and `pnpm db:roles`. **Local dev now runs as the restricted role** (§4.1), and so do the integration tests and the built API image. Not yet applied in AWS.                                                                           |
-| 12  | Backups, PITR, restore drill                           | BLOCKED_EXTERNAL | Needs RDS.                                                                                                                                                                                                                                                       |
-| 13  | Readiness/liveness, controlled degradation             | **DONE_LOCAL**   | Tested outages: Redis, PostgreSQL, and (new) the IdP JWKS endpoint, which returns 503 and retryable instead of 401. Cloud alerts: NOT VERIFIED.                                                                                                                  |
-| 14  | OTel sampling, alerts, p95/p99, DLQ, pool metrics      | IN_PROGRESS      | Done: structured logs, redaction, `user_ref`, correlation IDs. **Local gap:** p95/p99 latency and DB-pool metrics are not emitted yet. Alerts need the cloud.                                                                                                    |
-| 15  | Runbooks                                               | IN_PROGRESS      | **Local gap:** deploy/rollback, model outage, provider outage and webhook failure runbooks. Not written, because this run was limited to editing these two documents. Needs your go-ahead to add files under `docs/runbooks/`.                                   |
-| 16  | Container startup with real credentials                | BLOCKED_EXTERNAL | api, provider-worker and temporal-worker images rebuilt and smoke-tested locally (§10).                                                                                                                                                                          |
-| 17  | Failure simulations                                    | BLOCKED_EXTERNAL | **Local drills all done** (§6). The failed-deployment and rollback drill needs ECS.                                                                                                                                                                              |
-| 18  | Data classification and data-flow map                  | BLOCKED_EXTERNAL | §8 has the field classification and data-flow map. The upstream AI-processor list depends on the live gateway routing plus legal review.                                                                                                                         |
-| 19  | Retention policy, DPDP legal review                    | BLOCKED_EXTERNAL | Needs counsel.                                                                                                                                                                                                                                                   |
-| 20  | RLS with negative tests                                | **DONE_LOCAL**   | `rls.int.test.ts`, 17 tests.                                                                                                                                                                                                                                     |
-| 21  | Headers, CSP, CORS, CSRF, SSRF, scanning, egress       | IN_PROGRESS      | Done: API helmet/CORS, web and admin CSP/HSTS, and (new) **`safeFetch`** in `@karen/domain/node`, with 35 tests. Remaining: CSRF (applies once cookie sessions exist in Phase 01), attachment scanning (once uploads exist in Phase 08), egress filtering (AWS). |
-| 22  | Threat model (9 named scenarios)                       | **DONE_LOCAL**   | §7: every scenario has its mitigation and evidence.                                                                                                                                                                                                              |
-| 23  | Audit semantics                                        | **DONE_LOCAL**   | Columns `policy_decision` and `reason_code`; DENIED events must carry both.                                                                                                                                                                                      |
-| 24  | Synthetic fixtures only                                | **DONE_LOCAL**   | `@karen/test-fixtures`; the seed refuses to run outside local/test.                                                                                                                                                                                              |
-| 25  | ADR-0015 trial                                         | BLOCKED_EXTERNAL | Desk decision in §5. Trial steps in §9.4.                                                                                                                                                                                                                        |
-| 26  | Issuer/audience/JWKS, token lifecycle                  | BLOCKED_EXTERNAL | **Added this run:** the boot rules described in §4.2. The real values need the trial.                                                                                                                                                                            |
-| 27  | Vercel AI Gateway account and budgets                  | BLOCKED_EXTERNAL | §9.5.                                                                                                                                                                                                                                                            |
-| 28  | Live gateway test from Mumbai                          | BLOCKED_EXTERNAL | §9.6. **No paid calls made.**                                                                                                                                                                                                                                    |
-| 29  | Provider capability registry                           | **DONE_LOCAL**   | Schema plus registry enforcement, tested.                                                                                                                                                                                                                        |
-| 30  | OAuth verification, LiveKit, partner outreach          | BLOCKED_EXTERNAL | Business processes.                                                                                                                                                                                                                                              |
-| 31  | Observability / feature-flag / email vendors           | IN_PROGRESS      | Was `NOT_STARTED`. A recommendation is in §8.3. It needs your sign-off.                                                                                                                                                                                          |
+| #   | Task (short)                                           | Status           | Evidence / remaining                                                                                                                                                                                                                                                                                                  |
+| --- | ------------------------------------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | GitHub org/repo/remote, CODEOWNERS, MFA                | BLOCKED_EXTERNAL | **Private repo exists** (`arvindydv/KAREN`, personal account, private, verified with `gh repo view`). Still open: an organisation account (recommended), CODEOWNERS with real handles, and checks on contributor MFA and recovery admins.                                                                             |
+| 2   | Push commits, signed tags                              | BLOCKED_EXTERNAL | `100a037` is already on origin (you pushed it). **10 commits wait for your push approval.** Gitleaks over the full history: no leaks. Release tags are not created.                                                                                                                                                   |
+| 3   | Protected `main`, required checks, Dependabot          | BLOCKED_EXTERNAL | **GitHub returns 403 for branch protection** on this repository: "Upgrade to GitHub Pro or make this repository public". Branch protection on a private repo needs a paid plan (GitHub Pro, or an organisation on a paid plan). That is your purchase decision. `.github/dependabot.yml` is ready; rules are in §9.2. |
+| 4   | SHA-pinned actions, least privilege, concurrency, OIDC | **DONE_LOCAL**   | All `uses:` are pinned to commit SHAs. The deploy workflow takes inputs through `env:` and has per-target concurrency. actionlint 1.7.7: 0 findings.                                                                                                                                                                  |
+| 5   | Hosted CI, SBOM/license/JUnit artifacts                | BLOCKED_EXTERNAL | **First hosted run** (run 44687238679, on `100a037`): **13/15 jobs passed**. The 2 failures were found and fixed locally (§4.1 S6). Also added this run: JUnit uploads, a CycloneDX SBOM (syft, pinned by digest) and a license gate. A green hosted run needs the 10 commits pushed.                                 |
+| 6   | Pinned runtimes, lockfile installs, clean clone        | **DONE_LOCAL**   | **Fresh clone of `6173b78`:** `pnpm install --frozen-lockfile`, `pnpm verify`, `uv sync --frozen`, `pnpm verify:py` and `pnpm test:integration` all pass.                                                                                                                                                             |
+| 7   | Differential CI                                        | BLOCKED_EXTERNAL | Was `NOT_STARTED`. The roadmap says to add it only after hosted CI is green, so it cannot be implemented locally.                                                                                                                                                                                                     |
+| 8   | Isolated AWS accounts                                  | BLOCKED_EXTERNAL | §9.3.                                                                                                                                                                                                                                                                                                                 |
+| 9   | Terraform remote state, plan review                    | BLOCKED_EXTERNAL | `pnpm infra:validate` passes (3 environments × 4 offline tests).                                                                                                                                                                                                                                                      |
+| 10  | Provision VPC/RDS/Redis/WAF/ECS                        | BLOCKED_EXTERNAL | IaC exists.                                                                                                                                                                                                                                                                                                           |
+| 11  | Least-privilege DB roles                               | **DONE_LOCAL**   | `infra/database/roles.sql` and `pnpm db:roles`. **Local dev now runs as the restricted role** (§4.1), and so do the integration tests and the built API image. Not yet applied in AWS.                                                                                                                                |
+| 12  | Backups, PITR, restore drill                           | BLOCKED_EXTERNAL | Needs RDS.                                                                                                                                                                                                                                                                                                            |
+| 13  | Readiness/liveness, controlled degradation             | **DONE_LOCAL**   | Tested outages: Redis, PostgreSQL, and (new) the IdP JWKS endpoint, which returns 503 and retryable instead of 401. Cloud alerts: NOT VERIFIED.                                                                                                                                                                       |
+| 14  | OTel sampling, alerts, p95/p99, DLQ, pool metrics      | IN_PROGRESS      | Done: structured logs, redaction, `user_ref`, correlation IDs. **Local gap:** p95/p99 latency and DB-pool metrics are not emitted yet. Alerts need the cloud.                                                                                                                                                         |
+| 15  | Runbooks                                               | IN_PROGRESS      | **Local gap:** deploy/rollback, model outage, provider outage and webhook failure runbooks. Not written, because this run was limited to editing these two documents. Needs your go-ahead to add files under `docs/runbooks/`.                                                                                        |
+| 16  | Container startup with real credentials                | BLOCKED_EXTERNAL | api, provider-worker and temporal-worker images rebuilt and smoke-tested locally (§10).                                                                                                                                                                                                                               |
+| 17  | Failure simulations                                    | BLOCKED_EXTERNAL | **Local drills all done** (§6). The failed-deployment and rollback drill needs ECS.                                                                                                                                                                                                                                   |
+| 18  | Data classification and data-flow map                  | BLOCKED_EXTERNAL | §8 has the field classification and data-flow map. The upstream AI-processor list depends on the live gateway routing plus legal review.                                                                                                                                                                              |
+| 19  | Retention policy, DPDP legal review                    | BLOCKED_EXTERNAL | Needs counsel.                                                                                                                                                                                                                                                                                                        |
+| 20  | RLS with negative tests                                | **DONE_LOCAL**   | `rls.int.test.ts`, 17 tests.                                                                                                                                                                                                                                                                                          |
+| 21  | Headers, CSP, CORS, CSRF, SSRF, scanning, egress       | IN_PROGRESS      | Done: API helmet/CORS, web and admin CSP/HSTS, and (new) **`safeFetch`** in `@karen/domain/node`, with 35 tests. Remaining: CSRF (applies once cookie sessions exist in Phase 01), attachment scanning (once uploads exist in Phase 08), egress filtering (AWS).                                                      |
+| 22  | Threat model (9 named scenarios)                       | **DONE_LOCAL**   | §7: every scenario has its mitigation and evidence.                                                                                                                                                                                                                                                                   |
+| 23  | Audit semantics                                        | **DONE_LOCAL**   | Columns `policy_decision` and `reason_code`; DENIED events must carry both.                                                                                                                                                                                                                                           |
+| 24  | Synthetic fixtures only                                | **DONE_LOCAL**   | `@karen/test-fixtures`; the seed refuses to run outside local/test.                                                                                                                                                                                                                                                   |
+| 25  | ADR-0015 trial                                         | BLOCKED_EXTERNAL | Desk decision in §5. Trial steps in §9.4.                                                                                                                                                                                                                                                                             |
+| 26  | Issuer/audience/JWKS, token lifecycle                  | BLOCKED_EXTERNAL | **Added this run:** the boot rules described in §4.2. The real values need the trial.                                                                                                                                                                                                                                 |
+| 27  | Vercel AI Gateway account and budgets                  | BLOCKED_EXTERNAL | §9.5.                                                                                                                                                                                                                                                                                                                 |
+| 28  | Live gateway test from Mumbai                          | BLOCKED_EXTERNAL | §9.6. **No paid calls made.**                                                                                                                                                                                                                                                                                         |
+| 29  | Provider capability registry                           | **DONE_LOCAL**   | Schema plus registry enforcement, tested.                                                                                                                                                                                                                                                                             |
+| 30  | OAuth verification, LiveKit, partner outreach          | BLOCKED_EXTERNAL | Business processes.                                                                                                                                                                                                                                                                                                   |
+| 31  | Observability / feature-flag / email vendors           | IN_PROGRESS      | Was `NOT_STARTED`. A recommendation is in §8.3. It needs your sign-off.                                                                                                                                                                                                                                               |
 
 ## 4. What changed
 
@@ -154,6 +157,15 @@ Of the 31 tasks:
 - **#22:** threat scenarios (§7).
 - **#18:** data-flow map (§8.2).
 - **#31:** vendor recommendation (§8.3).
+
+**Hosted CI findings**
+
+The run on `100a037` was read-only inspected with `gh run view`.
+
+| #   | Failing job     | Cause                                                                                                                                                                                                                                                           | Status                                                                                                                          |
+| --- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| S6  | **Integration** | CI's unpinned `setup-uv` installed uv **0.13.9**. That version resolves `--project` relative to `--directory`, so `uv run --project apps/ai-service --directory apps/ai-service` failed with "Project directory does not exist". Locally (uv 0.9.10) it worked. | Fixed in `a78545a`: scripts use `--directory` only (checked with both uv 0.9.10 and 0.13.9 via `uvx`), and CI pins uv `0.9.10`. |
+| —   | **Security**    | GHSA-7589-6fvf-x4pw, the `effect` advisory.                                                                                                                                                                                                                     | Already fixed by the override in `acf3481`.                                                                                     |
 
 **Git (Step 2)**
 
@@ -379,16 +391,25 @@ Rules for everything in this section:
 ### 9.1 Private GitHub repository and hosted CI
 
 ```bash
-gh auth status                                   # an org admin account with MFA enabled
-gh repo create <org>/karen --private --source=. --remote=origin --description "KAREN"
-git push -u origin main                          # 9 commits; history preserved
-gh run watch                                     # first CI run; record results in this report
+# The private repo and origin already exist (arvindydv/KAREN). Only the push is pending:
+git log --oneline origin/main..main              # review the 10 commits
+git push origin main                             # needs your approval; fast-forward, history preserved
+gh run watch -R arvindydv/KAREN                  # expect all jobs green; record the result here
 ```
 
 Then add `.github/CODEOWNERS` with real handles, for example `* @<org>/core`, and
 `/infra/ @<org>/platform`.
 
 ### 9.2 Branch protection, environments and secrets
+
+**Prerequisite (purchase decision).** GitHub refuses branch protection on this private personal
+repository unless the account is on GitHub Pro. Choose one:
+
+- GitHub Pro on the personal account; or
+- **recommended:** transfer the repo to an organisation on a paid plan, which also gives team
+  CODEOWNERS and organisation-wide MFA enforcement.
+
+Until then, `main` is unprotected. Every change must still go through a PR by convention.
 
 1. **Protect `main`:**
    - Require a pull request with ≥1 approving review, plus CODEOWNERS review.
@@ -546,6 +567,7 @@ All in `karen-dev`, `ap-south-1`.
 | `pnpm audit --audit-level high --prod`                                                            | **PASS** (0 high; 4 moderate, accepted dev tooling)                                                                                   |
 | `pnpm check:licenses`                                                                             | **PASS** (1,032 packages, 6 reasoned exceptions)                                                                                      |
 | OSV scanner v2.2.4                                                                                | **PASS** (no unignored issues)                                                                                                        |
+| Hosted CI run 44687238679 (`100a037`, read-only inspection)                                       | 13/15 jobs passed. Security and Integration failed; both are fixed locally (S6).                                                      |
 | gitleaks: full git history                                                                        | **PASS** (no leaks)                                                                                                                   |
 | syft SBOM (local)                                                                                 | **PASS** (CycloneDX 1.7, 1,910 components)                                                                                            |
 | Docker builds: api, provider-worker, temporal-worker; smoke tests                                 | **PASS**. The API image runs as the restricted role (`/v1/me` 200, 0 secrets in logs). provider-worker ready with the kill switch on. |
@@ -553,7 +575,7 @@ All in `karen-dev`, `ap-south-1`.
 
 **Not executed:**
 
-- Hosted GitHub CI.
+- A hosted CI run of the new commits (needs push approval). The one hosted run that exists is for `100a037`.
 - `terraform plan/apply`.
 - Any Cognito or Vercel request (**no paid calls**).
 - Rebuilds of the web, admin, ai-service and voice-agent images (their Dockerfiles and
@@ -580,8 +602,8 @@ All in `karen-dev`, `ap-south-1`.
 
 **Gate 00, criterion by criterion:**
 
-1. **Clean clone reproduces the tests:** ✅ locally. ⏳ Hosted CI still to confirm.
-2. **GitHub CI and deployed staging pass smoke checks:** ❌ No remote and no AWS environment yet.
+1. **Clean clone reproduces the tests:** ✅ locally. ⏳ Hosted: 13/15 jobs passed on `100a037`; both failures are fixed but not yet pushed.
+2. **GitHub CI and deployed staging pass smoke checks:** ❌ CI needs the push. Staging needs AWS. Branch protection needs a paid GitHub plan.
 3. **User data access isolated:** ✅ locally (RLS and restricted role). ⏳ Still to apply in RDS.
 4. **Real IdP and gateway trials done:** ❌ Needs Cognito and Vercel accounts.
 5. **On-call rollback rehearsed:** ❌ Needs ECS. The deploy/rollback runbook is also missing (#15).
@@ -591,7 +613,9 @@ All in `karen-dev`, `ap-south-1`.
 
 **Next action:**
 
-1. **Approve §9.1–9.2:** create the repo, push, protect `main` and get the first hosted CI run.
+1. **Approve §9.1–9.2:**
+   - Approve pushing the 10 commits, so hosted CI should go green.
+   - Decide on the GitHub plan so branch protection can be turned on.
 2. **In parallel, approve §9.3–9.4:** the `karen-dev` account and the Cognito trial.
 3. **Then §9.5–9.6:** the gateway key and capped smoke tests.
 
