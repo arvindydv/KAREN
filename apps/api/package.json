@@ -22,7 +22,8 @@
     "db:reset": "prisma migrate reset",
     "openapi:generate": "prisma generate && pnpm build && node --env-file-if-exists=.env dist/openapi/emit.js ../../packages/api-contracts/openapi/karen-api.v1.json && pnpm --filter @karen/api-contracts generate:types",
     "mail:smoke": "node --env-file-if-exists=.env scripts/mail-smoke.mjs",
-    "staff:bootstrap": "pnpm build && node --env-file-if-exists=.env dist/staff/bootstrap.js"
+    "staff:bootstrap": "pnpm build && node --env-file-if-exists=.env dist/staff/bootstrap.js",
+    "account:status": "pnpm build && node --env-file-if-exists=.env dist/identity/account-status-cli.js"
   },
   "dependencies": {
     "@fastify/helmet": "13.2.0",

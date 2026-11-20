@@ -1,6 +1,7 @@
 import { createHmac } from 'node:crypto';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ApiError } from '../common/api-error.js';
+import { securityEvent } from '../common/security-metrics.js';
 import { API_ENV } from '../config/config.module.js';
 import type { ApiEnv } from '../config/env.js';
 import { RedisService } from '../infrastructure/redis/redis.service.js';
@@ -49,6 +50,7 @@ export class EmailSendBudget {
     }
     if (count > this.limit) {
       this.logger.warn({ budget: 'email_per_address' }, 'E-mail budget exhausted for an address');
+      securityEvent('karen.auth.rate_limited', { limiter: 'email_per_address' });
       return false;
     }
     return true;
