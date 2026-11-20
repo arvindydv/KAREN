@@ -17,16 +17,19 @@ export class ConsentService {
     scope = '*',
     now = new Date(),
   ): Promise<boolean> {
-    const grant = await this.prisma.consentGrant.findFirst({
-      where: {
-        userId,
-        purpose,
-        status: 'ACTIVE',
-        scope: { in: scope === '*' ? ['*'] : ['*', scope] },
-        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-      },
-      select: { id: true },
-    });
+    // RLS scope + explicit userId filter: two independent layers must agree.
+    const grant = await this.prisma.withUserScope(userId, (tx) =>
+      tx.consentGrant.findFirst({
+        where: {
+          userId,
+          purpose,
+          status: 'ACTIVE',
+          scope: { in: scope === '*' ? ['*'] : ['*', scope] },
+          OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+        },
+        select: { id: true },
+      }),
+    );
     return grant !== null;
   }
 }

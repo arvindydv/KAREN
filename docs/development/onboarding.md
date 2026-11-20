@@ -16,7 +16,8 @@ pnpm setup:env                   # creates apps/*/.env from .env.example (never 
 uv sync --project apps/ai-service
 uv sync --project apps/voice-agent   # optional
 pnpm infra:up                    # Postgres+pgvector, Redis, Temporal (waits for health)
-pnpm db:migrate:deploy           # apply migrations
+pnpm db:migrate:deploy           # apply migrations (as the owner role, MIGRATION_DATABASE_URL)
+pnpm db:roles                    # least-privilege grants + local runtime login role (RLS-bound)
 pnpm db:seed                     # synthetic users (dev|asha-0001, dev|rohan-0002, dev|ops-0003)
 pnpm dev:core                    # api :4100, ai-service :8100, temporal-worker, provider-worker
 ```

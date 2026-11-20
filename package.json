@@ -27,6 +27,7 @@
     "db:migrate:deploy": "pnpm --filter @karen/api db:migrate:deploy",
     "db:migrate:status": "pnpm --filter @karen/api db:migrate:status",
     "db:migrate:diff": "pnpm --filter @karen/api db:migrate:diff",
+    "db:roles": "pnpm --filter @karen/api db:roles",
     "db:seed": "pnpm --filter @karen/api db:seed",
     "db:reset": "pnpm --filter @karen/api db:reset",
     "lint": "turbo run lint",
@@ -44,7 +45,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:env-public": "node scripts/check-public-env.mjs",
-    "verify": "pnpm format:check && pnpm check:env-public && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "check:migrations": "node scripts/check-migrations.mjs",
+    "check:licenses": "node scripts/check-licenses.mjs",
+    "verify": "pnpm format:check && pnpm check:env-public && pnpm check:migrations && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "setup:env": "node scripts/setup-env.mjs",
     "verify:py": "pnpm lint:py && pnpm typecheck:py && pnpm test:py"
   },

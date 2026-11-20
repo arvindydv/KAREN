@@ -1,10 +1,11 @@
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
+import { SignJWT, generateKeyPair } from 'jose';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/bootstrap.js';
 import { ConsentService } from '../src/consent/consent.service.js';
 import { PrismaService } from '../src/infrastructure/database/prisma.service.js';
-import { testEnv } from './env.js';
+import { TEST_OWNER_DATABASE_URL, testEnv } from './env.js';
 
 async function start(overrides: Record<string, string> = {}) {
   const app = await createApp(testEnv(overrides), { logger: false });
@@ -17,16 +18,19 @@ const unique = () => `dev|it-${Date.now().toString(36)}-${Math.random().toString
 
 describe('API (integration: real PostgreSQL + Redis)', () => {
   let app: NestFastifyApplication;
-  let prisma: PrismaService;
+  // Fixtures/assertions use the owner role; the API itself runs as the RLS-bound runtime role.
+  const prisma = new PrismaService(testEnv({ DATABASE_URL: TEST_OWNER_DATABASE_URL }));
   const token = async (subject: string) =>
     (await request(app.getHttpServer()).post('/dev/auth/token').send({ subject }).expect(200)).body
       .access_token as string;
 
   beforeAll(async () => {
     app = await start();
-    prisma = app.get(PrismaService);
   });
-  afterAll(async () => app.close());
+  afterAll(async () => {
+    await app.close();
+    await prisma.$disconnect();
+  });
 
   it('GET /health/live is always 200 and carries a request id', async () => {
     const res = await request(app.getHttpServer()).get('/health/live').expect(200);
@@ -95,7 +99,11 @@ describe('API (integration: real PostgreSQL + Redis)', () => {
     const audit = await prisma.auditEvent.findFirst({
       where: { actorRef: me.body.id as string, action: 'authz.permission_denied' },
     });
-    expect(audit?.outcome).toBe('DENIED');
+    expect(audit).toMatchObject({
+      outcome: 'DENIED',
+      policyDecision: 'rbac:v1',
+      reasonCode: 'missing_permission',
+    });
 
     await prisma.staffRoleGrant.create({
       data: { userId: me.body.id as string, role: 'support_agent' },
@@ -203,6 +211,33 @@ describe('API readiness when a required dependency is down', () => {
   });
 });
 
+describe('API behaviour when PostgreSQL is unreachable', () => {
+  it('boots, stays live, reports not-ready and fails requests safely (no hang, no leak)', async () => {
+    const app = await start({
+      DATABASE_URL: 'postgresql://karen_api_local:x@127.0.0.1:1/karen_test',
+    });
+    try {
+      await request(app.getHttpServer()).get('/health/live').expect(200);
+      const ready = await request(app.getHttpServer()).get('/health/ready').expect(503);
+      expect(ready.body.checks.database.status).toBe('down');
+      const t = (
+        await request(app.getHttpServer())
+          .post('/dev/auth/token')
+          .send({ subject: 'dev|db-down-check' })
+          .expect(200)
+      ).body.access_token as string;
+      const res = await request(app.getHttpServer())
+        .get('/v1/me')
+        .set('authorization', `Bearer ${t}`);
+      expect(res.status).toBeGreaterThanOrEqual(500);
+      expect(JSON.stringify(res.body)).not.toMatch(/127\.0\.0\.1|ECONNREFUSED|prisma/i);
+      expect(res.body.error.correlation_id).toBeTruthy();
+    } finally {
+      await app.close();
+    }
+  });
+});
+
 describe('local-dev auth isolation', () => {
   it('the dev token route does not exist in oidc mode', async () => {
     const app = await start({
@@ -218,6 +253,35 @@ describe('local-dev auth isolation', () => {
         .send({ subject: 'dev|x-123' });
       expect([401, 404]).toContain(res.status);
       expect(res.status).not.toBe(200);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('denies with a retryable 503 (not a sign-out 401) when the IdP JWKS is unreachable', async () => {
+    const app = await start({
+      AUTH_MODE: 'oidc',
+      // Same origin as the issuer (config rule); nothing listens on port 1.
+      OIDC_ISSUER_URL: 'http://127.0.0.1:1/',
+      OIDC_AUDIENCE: 'karen-api',
+      OIDC_JWKS_URL: 'http://127.0.0.1:1/.well-known/jwks.json',
+      OIDC_ALLOWED_ALGORITHMS: 'RS256',
+    });
+    try {
+      const { privateKey } = await generateKeyPair('RS256');
+      const token = await new SignJWT({})
+        .setProtectedHeader({ alg: 'RS256', kid: 'k1' })
+        .setIssuer('http://127.0.0.1:1/')
+        .setAudience('karen-api')
+        .setSubject('someone')
+        .setIssuedAt()
+        .setExpirationTime('5m')
+        .sign(privateKey);
+      const res = await request(app.getHttpServer())
+        .get('/v1/me')
+        .set('authorization', `Bearer ${token}`)
+        .expect(503);
+      expect(res.body.error).toMatchObject({ code: 'DEPENDENCY_UNAVAILABLE', retryable: true });
     } finally {
       await app.close();
     }

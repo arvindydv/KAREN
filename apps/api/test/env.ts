@@ -1,7 +1,13 @@
 import { loadApiEnv, type ApiEnv } from '../src/config/env.js';
 
+/** Owner/migration role: applies migrations and seeds fixtures directly (bypasses RLS). */
+export const TEST_OWNER_DATABASE_URL =
+  process.env.TEST_OWNER_DATABASE_URL ??
+  'postgresql://karen:karen_local_only@localhost:5442/karen_test';
+/** Least-privilege runtime role (infra/database/roles.sql) — what the API itself uses. */
 export const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ?? 'postgresql://karen:karen_local_only@localhost:5442/karen_test';
+  process.env.TEST_DATABASE_URL ??
+  'postgresql://karen_api_local:karen_api_local_only@localhost:5442/karen_test';
 export const TEST_REDIS_URL = process.env.TEST_REDIS_URL ?? 'redis://localhost:6390/1';
 
 export const testEnv = (overrides: Record<string, string> = {}): ApiEnv =>
