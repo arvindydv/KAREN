@@ -10,6 +10,7 @@ import { pseudonymizeUserId } from '@karen/observability';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service.js';
 import { ApiError } from '../common/api-error.js';
+import { securityEvent } from '../common/security-metrics.js';
 import { API_ENV } from '../config/config.module.js';
 import type { ApiEnv } from '../config/env.js';
 import { Prisma } from '../generated/prisma/client.js';
@@ -313,6 +314,7 @@ export class AccountService {
     } catch (error) {
       if (error instanceof GateSaturatedError) {
         this.logger.warn({ reason: error.reason }, 'Password hashing capacity exhausted');
+        securityEvent('karen.auth.hash_saturated', { reason: error.reason });
         throw new ApiError(
           'DEPENDENCY_UNAVAILABLE',
           'Sign-in is busy right now. Please retry in a moment.',

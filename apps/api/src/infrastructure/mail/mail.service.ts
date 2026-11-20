@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger, type OnModuleDestroy } from '@nestjs/common';
+import { securityEvent } from '../../common/security-metrics.js';
 import { PermanentMailError, type MailTransport, type OutgoingMail } from './mail-transport.js';
 
 export const MAIL_TRANSPORT = Symbol('MAIL_TRANSPORT');
@@ -48,6 +49,7 @@ export class MailService implements OnModuleDestroy {
     for (let attempt = 0; ; attempt++) {
       try {
         const { messageId } = await this.transport.send(message);
+        securityEvent('karen.mail.delivery', { template: message.template, outcome: 'sent' });
         this.logger.log(
           {
             template: message.template,
@@ -62,6 +64,10 @@ export class MailService implements OnModuleDestroy {
         const permanent = error instanceof PermanentMailError;
         const delay = RETRY_DELAYS_MS[attempt];
         if (permanent || delay === undefined) {
+          securityEvent('karen.mail.delivery', {
+            template: message.template,
+            outcome: permanent ? 'rejected' : 'failed',
+          });
           this.logger.error(
             {
               template: message.template,

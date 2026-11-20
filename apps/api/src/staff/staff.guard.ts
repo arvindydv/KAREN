@@ -12,6 +12,7 @@ import { Reflector } from '@nestjs/core';
 import type { FastifyRequest } from 'fastify';
 import { AuditService } from '../audit/audit.service.js';
 import { ApiError } from '../common/api-error.js';
+import { securityEvent } from '../common/security-metrics.js';
 import { API_ENV } from '../config/config.module.js';
 import type { ApiEnv } from '../config/env.js';
 import { StaffAuthService, type StaffPrincipal } from './staff-auth.service.js';
@@ -95,6 +96,7 @@ export class StaffAuthGuard implements CanActivate {
   }
 
   private deny(p: StaffPrincipal, route: string, reason: string, metadata: Record<string, string>) {
+    securityEvent('karen.staff.authz_denied', { reason });
     return this.audit.recordBestEffort({
       actorType: 'STAFF',
       actorRef: p.staffId,

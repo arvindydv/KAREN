@@ -66,4 +66,27 @@ describe('API metrics (integration)', () => {
       Number((await metric('db.client.connection.pending_requests'))?.dataPoints[0]?.value),
     ).toBe(0);
   });
+
+  it('counts security events with a fixed, PII-free label vocabulary', async () => {
+    const email = `metrics.${Date.now().toString(36)}@example.test`;
+    await request(app.getHttpServer())
+      .post('/v1/auth/login')
+      .send({
+        email,
+        password: 'not a real passphrase at all',
+        client: 'web',
+        device: { installation_id: '6f1c2b9e-0000-4000-8000-0000000000aa' },
+      })
+      .expect(401);
+    const login = (await metric('karen.auth.login'))?.dataPoints ?? [];
+    const invalid = login.find((p) => p.attributes.outcome === 'invalid_credentials');
+    expect(Number(invalid?.value)).toBeGreaterThanOrEqual(1);
+    const everything = JSON.stringify(
+      (await mem.collect()).scopeMetrics.flatMap((s) =>
+        s.metrics.flatMap((m) => m.dataPoints.map((d) => d.attributes)),
+      ),
+    );
+    expect(everything).not.toContain(email);
+    expect(everything).not.toContain('@');
+  });
 });

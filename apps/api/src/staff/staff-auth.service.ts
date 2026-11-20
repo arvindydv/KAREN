@@ -20,6 +20,7 @@ import {
 } from '@simplewebauthn/server';
 import { AuditService } from '../audit/audit.service.js';
 import { ApiError } from '../common/api-error.js';
+import { securityEvent } from '../common/security-metrics.js';
 import { API_ENV } from '../config/config.module.js';
 import type { ApiEnv } from '../config/env.js';
 import type { PrismaService } from '../infrastructure/database/prisma.service.js';
@@ -250,6 +251,7 @@ export class StaffAuthService {
         })
       : null;
     const fail = async (reason: string) => {
+      securityEvent('karen.staff.login', { outcome: reason });
       await this.audit.recordBestEffort({
         actorType: 'STAFF',
         actorRef: account?.id ?? 'unknown',
@@ -313,6 +315,7 @@ export class StaffAuthService {
         tx,
       );
     });
+    securityEvent('karen.staff.login', { outcome: 'success' });
     const principal = await this.resolve(token.token);
     if (!principal) throw new Error('freshly created staff session did not resolve');
     return { session_token: token.token, me: this.toMe(principal) };
@@ -489,6 +492,7 @@ export class StaffAuthService {
         { reason: (error as Error).message.slice(0, 120) },
         'Staff assertion rejected',
       );
+      securityEvent('karen.staff.login', { outcome: 'assertion_invalid' });
       await this.audit.recordBestEffort({
         actorType: 'STAFF',
         actorRef: state.staffId,

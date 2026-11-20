@@ -13,6 +13,7 @@ import {
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service.js';
 import { ApiError } from '../common/api-error.js';
+import { securityEvent } from '../common/security-metrics.js';
 import { API_ENV } from '../config/config.module.js';
 import type { ApiEnv } from '../config/env.js';
 import type { DataRightsRequest } from '../generated/prisma/client.js';
@@ -281,6 +282,7 @@ export class DataRightsService {
     const outcome = row?.outcome;
     if (!outcome) throw new Error('erase_user returned no outcome');
     if (outcome === 'completed' && located.status === 'scheduled') {
+      securityEvent('karen.data_rights.event', { kind: 'deletion', event: 'completed' });
       await this.audit.record({
         actorType: 'SYSTEM',
         actorRef: 'temporal:accountDeletionWorkflow',
@@ -492,6 +494,11 @@ export class DataRightsService {
   }
 
   private auditRequest(tx: TransactionClient, userId: string, action: string, id: string) {
+    const [, kind, event] = action.split('.');
+    securityEvent('karen.data_rights.event', {
+      kind: kind ?? 'unknown',
+      event: event ?? 'unknown',
+    });
     return this.audit.record(
       {
         actorType: 'USER',
@@ -506,6 +513,11 @@ export class DataRightsService {
   }
 
   private auditSystem(tx: TransactionClient, action: string, id: string) {
+    const [, kind, event] = action.split('.');
+    securityEvent('karen.data_rights.event', {
+      kind: kind ?? 'unknown',
+      event: event ?? 'unknown',
+    });
     return this.audit.record(
       {
         actorType: 'SYSTEM',
