@@ -93,3 +93,18 @@ variable "targets" {
     error_message = "Listener rule priorities must be unique."
   }
 }
+
+variable "blocked_path_patterns" {
+  description = <<-EOT
+    Paths answered with 404 on EVERY host before any forward rule (defence in depth): service-to-
+    service routes such as the API's /internal/* data-rights steps are never public. The API
+    authenticates them itself (signed requests); this keeps them off the internet entirely.
+  EOT
+  type        = list(string)
+  default     = ["/internal/*"]
+
+  validation {
+    condition     = length(var.blocked_path_patterns) <= 5
+    error_message = "At most 5 blocked path patterns (ALB condition limit)."
+  }
+}

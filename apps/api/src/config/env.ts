@@ -10,6 +10,7 @@ import {
   port,
   redisEnv,
   requiredWhenDeployed,
+  temporalEnv,
   resolveRedisUrl,
 } from '@karen/config';
 import { z } from 'zod';
@@ -32,6 +33,7 @@ export const apiEnvShape = {
   ...redisEnv,
   ...observabilityEnv,
   ...internalAuthEnv,
+  ...temporalEnv,
   API_PORT: port(4100),
   API_PUBLIC_BASE_URL: z.string().url().default('http://localhost:4100'),
   API_CORS_ALLOWED_ORIGINS: csv,
@@ -113,6 +115,21 @@ export const apiEnvShape = {
   ALLOW_DRAFT_NOTICES: booleanFlag(false),
   /** HMAC key for consent-receipt MACs (≥ 32 chars). Required when deployed. */
   CONSENT_RECEIPT_KEY: optionalString,
+  /**
+   * How data-rights workflows run (M7, ADR-0020). `temporal` (always, when deployed) starts
+   * durable workflows; `manual` (local/test only) records the request and leaves each step to
+   * be triggered through the signed internal endpoints (tests, or a developer without a worker).
+   */
+  DATA_RIGHTS_DISPATCH: z.enum(['temporal', 'manual']).default('temporal'),
+  /** Account-deletion cancellation window. Default 7 days — PENDING LEGAL REVIEW. */
+  DATA_DELETION_GRACE_SECONDS: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(90 * 86_400)
+    .default(604_800),
+  /** How long a ready export can be downloaded. */
+  DATA_EXPORT_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(168),
   AI_SERVICE_URL: z.string().url().default('http://localhost:8100'),
   KAREN_EXECUTION_PAUSED: booleanFlag(false),
 };
@@ -166,6 +183,14 @@ export function loadApiEnv(source: Record<string, string | undefined> = process.
       requiredWhenDeployed('PASSWORD_PEPPER_CURRENT_ID'),
       requiredWhenDeployed('OTP_HMAC_KEY'),
       requiredWhenDeployed('CONSENT_RECEIPT_KEY'),
+      (env) =>
+        isDeployedEnv(env.APP_ENV) && env.DATA_RIGHTS_DISPATCH !== 'temporal'
+          ? 'DATA_RIGHTS_DISPATCH must be temporal when deployed'
+          : undefined,
+      (env) =>
+        isDeployedEnv(env.APP_ENV) && env.DATA_DELETION_GRACE_SECONDS < 86_400
+          ? 'DATA_DELETION_GRACE_SECONDS must be at least one day when deployed'
+          : undefined,
       (env) =>
         env.CONSENT_RECEIPT_KEY !== undefined && env.CONSENT_RECEIPT_KEY.length < 32
           ? 'CONSENT_RECEIPT_KEY must be at least 32 characters'

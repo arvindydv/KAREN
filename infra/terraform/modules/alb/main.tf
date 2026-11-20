@@ -79,6 +79,30 @@ resource "aws_lb_listener" "https" {
   }
 }
 
+# Highest priority: internal service routes never leave the VPC through the public ALB.
+resource "aws_lb_listener_rule" "blocked_paths" {
+  count = length(var.blocked_path_patterns) > 0 ? 1 : 0
+
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 1
+
+  action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Not Found"
+      status_code  = "404"
+    }
+  }
+
+  condition {
+    path_pattern {
+      values = var.blocked_path_patterns
+    }
+  }
+}
+
 resource "aws_lb_listener_rule" "this" {
   for_each = var.targets
 

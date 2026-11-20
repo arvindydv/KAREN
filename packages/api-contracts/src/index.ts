@@ -3,6 +3,7 @@ export * from './auth.js';
 export * from './profile.js';
 export * from './onboarding.js';
 export * from './consent.js';
+export * from './data-rights.js';
 export * from './health.js';
 export * from './identity.js';
 export * from './tasks.js';

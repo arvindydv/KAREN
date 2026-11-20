@@ -1,4 +1,7 @@
 import type {
+  ErasureStepOutcome,
+  ExportExpiryOutcome,
+  ExportStepResult,
   ProviderOperationOutcome,
   ProviderOperationRequest,
   ProviderStatusResult,
@@ -28,4 +31,14 @@ export interface ProviderActivities {
     providerId: string;
     idempotencyKey: string;
   }): Promise<ProviderStatusResult>;
+}
+
+/**
+ * Data-rights workflow steps (Phase 01 M7). Each is a signed internal call to the API, which
+ * owns the data; all are idempotent so Temporal retries are safe. Inputs are request ids only.
+ */
+export interface DataRightsActivities {
+  buildExport(requestId: string): Promise<ExportStepResult>;
+  expireExport(requestId: string): Promise<ExportExpiryOutcome>;
+  executeErasure(requestId: string): Promise<ErasureStepOutcome>;
 }

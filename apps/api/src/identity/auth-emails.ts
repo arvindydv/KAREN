@@ -167,3 +167,70 @@ export function emailChangeNoticeMail(
     ),
   };
 }
+
+const longDate = (d: Date) =>
+  d.toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+
+export function deletionScheduledMail(to: string, scheduledFor: Date): OutgoingMail {
+  const when = longDate(scheduledFor);
+  return {
+    to,
+    template: 'privacy.deletion_scheduled',
+    subject: 'Your KAREN account is scheduled for deletion',
+    text:
+      `You asked us to delete your KAREN account. It will be deleted on ${when} (IST).\n\n` +
+      `Changed your mind? Sign in before then and cancel the deletion. You have been signed out of every device.\n\n` +
+      `If you did not ask for this, sign in, cancel the deletion and reset your password now.`,
+    html: wrap(
+      'Account deletion scheduled',
+      `<p>You asked us to delete your KAREN account. It will be deleted on <b>${when} (IST)</b>.</p>` +
+        `<p>Changed your mind? Sign in before then and cancel the deletion. You have been signed out of every device.</p>` +
+        `<p>If you did not ask for this, sign in, cancel the deletion and reset your password now.</p>`,
+    ),
+  };
+}
+
+export function deletionCancelledMail(to: string): OutgoingMail {
+  return {
+    to,
+    template: 'privacy.deletion_cancelled',
+    subject: 'Your KAREN account deletion was cancelled',
+    text: 'The deletion of your KAREN account was cancelled. Your account stays active.',
+    html: wrap(
+      'Deletion cancelled',
+      '<p>The deletion of your KAREN account was cancelled. Your account stays active.</p>',
+    ),
+  };
+}
+
+export function accountDeletedMail(to: string): OutgoingMail {
+  return {
+    to,
+    template: 'privacy.account_deleted',
+    subject: 'Your KAREN account has been deleted',
+    text:
+      'Your KAREN account and its personal data have been deleted. Some records are kept where the law ' +
+      'or security requires it (for example, proof of your consent choices), without your contact details. ' +
+      'Backups are overwritten on their normal schedule. This is the last e-mail we will send.',
+    html: wrap(
+      'Account deleted',
+      '<p>Your KAREN account and its personal data have been deleted.</p>' +
+        '<p>Some records are kept where the law or security requires it (for example, proof of your consent choices), without your contact details. Backups are overwritten on their normal schedule.</p>' +
+        '<p>This is the last e-mail we will send.</p>',
+    ),
+  };
+}
+
+export function exportReadyMail(to: string, expiresAt: Date): OutgoingMail {
+  const when = longDate(expiresAt);
+  return {
+    to,
+    template: 'privacy.export_ready',
+    subject: 'Your KAREN data export is ready',
+    text: `Your data export is ready. Sign in to KAREN and download it from Privacy settings before ${when} (IST).`,
+    html: wrap(
+      'Your data export is ready',
+      `<p>Sign in to KAREN and download it from <b>Privacy settings</b> before ${when} (IST).</p>`,
+    ),
+  };
+}

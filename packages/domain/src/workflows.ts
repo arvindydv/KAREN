@@ -111,3 +111,51 @@ export const FAILURE_TYPES = {
   /** Global kill switch (KAREN_EXECUTION_PAUSED) refused a side effect; nothing was dispatched. */
   EXECUTION_PAUSED: 'ExecutionPausedError',
 } as const;
+
+// ── Data rights (Phase 01 M7) ──────────────────────────────────────────────────────────────
+
+/**
+ * Durable data-rights workflows. Inputs carry ONLY request ids and timestamps — never personal
+ * data — because Temporal history is retained outside our deletion guarantees. The worker has no
+ * database access: each step is a signed internal call to the API (ADR-0007).
+ */
+export const DATA_RIGHTS_WORKFLOWS = {
+  EXPORT: 'dataExportWorkflow',
+  DELETION: 'accountDeletionWorkflow',
+} as const;
+
+export const dataRightsWorkflowId = (kind: 'export' | 'deletion', requestId: string) =>
+  `karen-data-${kind}-${requestId}`;
+
+export interface DataExportWorkflowInput {
+  requestId: string;
+}
+export interface AccountDeletionWorkflowInput {
+  requestId: string;
+  /**
+   * Seconds until the cancellation window ends, computed by the API (which owns the clock).
+   * Workflows never read the clock; the API's `not_due` answer guards against any skew.
+   */
+  waitSeconds: number;
+}
+
+/** Result of the API's internal export step. */
+export type ExportStepOutcome = 'ready' | 'cancelled' | 'already_done';
+/** What the export step tells the workflow: the outcome and when the download expires. */
+export interface ExportStepResult {
+  outcome: ExportStepOutcome;
+  /** Seconds until the download expires (computed by the API); null when not ready. */
+  expiresInSeconds: number | null;
+}
+/** Result of the API's internal erasure step. `not_due`: the window has not ended yet. */
+export type ErasureStepOutcome = 'completed' | 'cancelled' | 'not_due';
+
+/** Internal API routes called by the worker (signed; never exposed publicly). */
+export const INTERNAL_DATA_RIGHTS_PATHS = {
+  buildExport: (requestId: string) => `/internal/v1/data-rights/${requestId}/export`,
+  executeErasure: (requestId: string) => `/internal/v1/data-rights/${requestId}/erase`,
+  expireExport: (requestId: string) => `/internal/v1/data-rights/${requestId}/expire-export`,
+} as const;
+
+/** Result of expiring an export download (payload purged). */
+export type ExportExpiryOutcome = 'expired' | 'not_due' | 'already_done';

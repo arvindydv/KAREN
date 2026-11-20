@@ -13,7 +13,9 @@ module.exports = {
       name: 'infrastructure-is-leaf',
       severity: 'error',
       from: { path: '^src/infrastructure' },
-      to: { path: '^src/(identity|consent|audit|policy|admin|health|auth|security|onboarding)/' },
+      to: {
+        path: '^src/(identity|consent|audit|policy|admin|health|auth|security|onboarding|data-rights)/',
+      },
     },
     {
       // Security primitives (hashing, policy, gates, opaque tokens) are pure and reusable:
@@ -22,7 +24,7 @@ module.exports = {
       severity: 'error',
       from: { path: '^src/security/', pathNot: '\\.module\\.ts$' },
       to: {
-        path: '^src/(identity|consent|audit|policy|admin|health|auth|infrastructure|generated|onboarding)/',
+        path: '^src/(identity|consent|audit|policy|admin|health|auth|infrastructure|generated|onboarding|data-rights)/',
       },
     },
     {

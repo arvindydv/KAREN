@@ -135,6 +135,11 @@ export const signedInResponseSchema = z
     session_id: z.uuid(),
     /** Absolute session end; re-login required after it. */
     session_expires_at: z.iso.datetime(),
+    /**
+     * ACTIVE, or DELETION_REQUESTED: a restricted session that can only view or cancel the
+     * pending deletion (M7).
+     */
+    account_status: z.enum(['ACTIVE', 'DELETION_REQUESTED']),
     /** Web (BFF) only: opaque session token for an HttpOnly cookie. Never expose to browser JS. */
     session_token: z.string().optional(),
     /** Mobile only: short-lived ES256 access token (Authorization: Bearer). */
