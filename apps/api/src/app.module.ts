@@ -18,6 +18,7 @@ import { DatabaseModule } from './infrastructure/database/database.module.js';
 import { MailModule } from './infrastructure/mail/mail.module.js';
 import { RedisThrottlerStorage } from './infrastructure/redis/redis-throttler.storage.js';
 import { RedisModule } from './infrastructure/redis/redis.module.js';
+import { OnboardingModule } from './onboarding/onboarding.module.js';
 import { PolicyModule } from './policy/policy.module.js';
 import { SecurityModule } from './security/security.module.js';
 
@@ -80,6 +81,7 @@ export class AppModule {
         SecurityModule,
         IdentityModule,
         ConsentModule,
+        OnboardingModule,
         PolicyModule,
         AuthModule.forRoot(env),
         HealthModule,

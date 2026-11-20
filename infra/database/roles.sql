@@ -63,6 +63,8 @@ GRANT EXECUTE ON FUNCTION identity.lookup_refresh_credential(text) TO karen_api_
 -- Profile (M4). Saved places are user content the user may delete outright (hard DELETE, RLS).
 GRANT SELECT, INSERT, UPDATE ON identity.user_preferences TO karen_api_runtime;
 GRANT SELECT, INSERT, UPDATE, DELETE ON identity.saved_places TO karen_api_runtime;
+-- Onboarding (M5).
+GRANT SELECT, INSERT, UPDATE ON identity.onboarding_progress TO karen_api_runtime;
 
 -- consent (RLS: own rows only; revocation is an UPDATE, never a DELETE)
 GRANT SELECT, INSERT, UPDATE ON consent.consent_grants TO karen_api_runtime;

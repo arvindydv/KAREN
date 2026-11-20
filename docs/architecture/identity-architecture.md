@@ -275,28 +275,28 @@ Auth levels: **P** public · **S** authenticated session (ACTIVE) · **R** recen
 **D** deletion-pending session allowed · **T** staff realm · **TS** staff step-up · **C** consent
 gate. All routes `/v1`, Zod contracts in `@karen/api-contracts`, errors in the standard envelope.
 
-| Route                                                                           | Auth                 | Idempotency                                                     | Milestone |
-| ------------------------------------------------------------------------------- | -------------------- | --------------------------------------------------------------- | --------- |
-| `POST /auth/register`                                                           | P                    | natural (canonical e-mail)                                      | **M2 ✔**  |
-| `POST /auth/verify-email`, `POST /auth/challenges/resend`                       | P                    | single-use; resend rotates the code                             | **M2 ✔**  |
-| `POST /auth/login`                                                              | P                    | none (each success = new session)                               | **M3 ✔**  |
-| `POST /auth/password/forgot`, `POST /auth/password/reset`                       | P                    | single-use challenge                                            | **M2 ✔**  |
-| `POST /auth/token/refresh`                                                      | P (refresh token)    | 10 s same-installation retry returns the same successor         | **M3 ✔**  |
-| `POST /auth/logout`, `POST /auth/logout-all`                                    | S                    | idempotent                                                      | **M3 ✔**  |
-| `GET /me`                                                                       | S                    | —                                                               | existing  |
-| `GET /me/sessions`, `DELETE /me/sessions/:id`                                   | S                    | idempotent delete; other users' ids → 404                       | **M3 ✔**  |
-| `GET /me/devices`, `DELETE /me/devices/:id`                                     | S                    | idempotent delete; other users' ids → 404                       | **M3 ✔**  |
-| `GET/PATCH /me/profile`                                                         | S                    | `If-Match` (ETag = version) → 428 missing / 412 stale           | **M4 ✔**  |
-| `GET/PATCH /me/preferences`; `GET/POST /me/places`, `PUT/DELETE /me/places/:id` | S                    | `If-Match` on PATCH/PUT/DELETE; ≤ 20 places                     | **M4 ✔**  |
-| `POST /me/email-change`, `POST /me/email-change/confirm`                        | S + current password | code to the NEW address; decoy if taken; other sessions revoked | **M4 ✔**  |
-| `POST /me/password`                                                             | S + current password | other sessions revoked; throttled like sign-in                  | **M4 ✔**  |
-| `GET/PUT /me/onboarding`                                                        | S                    | step transitions idempotent                                     | M5        |
-| `GET /consent/notices`, `GET /consent/notices/:kind/:version`                   | P                    | —                                                               | M6        |
-| `GET /me/consents`, `PUT /me/consents/:purpose`, `GET /me/consents/history`     | S                    | `Idempotency-Key` + per-purpose version                         | M6        |
-| `GET /me/consents/receipts/:id/verify`                                          | S                    | —                                                               | M6        |
-| `POST /me/data-rights/export`, `POST /me/data-rights/deletion`                  | R / D                | one active request per kind                                     | M7        |
-| `GET /me/data-rights/:id`, `POST /me/data-rights/:id/cancel`                    | S / D                | idempotent                                                      | M7        |
-| `/staff/auth/*`, `/staff/*`                                                     | T / TS               | per route                                                       | M8        |
+| Route                                                                                                | Auth                 | Idempotency                                                     | Milestone |
+| ---------------------------------------------------------------------------------------------------- | -------------------- | --------------------------------------------------------------- | --------- |
+| `POST /auth/register`                                                                                | P                    | natural (canonical e-mail)                                      | **M2 ✔**  |
+| `POST /auth/verify-email`, `POST /auth/challenges/resend`                                            | P                    | single-use; resend rotates the code                             | **M2 ✔**  |
+| `POST /auth/login`                                                                                   | P                    | none (each success = new session)                               | **M3 ✔**  |
+| `POST /auth/password/forgot`, `POST /auth/password/reset`                                            | P                    | single-use challenge                                            | **M2 ✔**  |
+| `POST /auth/token/refresh`                                                                           | P (refresh token)    | 10 s same-installation retry returns the same successor         | **M3 ✔**  |
+| `POST /auth/logout`, `POST /auth/logout-all`                                                         | S                    | idempotent                                                      | **M3 ✔**  |
+| `GET /me`                                                                                            | S                    | —                                                               | existing  |
+| `GET /me/sessions`, `DELETE /me/sessions/:id`                                                        | S                    | idempotent delete; other users' ids → 404                       | **M3 ✔**  |
+| `GET /me/devices`, `DELETE /me/devices/:id`                                                          | S                    | idempotent delete; other users' ids → 404                       | **M3 ✔**  |
+| `GET/PATCH /me/profile`                                                                              | S                    | `If-Match` (ETag = version) → 428 missing / 412 stale           | **M4 ✔**  |
+| `GET/PATCH /me/preferences`; `GET/POST /me/places`, `PUT/DELETE /me/places/:id`                      | S                    | `If-Match` on PATCH/PUT/DELETE; ≤ 20 places                     | **M4 ✔**  |
+| `POST /me/email-change`, `POST /me/email-change/confirm`                                             | S + current password | code to the NEW address; decoy if taken; other sessions revoked | **M4 ✔**  |
+| `POST /me/password`                                                                                  | S + current password | other sessions revoked; throttled like sign-in                  | **M4 ✔**  |
+| `GET /me/onboarding`, `PUT /me/onboarding/steps/:step`, `POST /me/onboarding/{skip,resume,complete}` | S                    | atomic set-union upserts; all idempotent                        | **M5 ✔**  |
+| `GET /consent/notices`, `GET /consent/notices/:kind/:version`                                        | P                    | —                                                               | M6        |
+| `GET /me/consents`, `PUT /me/consents/:purpose`, `GET /me/consents/history`                          | S                    | `Idempotency-Key` + per-purpose version                         | M6        |
+| `GET /me/consents/receipts/:id/verify`                                                               | S                    | —                                                               | M6        |
+| `POST /me/data-rights/export`, `POST /me/data-rights/deletion`                                       | R / D                | one active request per kind                                     | M7        |
+| `GET /me/data-rights/:id`, `POST /me/data-rights/:id/cancel`                                         | S / D                | idempotent                                                      | M7        |
+| `/staff/auth/*`, `/staff/*`                                                                          | T / TS               | per route                                                       | M8        |
 
 Naming resolution: the roadmap's `/v1/consent/grants`, `/v1/consent/requests`,
 `/v1/data-rights/export` and `/v1/identity/bootstrap` are replaced by the user-scoped `/v1/me/...`
