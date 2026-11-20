@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { API_ENV } from '../config/config.module.js';
 import type { ApiEnv } from '../config/env.js';
+import { ACCESS_TOKEN_SERVICE, AccessTokenService } from './access-token.js';
 import { ConcurrencyGate } from './concurrency-gate.js';
 import { PasswordHasher, parsePepperKeys } from './password/password-hasher.js';
 
@@ -25,7 +26,18 @@ import { PasswordHasher, parsePepperKeys } from './password/password-hasher.js';
           }),
         }),
     },
+    {
+      provide: ACCESS_TOKEN_SERVICE,
+      inject: [API_ENV],
+      useFactory: (env: ApiEnv) =>
+        AccessTokenService.create({
+          issuer: env.API_PUBLIC_BASE_URL,
+          ttlSeconds: env.ACCESS_TOKEN_TTL_SECONDS,
+          keysJson: env.ACCESS_TOKEN_SIGNING_KEYS,
+          currentKid: env.ACCESS_TOKEN_CURRENT_KID,
+        }),
+    },
   ],
-  exports: [PasswordHasher],
+  exports: [PasswordHasher, ACCESS_TOKEN_SERVICE],
 })
 export class SecurityModule {}

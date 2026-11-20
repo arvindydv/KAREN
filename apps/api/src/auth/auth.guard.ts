@@ -11,10 +11,13 @@ import type { FastifyRequest } from 'fastify';
 import { AuditService } from '../audit/audit.service.js';
 import { ApiError } from '../common/api-error.js';
 import { IdentityService } from '../identity/identity.service.js';
+import { SessionService } from '../identity/session.service.js';
+import {
+  ACCESS_TOKEN_SERVICE,
+  AccessTokenError,
+  type AccessTokenService,
+} from '../security/access-token.js';
 import { IS_PUBLIC, REQUIRED_PERMISSIONS } from './decorators.js';
-import { TokenVerificationError, type TokenVerifier } from './token-verifier.js';
-
-export const TOKEN_VERIFIER = Symbol('TOKEN_VERIFIER');
 
 const bearer = (header: string | undefined): string | undefined => {
   const match = /^Bearer\s+(\S+)$/i.exec(header ?? '');
@@ -22,8 +25,10 @@ const bearer = (header: string | undefined): string | undefined => {
 };
 
 /**
- * Global authentication guard: every route requires a valid access token unless marked
- * @Public(). Unknown → deny.
+ * Global authentication guard (ADR-0016): every route requires a live KAREN session unless
+ * marked @Public(). Accepts either an opaque web session token (`kss_…`, sent by the web BFF)
+ * or a first-party ES256 access token (mobile). Both resolve to a session row that is checked
+ * on every request, so revocation is immediate. Unknown → deny.
  */
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -31,7 +36,8 @@ export class AuthGuard implements CanActivate {
 
   constructor(
     private readonly reflector: Reflector,
-    @Inject(TOKEN_VERIFIER) private readonly verifier: TokenVerifier,
+    @Inject(ACCESS_TOKEN_SERVICE) private readonly tokens: AccessTokenService,
+    private readonly sessions: SessionService,
     private readonly identity: IdentityService,
   ) {}
 
@@ -44,27 +50,28 @@ export class AuthGuard implements CanActivate {
     if (isPublic) return true;
 
     const request = context.switchToHttp().getRequest<FastifyRequest>();
-    try {
-      const token = await this.verifier.verify(bearer(request.headers.authorization));
-      request.principal = await this.identity.resolvePrincipal(token.issuer, token.subject);
-      return true;
-    } catch (error) {
-      if (error instanceof TokenVerificationError) {
+    const token = bearer(request.headers.authorization);
+    let owner: { userId: string; sessionId: string } | null;
+    if (token?.startsWith('kss_')) {
+      owner = await this.sessions.locateWebSession(token);
+      if (!owner) this.logger.warn({ reason: 'UNKNOWN_SESSION' }, 'Rejected session token');
+    } else {
+      try {
+        const claims = await this.tokens.verify(token);
+        owner = { userId: claims.userId, sessionId: claims.sessionId };
+      } catch (error) {
+        if (!(error instanceof AccessTokenError)) throw error;
         // Log the reason class only — never the token.
         this.logger.warn({ reason: error.reason }, 'Rejected access token');
-        if (error.reason === 'JWKS_UNAVAILABLE') {
-          // IdP key endpoint down: deny (fail closed) but do not tell clients the session is
-          // invalid — a 401 would sign every user out during an IdP blip.
-          throw new ApiError(
-            'DEPENDENCY_UNAVAILABLE',
-            'Sign-in verification is temporarily unavailable. Please retry.',
-            { retryable: true },
-          );
-        }
-        throw new ApiError('UNAUTHENTICATED', 'Authentication is required.');
+        owner = null;
       }
-      throw error;
     }
+    if (!owner) throw new ApiError('UNAUTHENTICATED', 'Authentication is required.');
+    request.principal = await this.identity.resolvePrincipalForSession(
+      owner.userId,
+      owner.sessionId,
+    );
+    return true;
   }
 }
 

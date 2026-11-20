@@ -80,3 +80,21 @@ fallback covers it (a request either sees the Redis entry or — when Redis is d
 - The BFF is now security-critical code in `apps/web`; it gets its own tests (CSRF, cookie flags,
   open-redirect).
 - Clients never handle passwords after submission and never persist them.
+
+## Implementation notes (Phase 01 M3, 2026-11-20)
+
+Implemented as designed except for these deliberate changes:
+
+| Design above                                                          | Implemented                                                                                                                                         | Why                                                                                                                                                                                |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Liveness via a Redis revocation set, PostgreSQL fallback              | **PostgreSQL only**: the session row is read in the same transaction that loads account status and roles                                            | Strongly consistent revocation with no cache to invalidate and no Redis-down special case; still one transaction per request. Performance measured in M10 before adding any cache. |
+| Web idle timeout 30 min                                               | `WEB_SESSION_IDLE_HOURS` default **24 h** (sliding), absolute 30 days                                                                               | 30 min idle is impractical for a consumer assistant; sensitive operations will require recent re-authentication (`authTime` on the principal) instead. Configurable.               |
+| Idempotent retry "returns the same successor" (mechanism unspecified) | Successor token sealed (AES-256-GCM, HKDF-derived key, bound to the installation id) in Redis for **10 s**, written inside the rotating transaction | We never store refresh tokens at rest, so re-delivery needs a short-lived encrypted copy. Written before commit so a concurrent retry waiting on the row lock always finds it.     |
+| —                                                                     | Refresh is **not** on the strict per-IP limiter                                                                                                     | Many devices share carrier NAT addresses and refresh every few minutes; 256-bit single-use tokens + reuse detection bound abuse.                                                   |
+| KMS-held signing key                                                  | Secrets-Manager-held EC P-256 JWKs (`ACCESS_TOKEN_SIGNING_KEYS`), rotation by `kid`                                                                 | KMS signing needs AWS access (not available); the key-set interface is unchanged when KMS lands.                                                                                   |
+| `OIDC_*` / Cognito verifier                                           | **Removed** (code, config, Terraform)                                                                                                               | ADR-0015.                                                                                                                                                                          |
+
+Additional controls: refresh from a different installation id revokes the session
+(`device_mismatch`); leaving ACTIVE (lock/suspend/deletion request) and password reset revoke all
+sessions in the same transaction; per-account failed-login throttle keyed by an HMAC of the
+submitted e-mail (existing or not); new-device sign-in notice e-mail.

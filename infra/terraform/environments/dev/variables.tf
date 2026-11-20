@@ -379,34 +379,26 @@ variable "api_trusted_proxy_hops" {
 
 # ------------------------------------------------------------- Identity --
 
-variable "oidc" {
+variable "identity" {
   description = <<-EOT
-    End-user identity provider for the API (ADR-0015: Amazon Cognito user pool).
-    Cognito: issuer_url = https://cognito-idp.<region>.amazonaws.com/<pool-id>,
-    jwks_url = <issuer_url>/.well-known/jwks.json, audience = <app client id>,
-    audience_claim = "client_id", required_token_use = "access". Not secret.
-    Left null, the API refuses to start (fail closed) — it never falls back to dev auth.
+    First-party identity settings for the API (ADR-0015/0016/0018). Not secret: the matching
+    key material lives in Secrets Manager (api/ACCESS_TOKEN_SIGNING_KEYS, api/PASSWORD_PEPPERS,
+    api/OTP_HMAC_KEY, api/BREVO_SMTP_*). email_from must be a Brevo-verified sender on a domain
+    with DKIM/SPF/DMARC. Left null, the API refuses to start (fail closed).
   EOT
   type = object({
-    issuer_url         = optional(string)
-    jwks_url           = optional(string)
-    audience           = optional(string)
-    audience_claim     = optional(string, "client_id")
-    required_token_use = optional(string, "access")
-    allowed_algorithms = optional(list(string), ["RS256"])
+    access_token_current_kid   = optional(string)
+    password_pepper_current_id = optional(string)
+    email_from                 = optional(string)
   })
   default = {}
 
   validation {
-    condition     = contains(["aud", "client_id"], var.oidc.audience_claim)
-    error_message = "oidc.audience_claim must be \"aud\" or \"client_id\"."
+    condition     = var.identity.access_token_current_kid == null || can(regex("^[A-Za-z0-9._-]{1,64}$", var.identity.access_token_current_kid))
+    error_message = "identity.access_token_current_kid must match [A-Za-z0-9._-]{1,64}."
   }
   validation {
-    condition     = var.oidc.audience_claim != "client_id" || var.oidc.required_token_use == "access"
-    error_message = "client_id audience validation requires required_token_use = \"access\"."
-  }
-  validation {
-    condition     = var.oidc.issuer_url == null || startswith(coalesce(var.oidc.issuer_url, "x"), "https://")
-    error_message = "oidc.issuer_url must be an https URL."
+    condition     = var.identity.password_pepper_current_id == null || can(regex("^[a-z0-9-]{1,32}$", var.identity.password_pepper_current_id))
+    error_message = "identity.password_pepper_current_id must match [a-z0-9-]{1,32}."
   }
 }

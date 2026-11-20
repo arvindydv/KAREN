@@ -50,3 +50,10 @@ alert_email_addresses = ["oncall@dev.example.com"]
 # enable_admin        = true   # requires admin_allowed_cidrs; see docs/architecture/infrastructure.md
 # admin_hostname      = "admin.dev.example.com"
 # admin_allowed_cidrs = ["198.51.100.0/24"]
+
+# First-party identity (ADR-0015/0016/0018). Key material goes in Secrets Manager, not here.
+identity = {
+  access_token_current_kid   = "k1"
+  password_pepper_current_id = "p1"
+  email_from                 = "KAREN <no-reply@example.com>" # Brevo-verified sender on an owned domain
+}

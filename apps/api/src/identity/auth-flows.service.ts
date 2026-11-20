@@ -21,6 +21,7 @@ import {
 } from './auth-emails.js';
 import { ChallengeService, REFUSE } from './challenge.service.js';
 import { EmailSendBudget } from './email-send-budget.js';
+import { SessionService } from './session.service.js';
 
 /** Accounts that may receive a password-reset code. */
 const RECOVERABLE: ReadonlySet<AccountStatus> = new Set([
@@ -49,6 +50,7 @@ export class AuthFlowsService {
     private readonly mail: MailService,
     private readonly budget: EmailSendBudget,
     private readonly audit: AuditService,
+    private readonly sessions: SessionService,
   ) {}
 
   async register(input: RegisterRequest): Promise<AuthChallengeResponse> {
@@ -232,7 +234,8 @@ export class AuthFlowsService {
           },
           tx,
         );
-        // NOTE (M3): revoke all sessions here once sessions exist.
+        // A reset is a recovery: every existing session (possibly the attacker's) ends now.
+        await this.sessions.revokeInTx(tx, userId, {}, 'password_reset');
         return true;
       },
     );

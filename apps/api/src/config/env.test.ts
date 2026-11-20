@@ -6,15 +6,19 @@ const base = {
   DATABASE_URL: 'postgresql://u:p@localhost:5442/karen',
   REDIS_URL: 'redis://localhost:6390/0',
 };
-const oidc = {
-  AUTH_MODE: 'oidc',
-  OIDC_ISSUER_URL: 'https://issuer.example.com/',
-  OIDC_AUDIENCE: 'karen-api',
-  OIDC_JWKS_URL: 'https://issuer.example.com/.well-known/jwks.json',
-  OIDC_ALLOWED_ALGORITHMS: 'RS256',
-};
+// Shape-valid, NOT a real key (config validation checks structure only).
+const fakeJwk = (kid: string) => ({
+  kty: 'EC',
+  crv: 'P-256',
+  x: 'A'.repeat(43),
+  y: 'B'.repeat(43),
+  d: 'C'.repeat(43),
+  kid,
+});
 const deployed = {
-  ...oidc,
+  AUTH_MODE: 'first-party',
+  ACCESS_TOKEN_SIGNING_KEYS: JSON.stringify([fakeJwk('k1'), fakeJwk('k0')]),
+  ACCESS_TOKEN_CURRENT_KID: 'k1',
   INTERNAL_SERVICE_HMAC_SECRET: 'x'.repeat(40),
   LOG_PSEUDONYMIZATION_KEY: 'k'.repeat(40),
   PASSWORD_PEPPERS: `p1:${Buffer.alloc(32, 7).toString('base64url')}`,
@@ -41,56 +45,54 @@ describe('API environment validation', () => {
     },
   );
 
-  it('requires token_use=access when validating Cognito client_id instead of aud', () => {
-    expect(() => loadApiEnv({ ...base, ...oidc, OIDC_AUDIENCE_CLAIM: 'client_id' })).toThrow(
-      /OIDC_REQUIRED_TOKEN_USE/,
+  it('defaults to first-party auth and refuses the removed OIDC mode', () => {
+    expect(loadApiEnv(base).AUTH_MODE).toBe('first-party');
+    expect(() => loadApiEnv({ ...base, AUTH_MODE: 'oidc' })).toThrow(ConfigError);
+  });
+
+  it('requires shared access-token signing keys when deployed and validates them', () => {
+    const { ACCESS_TOKEN_SIGNING_KEYS: _k, ...noKeys } = deployed;
+    expect(() => loadApiEnv({ ...base, ...noKeys, APP_ENV: 'staging' })).toThrow(
+      /ACCESS_TOKEN_SIGNING_KEYS: required/,
     );
-    const cognito = {
-      ...base,
-      ...oidc,
-      OIDC_AUDIENCE_CLAIM: 'client_id',
-      OIDC_REQUIRED_TOKEN_USE: 'access',
-      OIDC_ISSUER_URL: 'https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_AbC123',
-      OIDC_JWKS_URL:
-        'https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_AbC123/.well-known/jwks.json',
-    };
-    expect(loadApiEnv(cognito).OIDC_AUDIENCE_CLAIM).toBe('client_id');
-    // Trailing slash would make every real token fail the exact `iss` match.
     expect(() =>
-      loadApiEnv({ ...cognito, OIDC_ISSUER_URL: `${cognito.OIDC_ISSUER_URL}/` }),
-    ).toThrow(/no trailing slash/);
-  });
-
-  it('requires https identity endpoints in deployed environments', () => {
-    const deployedOidc = {
-      ...base,
-      ...deployed,
-      ...oidc,
-      APP_ENV: 'staging',
-      OIDC_ISSUER_URL: 'http://idp.internal/',
-      OIDC_JWKS_URL: 'http://idp.internal/jwks.json',
-    };
-    expect(() => loadApiEnv(deployedOidc)).toThrow(/must use https/);
-  });
-
-  it('requires the JWKS to be served by the issuer origin', () => {
+      loadApiEnv({ ...base, ...deployed, APP_ENV: 'staging', ACCESS_TOKEN_CURRENT_KID: 'k9' }),
+    ).toThrow(/must name a key/);
     expect(() =>
-      loadApiEnv({ ...base, ...oidc, OIDC_JWKS_URL: 'https://keys.attacker.example/jwks.json' }),
-    ).toThrow(/same origin/);
+      loadApiEnv({
+        ...base,
+        ACCESS_TOKEN_SIGNING_KEYS: '{not json',
+        ACCESS_TOKEN_CURRENT_KID: 'x',
+      }),
+    ).toThrow(/JSON array/);
+    const rsa = JSON.stringify([{ kty: 'RSA', n: 'AQAB', e: 'AQAB', d: 'AQAB', kid: 'r' }]);
+    expect(() =>
+      loadApiEnv({ ...base, ACCESS_TOKEN_SIGNING_KEYS: rsa, ACCESS_TOKEN_CURRENT_KID: 'r' }),
+    ).toThrow(/EC P-256/);
+    const dup = JSON.stringify([fakeJwk('k1'), fakeJwk('k1')]);
+    expect(() =>
+      loadApiEnv({ ...base, ACCESS_TOKEN_SIGNING_KEYS: dup, ACCESS_TOKEN_CURRENT_KID: 'k1' }),
+    ).toThrow(/duplicate kid/);
+    try {
+      loadApiEnv({
+        ...base,
+        ACCESS_TOKEN_SIGNING_KEYS: '{secret-ish',
+        ACCESS_TOKEN_CURRENT_KID: 'x',
+      });
+    } catch (e) {
+      expect(String(e)).not.toContain('secret-ish');
+    }
   });
 
-  it('requires complete OIDC settings in oidc mode', () => {
-    expect(() => loadApiEnv({ ...base, AUTH_MODE: 'oidc' })).toThrow(/OIDC_ISSUER_URL/);
-  });
-
-  it('rejects symmetric / unknown JWT algorithms at config time', () => {
-    expect(() => loadApiEnv({ ...base, ...oidc, OIDC_ALLOWED_ALGORITHMS: 'HS256' })).toThrow(
-      ConfigError,
-    );
+  it('rejects an idle timeout longer than the absolute session lifetime', () => {
+    expect(() =>
+      loadApiEnv({ ...base, WEB_SESSION_IDLE_HOURS: '100', WEB_SESSION_ABSOLUTE_DAYS: '1' }),
+    ).toThrow(/WEB_SESSION_IDLE_HOURS/);
   });
 
   it('requires internal HMAC and pseudonymisation secrets when deployed', () => {
-    expect(() => loadApiEnv({ ...base, ...oidc, APP_ENV: 'staging' })).toThrow(
+    const { INTERNAL_SERVICE_HMAC_SECRET: _h, ...noHmac } = deployed;
+    expect(() => loadApiEnv({ ...base, ...noHmac, APP_ENV: 'staging' })).toThrow(
       /INTERNAL_SERVICE_HMAC_SECRET/,
     );
     expect(() => loadApiEnv({ ...base, ...deployed, APP_ENV: 'staging' })).not.toThrow();

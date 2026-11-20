@@ -65,6 +65,12 @@ locals {
     # NON-OWNER runtime role (karen_api_runtime member); the migration role's URL is held by
     # operators and never injected into a service.
     "api/DATABASE_URL" = { description = "Postgres URL for the api DB role (sslmode=verify-full)" }
+    # First-party identity secrets (ADR-0015/0016/0018). Values are set by operators, never in code.
+    "api/ACCESS_TOKEN_SIGNING_KEYS" = { description = "JSON array of EC P-256 private JWKs (current + previous kid)" }
+    "api/PASSWORD_PEPPERS"          = { description = "Argon2id pepper keys: id:base64url[,id:base64url]" }
+    "api/OTP_HMAC_KEY"              = { description = "HMAC key for one-time-code verifiers and auth rate-limit keys" }
+    "api/BREVO_SMTP_LOGIN"          = { description = "Brevo SMTP relay login" }
+    "api/BREVO_SMTP_KEY"            = { description = "Brevo SMTP relay key" }
   }
 
   s = module.secrets.secret_arns
@@ -87,7 +93,12 @@ locals {
 
   service_secrets = {
     api = merge(local.common_secrets, local.temporal_secrets, local.livekit_secrets, local.redis_secret, {
-      DATABASE_URL = local.s["api/DATABASE_URL"]
+      DATABASE_URL              = local.s["api/DATABASE_URL"]
+      ACCESS_TOKEN_SIGNING_KEYS = local.s["api/ACCESS_TOKEN_SIGNING_KEYS"]
+      PASSWORD_PEPPERS          = local.s["api/PASSWORD_PEPPERS"]
+      OTP_HMAC_KEY              = local.s["api/OTP_HMAC_KEY"]
+      BREVO_SMTP_LOGIN          = local.s["api/BREVO_SMTP_LOGIN"]
+      BREVO_SMTP_KEY            = local.s["api/BREVO_SMTP_KEY"]
     })
     "ai-service" = merge(local.common_secrets, local.redis_secret, {
       AI_GATEWAY_API_KEY  = local.s["ai-service/AI_GATEWAY_API_KEY"]
@@ -126,19 +137,18 @@ locals {
     api = merge(local.base_env, local.redis_env, local.livekit_env, {
       PORT                   = "4100"
       API_TRUSTED_PROXY_HOPS = tostring(var.api_trusted_proxy_hops)
-      # Real IdP only (ADR-0015). Unset OIDC values make the API refuse to start: fail closed.
-      AUTH_MODE               = "oidc"
-      OIDC_ISSUER_URL         = var.oidc.issuer_url == null ? "" : var.oidc.issuer_url
-      OIDC_JWKS_URL           = var.oidc.jwks_url == null ? "" : var.oidc.jwks_url
-      OIDC_AUDIENCE           = var.oidc.audience == null ? "" : var.oidc.audience
-      OIDC_AUDIENCE_CLAIM     = var.oidc.audience_claim
-      OIDC_REQUIRED_TOKEN_USE = var.oidc.required_token_use == null ? "" : var.oidc.required_token_use
-      OIDC_ALLOWED_ALGORITHMS = join(",", var.oidc.allowed_algorithms)
-      AI_SERVICE_URL          = local.ai_service_url
-      TEMPORAL_TLS_ENABLED    = "true"
-      EVENT_BUS_NAME          = module.eventbridge.bus_name
-      USER_ARTIFACTS_BUCKET   = module.s3_user_artifacts.bucket_name
-      EVIDENCE_BUCKET         = module.s3_evidence.bucket_name
+      # First-party identity (ADR-0015/0016/0018). Unset keys/ids make the API refuse to start.
+      AUTH_MODE                  = "first-party"
+      API_PUBLIC_BASE_URL        = "https://${var.api_hostname}" # access-token issuer
+      ACCESS_TOKEN_CURRENT_KID   = var.identity.access_token_current_kid == null ? "" : var.identity.access_token_current_kid
+      PASSWORD_PEPPER_CURRENT_ID = var.identity.password_pepper_current_id == null ? "" : var.identity.password_pepper_current_id
+      EMAIL_TRANSPORT            = "brevo-smtp"
+      EMAIL_FROM                 = var.identity.email_from == null ? "" : var.identity.email_from
+      AI_SERVICE_URL             = local.ai_service_url
+      TEMPORAL_TLS_ENABLED       = "true"
+      EVENT_BUS_NAME             = module.eventbridge.bus_name
+      USER_ARTIFACTS_BUCKET      = module.s3_user_artifacts.bucket_name
+      EVIDENCE_BUCKET            = module.s3_evidence.bucket_name
     })
     "ai-service" = merge(local.base_env, local.redis_env, {
       PORT                  = "8100"
