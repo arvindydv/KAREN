@@ -76,9 +76,42 @@ describe('provider registry & capability validation', () => {
     );
     expect(() => registry.require('nope', 'search')).toThrow(UnknownProviderError);
   });
+
+  it('refuses side effects once the legal access window has lapsed (reads still allowed)', () => {
+    const adapter = new MockSandboxAdapter({ webhookSecret: fixtures.secret });
+    const lapsed = Object.assign(Object.create(Object.getPrototypeOf(adapter) as object), adapter, {
+      descriptor: { ...MOCK_SANDBOX_DESCRIPTOR, legalAccessExpiresAt: '2020-01-01T00:00:00Z' },
+    }) as MockSandboxAdapter;
+    const registry = new ProviderRegistry({ allowSandbox: true }, [lapsed]);
+    expect(() => registry.require('mock-sandbox', 'confirm')).toThrow(
+      ProviderCapabilityUnavailableError,
+    );
+    expect(registry.require('mock-sandbox', 'status')).toBe(lapsed);
+  });
 });
 
 describe('provider activities', () => {
+  it('kill switch refuses side effects before contacting the provider; status still works', async () => {
+    const adapter = new MockSandboxAdapter({ webhookSecret: fixtures.secret });
+    let paused = true;
+    const acts = createProviderActivities(new ProviderRegistry({ allowSandbox: true }, [adapter]), {
+      executionPaused: () => paused,
+    });
+    await expect(acts.executeProviderOperation(request)).rejects.toMatchObject({
+      type: 'ExecutionPausedError',
+      nonRetryable: true,
+    });
+    const status = await acts.getProviderOperationStatus({
+      providerId: 'mock-sandbox',
+      idempotencyKey: request.idempotencyKey,
+    });
+    expect(status.status).not.toBe('CONFIRMED'); // nothing was executed while paused
+    paused = false;
+    await expect(acts.executeProviderOperation(request)).resolves.toMatchObject({
+      kind: 'ACCEPTED',
+    });
+  });
+
   it('confirm is idempotent per key and labelled SANDBOX', async () => {
     const adapter = new MockSandboxAdapter({ webhookSecret: fixtures.secret });
     const acts = createProviderActivities(new ProviderRegistry({ allowSandbox: true }, [adapter]));

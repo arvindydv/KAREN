@@ -68,6 +68,7 @@ export const MOCK_SANDBOX_DESCRIPTOR: ProviderDescriptor = {
   dataResidency: 'IN',
   rateLimitPerMinute: 120,
   webhookSignature: 'HMAC_SHA256',
+  reconciliation: 'STATUS_READBACK',
 };
 
 const webhookEventSchema = z.object({

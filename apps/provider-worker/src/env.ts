@@ -1,5 +1,6 @@
 import {
   baseServiceEnv,
+  booleanFlag,
   loadEnv,
   observabilityEnv,
   optionalString,
@@ -17,6 +18,8 @@ export const loadProviderWorkerEnv = (source: Record<string, string | undefined>
       ...temporalEnv,
       ...observabilityEnv,
       PROVIDER_WORKER_PORT: port(4200),
+      /** Kill switch: refuse every side-effecting provider call (runbook incident-kill-switches). */
+      KAREN_EXECUTION_PAUSED: booleanFlag(false),
       /** Secret for the SANDBOX mock provider's webhook signatures. Local/test only. */
       MOCK_PROVIDER_WEBHOOK_SECRET: optionalString,
     },

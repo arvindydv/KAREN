@@ -47,6 +47,15 @@ export interface ActionExecutionInput {
 export interface ApprovalDecisionSignal {
   approvalId: string;
   decision: 'APPROVE' | 'REJECT';
+  /**
+   * Subject the approval was issued for, copied from the stored approval record by the API.
+   * The workflow compares these with its own input, so an approval for another user, task,
+   * action or provider can never authorise this execution.
+   */
+  userId: string;
+  taskId: string;
+  actionType: string;
+  providerId: string;
   /** Must equal the workflow's payloadHash: a material change invalidates the approval. */
   payloadHash: string;
   maximumTotal: Money;
@@ -99,4 +108,6 @@ export const FAILURE_TYPES = {
   PROVIDER_REJECTED: 'ProviderRejectedError',
   CAPABILITY_UNAVAILABLE: 'ProviderCapabilityUnavailableError',
   POLICY_DENIED: 'PolicyDeniedError',
+  /** Global kill switch (KAREN_EXECUTION_PAUSED) refused a side effect; nothing was dispatched. */
+  EXECUTION_PAUSED: 'ExecutionPausedError',
 } as const;
