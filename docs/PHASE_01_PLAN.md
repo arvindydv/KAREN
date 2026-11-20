@@ -71,7 +71,7 @@ credential storage and the removal of implicit provisioning.
 | M2        | Register / verify / resend / forgot / reset APIs, OTP challenges, Brevo e-mail (ADR-0018), per-address budget                                                                                    | **DONE_LOCAL** (login moved to M3) | §5.1. Brevo SMTP auth verified; inbox delivery NOT VERIFIED (`pnpm --filter @karen/api mail:smoke <to>`); sender domain + legal review pending |
 | M3        | Login, sessions, refresh rotation/reuse, logout(-all), devices, revocation on reset/status, OIDC/Cognito removal (code, config, Terraform)                                                       | **DONE_LOCAL**                     | §5.2. Web cookie/BFF lands with the web UI (M9). KMS signing NOT VERIFIED (Secrets Manager keys)                                               |
 | M4        | Profile (ETag/If-Match), preferences, saved places, e-mail change (code to new address), password change                                                                                         | **DONE_LOCAL**                     | §5.3. Avatar deferred (no malware-scanning pipeline). Connected-accounts overview: none exist yet (Phase 05)                                   |
-| M5        | Onboarding (web + mobile), skip/resume                                                                                                                                                           | NOT_STARTED                        | Copy/translations need product + Hindi review                                                                                                  |
+| M5        | Onboarding progress API (steps, skip/resume/complete, multi-device)                                                                                                                              | **DONE_LOCAL** (API)               | §5.4. Screens in M9; copy/translations need product + Hindi review                                                                             |
 | M6        | Notices, purpose catalog, grants, receipts (hash chain), enforcement                                                                                                                             | NOT_STARTED                        | **Legal**: notice texts, purposes, legal bases                                                                                                 |
 | M7        | Export/deletion workflows, retention exceptions                                                                                                                                                  | NOT_STARTED                        | **Legal**: cancellation window, retention schedule                                                                                             |
 | M8        | Staff realm, WebAuthn, RBAC/JIT, break-glass, audit                                                                                                                                              | NOT_STARTED                        | Physical security keys for testing                                                                                                             |
@@ -158,6 +158,20 @@ outbox (ADR-0018). Session revocation on reset lands with sessions in M3.
 
 **Found and fixed in M4:** `Intl.supportedValuesOf('timeZone')` omits ICU aliases, so `Asia/Kolkata`
 (the default zone) was rejected at registration since M2. Now validated with `Intl.DateTimeFormat`.
+
+### 5.4 M5 evidence (`apps/api/test/onboarding.int.test.ts`)
+
+Separate states by design: authentication (sessions), mandatory legal acknowledgement (M6),
+optional consents (M6) and onboarding completion (this table). Onboarding records progress only
+and never gates product access.
+
+| Control                                                                                     | Test                   |
+| ------------------------------------------------------------------------------------------- | ---------------------- |
+| Steps progress; retries are no-ops; out-of-order completion; unknown step → 404             | "starts not_started…"  |
+| Concurrent progress from several devices converges, one row per user                        | "concurrent progress…" |
+| Skip/resume idempotent; completing a step after skipping resumes; skipping never blocks use | "skip and resume…"     |
+| Complete is final and idempotent                                                            | "complete is final…"   |
+| Per-user isolation (FORCEd RLS); authentication required                                    | "is per user…"         |
 
 ## 6. Items needing decisions or external validation
 

@@ -69,6 +69,7 @@ model User {
   devices            Device[]
   sessions           Session[]
   preferences        UserPreferences?
+  onboarding         OnboardingProgress?
   places             SavedPlace[]
   staffRoles         StaffRoleGrant[]
   consentGrants      ConsentGrant[]
@@ -290,6 +291,24 @@ model SavedPlace {
 
   @@index([userId])
   @@map("saved_places")
+  @@schema("identity")
+}
+
+/// Onboarding progress (M5). Records progress only; data lives in profile/preferences/consents.
+/// `completed_steps` is a set: completing a step is an idempotent, commutative union, so retries
+/// and concurrent progress from several devices converge.
+model OnboardingProgress {
+  userId         String    @id @map("user_id") @db.Uuid
+  status         String    @default("in_progress") @db.VarChar(16)
+  completedSteps String[]  @default([]) @map("completed_steps") @db.VarChar(32)
+  startedAt      DateTime  @default(now()) @map("started_at") @db.Timestamptz(3)
+  skippedAt      DateTime? @map("skipped_at") @db.Timestamptz(3)
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("onboarding_progress")
   @@schema("identity")
 }
 
