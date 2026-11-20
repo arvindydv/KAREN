@@ -58,6 +58,8 @@ owned by another account returns an indistinguishable decoy.
 - **R6** Argon2id cost on the production task size is unmeasured; the per-process gate bounds damage but
   capacity planning is open until M10.
 - **R7** Backups retain deleted data until they expire; deletion is not instantaneous across backups.
+- **R8** A database superuser who also holds `CONSENT_RECEIPT_KEY` could rewrite a receipt chain undetectably;
+  key custody separation (KMS) and off-database receipt anchoring are future hardening.
 
 ## 3. OWASP ASVS 5.0 traceability (chapter level)
 

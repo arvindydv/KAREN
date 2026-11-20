@@ -72,7 +72,7 @@ credential storage and the removal of implicit provisioning.
 | M3        | Login, sessions, refresh rotation/reuse, logout(-all), devices, revocation on reset/status, OIDC/Cognito removal (code, config, Terraform)                                                       | **DONE_LOCAL**                     | §5.2. Web cookie/BFF lands with the web UI (M9). KMS signing NOT VERIFIED (Secrets Manager keys)                                               |
 | M4        | Profile (ETag/If-Match), preferences, saved places, e-mail change (code to new address), password change                                                                                         | **DONE_LOCAL**                     | §5.3. Avatar deferred (no malware-scanning pipeline). Connected-accounts overview: none exist yet (Phase 05)                                   |
 | M5        | Onboarding progress API (steps, skip/resume/complete, multi-device)                                                                                                                              | **DONE_LOCAL** (API)               | §5.4. Screens in M9; copy/translations need product + Hindi review                                                                             |
-| M6        | Notices, purpose catalog, grants, receipts (hash chain), enforcement                                                                                                                             | NOT_STARTED                        | **Legal**: notice texts, purposes, legal bases                                                                                                 |
+| M6        | Notices, purpose catalog, grant/deny/revoke with cascade, hash-chained receipts + verification, legal acknowledgement, @RequireConsent                                                           | **DONE_LOCAL**                     | §5.5, ADR-0019. Real notice texts, purposes and legal bases: **legal approval pending** (only DRAFT placeholders exist, local/test only)       |
 | M7        | Export/deletion workflows, retention exceptions                                                                                                                                                  | NOT_STARTED                        | **Legal**: cancellation window, retention schedule                                                                                             |
 | M8        | Staff realm, WebAuthn, RBAC/JIT, break-glass, audit                                                                                                                                              | NOT_STARTED                        | Physical security keys for testing                                                                                                             |
 | M9        | Web Playwright + mobile flows, a11y, localization                                                                                                                                                | NOT_STARTED                        | Physical iOS/Android devices for SecureStore/biometric validation                                                                              |
@@ -172,6 +172,22 @@ and never gates product access.
 | Skip/resume idempotent; completing a step after skipping resumes; skipping never blocks use | "skip and resume…"     |
 | Complete is final and idempotent                                                            | "complete is final…"   |
 | Per-user isolation (FORCEd RLS); authentication required                                    | "is per user…"         |
+
+### 5.5 M6 evidence (`apps/api/test/consent.int.test.ts` unless noted)
+
+| Control                                                                                                        | Test                                                          |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Catalog: one entry per purpose, deps acyclic, unbuilt features not grantable                                   | `packages/domain/src/privacy.test.ts`, "lists every purpose…" |
+| Drafts served only in local/test; config refuses drafts when deployed                                          | "never serves drafts…", `env.test.ts`                         |
+| Approved notices immutable; DB enforces content hash                                                           | "approved notices are immutable…"                             |
+| Default not_asked; dependency enforcement (403 CONSENT_REQUIRED); revoke cascades with receipts                | "defaults to not_asked…"                                      |
+| Unavailable purposes, unknown notice versions, invalid transitions refused; deny recorded                      | "refuses unavailable purposes…"                               |
+| If-Match 428/412; out-of-order concurrent updates → one wins                                                   | "stale or missing If-Match…"                                  |
+| Idempotency-Key replay returns the original receipt                                                            | "Idempotency-Key replays…"                                    |
+| Receipt chain verifies; tampering (even with the trigger disabled) is detected; API role cannot alter receipts | "form a verifiable chain…"                                    |
+| Receipts private per user (FORCEd RLS)                                                                         | "receipts are private…"                                       |
+| Legal acknowledgement idempotent, stores notice hash                                                           | "tracks acceptance…"                                          |
+| @RequireConsent requires every purpose; no principal ≠ consent                                                 | `src/consent/consent.guard.test.ts`                           |
 
 ## 6. Items needing decisions or external validation
 

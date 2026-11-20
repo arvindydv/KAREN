@@ -3,6 +3,7 @@
  * Idempotent. Refuses to run outside APP_ENV=local|test.
  *   pnpm db:seed
  */
+import { createHash } from 'node:crypto';
 import { syntheticUsers } from '@karen/test-fixtures';
 import { loadApiEnv } from '../config/env.js';
 import { LOCAL_DEV_ISSUER } from '../identity/identity.service.js';
@@ -20,6 +21,29 @@ const prisma = new PrismaService({
   DATABASE_URL: process.env.MIGRATION_DATABASE_URL ?? env.DATABASE_URL,
 });
 try {
+  // DRAFT placeholder notices for local development only. They are NOT legal text and are never
+  // served outside APP_ENV=local|test (ALLOW_DRAFT_NOTICES is refused when deployed).
+  const placeholder: Record<string, string> = {
+    'en-IN': 'DRAFT — NOT LEGALLY REVIEWED. Placeholder text for local development only.',
+    'hi-IN': 'मसौदा — कानूनी समीक्षा नहीं हुई। केवल स्थानीय विकास के लिए प्लेसहोल्डर पाठ।',
+  };
+  for (const kind of ['privacy_notice', 'terms_of_service', 'ai_disclosure']) {
+    for (const [locale, text] of Object.entries(placeholder)) {
+      const content = `${text}\n\n(${kind})`;
+      await prisma.notice.upsert({
+        where: { kind_locale_version: { kind, locale, version: 'draft-0' } },
+        create: {
+          kind,
+          locale,
+          version: 'draft-0',
+          content,
+          contentSha256: `sha256:${createHash('sha256').update(content, 'utf8').digest('hex')}`,
+        },
+        update: {},
+      });
+    }
+  }
+  process.stdout.write('seeded DRAFT notices (draft-0) — placeholders, not legal text\n');
   for (const u of syntheticUsers()) {
     const existing = await prisma.externalIdentity.findUnique({
       where: { issuer_subject: { issuer: LOCAL_DEV_ISSUER, subject: u.external_subject } },

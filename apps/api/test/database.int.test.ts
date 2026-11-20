@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { AuditService } from '../src/audit/audit.service.js';
 import { ConsentService } from '../src/consent/consent.service.js';
 import { pgvectorVersion, vectorL2Distance } from '../src/infrastructure/database/vector.js';
 import { PrismaService } from '../src/infrastructure/database/prisma.service.js';
@@ -59,7 +60,7 @@ describe('database foundation (integration)', () => {
   });
 
   it('consent checks are deny-by-default and honour revocation and expiry', async () => {
-    const consent = new ConsentService(prisma);
+    const consent = new ConsentService(prisma, new AuditService(prisma), env);
     const user = await prisma.user.create({ data: {} });
     expect(await consent.hasActiveConsent(user.id, 'AI_PROCESSING')).toBe(false);
     const grant = await prisma.consentGrant.create({

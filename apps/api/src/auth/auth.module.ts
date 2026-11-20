@@ -1,11 +1,12 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import type { ApiEnv } from '../config/env.js';
+import { ConsentGuard } from '../consent/consent.guard.js';
 import { DevAuthController } from './dev-auth.controller.js';
 import { AuthGuard, PermissionsGuard } from './auth.guard.js';
 
 /**
- * Global guards (order: Auth → Permissions). Credentials are first-party sessions/access tokens
+ * Global guards (order: Auth → Permissions → Consent). Credentials are first-party sessions/access tokens
  * (ADR-0016); the access-token service lives in SecurityModule. The dev token route is
  * registered only in AUTH_MODE=local-dev (refused outside APP_ENV=local|test by config).
  */
@@ -18,6 +19,8 @@ export class AuthModule {
       providers: [
         { provide: APP_GUARD, useClass: AuthGuard },
         { provide: APP_GUARD, useClass: PermissionsGuard },
+        // Last: consent is checked only for an authenticated, authorised caller.
+        { provide: APP_GUARD, useClass: ConsentGuard },
       ],
     };
   }
