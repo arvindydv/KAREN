@@ -20,6 +20,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/auth/login': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Sign in with e-mail and password */
+    post: operations['AuthController_login_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/token/refresh': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Rotate a mobile refresh token for a new access token */
+    post: operations['AuthController_refresh_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/auth/register': {
     parameters: {
       query?: never;
@@ -100,6 +134,108 @@ export interface paths {
     /** Set a new password with the e-mailed code (does not sign in) */
     post: operations['AuthController_reset_v1'];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/logout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Sign out this session */
+    post: operations['SessionsController_logout_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/logout-all': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Sign out every session, including this one */
+    post: operations['SessionsController_logoutAll_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/sessions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List active sessions */
+    get: operations['SessionsController_list_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/sessions/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Revoke one of your sessions */
+    delete: operations['SessionsController_revokeSession_v1'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/devices': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List devices that signed in to your account */
+    get: operations['SessionsController_devices_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/devices/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Sign out every session on one device */
+    delete: operations['SessionsController_revokeDevice_v1'];
     options?: never;
     head?: never;
     patch?: never;
@@ -214,6 +350,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -251,6 +388,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -288,6 +426,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -325,6 +464,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -362,6 +502,484 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  AuthController_login_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          email: string;
+          password: string;
+          /** @enum {string} */
+          client: 'web' | 'ios' | 'android';
+          device: {
+            /** Format: uuid */
+            installation_id: string;
+            name?: string;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | {
+                /** @enum {string} */
+                result: 'signed_in';
+                /** Format: uuid */
+                user_id: string;
+                /** Format: uuid */
+                session_id: string;
+                /** Format: date-time */
+                session_expires_at: string;
+                session_token?: string;
+                access_token?: string;
+                /** Format: date-time */
+                access_token_expires_at?: string;
+                refresh_token?: string;
+              }
+            | {
+                /** @enum {string} */
+                result: 'verification_required';
+                challenge: {
+                  challenge_handle: string;
+                  /** Format: date-time */
+                  expires_at: string;
+                  /** @enum {number} */
+                  code_length: 6;
+                  /** @enum {string} */
+                  delivery: 'email';
+                };
+              };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  AuthController_refresh_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          refresh_token: string;
+          /** Format: uuid */
+          installation_id: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            access_token: string;
+            /** Format: date-time */
+            access_token_expires_at: string;
+            refresh_token: string;
+            /** Format: date-time */
+            session_expires_at: string;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -437,6 +1055,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -474,6 +1093,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -511,6 +1131,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -548,6 +1169,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -585,6 +1207,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -654,6 +1277,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -691,6 +1315,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -728,6 +1353,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -765,6 +1391,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -802,6 +1429,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -873,6 +1501,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -910,6 +1539,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -947,6 +1577,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -984,6 +1615,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1021,6 +1653,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1092,6 +1725,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1129,6 +1763,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1166,6 +1801,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1203,6 +1839,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1240,6 +1877,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1310,6 +1948,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1347,6 +1986,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1384,6 +2024,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1421,6 +2062,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1458,6 +2100,1310 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  SessionsController_logout_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            revoked_sessions: number;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  SessionsController_logoutAll_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            revoked_sessions: number;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  SessionsController_list_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              client: 'web' | 'ios' | 'android';
+              /** Format: uuid */
+              device_id: string;
+              device_name: string | null;
+              /** Format: date-time */
+              created_at: string;
+              /** Format: date-time */
+              last_seen_at: string;
+              /** Format: date-time */
+              expires_at: string;
+              current: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  SessionsController_revokeSession_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            revoked_sessions: number;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  SessionsController_devices_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              platform: 'web' | 'ios' | 'android';
+              name: string | null;
+              /** Format: date-time */
+              first_seen_at: string;
+              /** Format: date-time */
+              last_seen_at: string;
+              active_sessions: number;
+              current: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  SessionsController_revokeDevice_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            revoked_sessions: number;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1598,6 +3544,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1635,6 +3582,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1672,6 +3620,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1709,6 +3658,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'
@@ -1746,6 +3696,7 @@ export interface operations {
                 | 'WEAK_PASSWORD'
                 | 'CHALLENGE_INVALID'
                 | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
                 | 'FORBIDDEN'
                 | 'ACCOUNT_INACTIVE'
                 | 'NOT_FOUND'

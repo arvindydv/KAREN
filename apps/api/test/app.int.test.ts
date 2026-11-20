@@ -1,9 +1,8 @@
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
-import { SignJWT, generateKeyPair } from 'jose';
+import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { LOCAL_DEV_ISSUER_TOKEN } from '../src/auth/auth.module.js';
-import type { LocalDevIssuer } from '../src/auth/local-dev-issuer.js';
+import { ACCESS_TOKEN_SERVICE, type AccessTokenService } from '../src/security/access-token.js';
 import { createApp } from '../src/bootstrap.js';
 import { ConsentService } from '../src/consent/consent.service.js';
 import { PrismaService } from '../src/infrastructure/database/prisma.service.js';
@@ -143,16 +142,17 @@ describe('API (integration: real PostgreSQL + Redis)', () => {
   });
 
   it('never provisions an account from a verified token alone (no guard auto-provisioning)', async () => {
-    const subject = unique();
-    // A correctly signed token for a subject that was never provisioned explicitly.
-    const issuer = app.get<LocalDevIssuer>(LOCAL_DEV_ISSUER_TOKEN);
-    const t = await issuer.issue(subject);
+    // A correctly signed access token for a user and session that do not exist.
+    const userId = randomUUID();
+    const { token: t } = await app
+      .get<AccessTokenService>(ACCESS_TOKEN_SERVICE)
+      .issue(userId, randomUUID());
     const res = await request(app.getHttpServer())
       .get('/v1/me')
       .set('authorization', `Bearer ${t}`)
       .expect(401);
     expect(res.body.error.code).toBe('UNAUTHENTICATED');
-    expect(await prisma.externalIdentity.count({ where: { subject } })).toBe(0);
+    expect(await prisma.user.count({ where: { id: userId } })).toBe(0);
   });
 
   it('client-supplied role claims in a token never grant permissions', async () => {
@@ -245,7 +245,9 @@ describe('API behaviour when PostgreSQL is unreachable', () => {
       const ready = await request(app.getHttpServer()).get('/health/ready').expect(503);
       expect(ready.body.checks.database.status).toBe('down');
       // Mint directly: the dev route provisions in the DB, which is down in this scenario.
-      const t = await app.get<LocalDevIssuer>(LOCAL_DEV_ISSUER_TOKEN).issue('dev|db-down-check');
+      const { token: t } = await app
+        .get<AccessTokenService>(ACCESS_TOKEN_SERVICE)
+        .issue(randomUUID(), randomUUID());
       const res = await request(app.getHttpServer())
         .get('/v1/me')
         .set('authorization', `Bearer ${t}`);
@@ -259,49 +261,14 @@ describe('API behaviour when PostgreSQL is unreachable', () => {
 });
 
 describe('local-dev auth isolation', () => {
-  it('the dev token route does not exist in oidc mode', async () => {
-    const app = await start({
-      AUTH_MODE: 'oidc',
-      OIDC_ISSUER_URL: 'https://idp.example/',
-      OIDC_AUDIENCE: 'karen-api',
-      OIDC_JWKS_URL: 'https://idp.example/.well-known/jwks.json',
-      OIDC_ALLOWED_ALGORITHMS: 'RS256',
-    });
+  it('the dev token route does not exist in first-party mode', async () => {
+    const app = await start({ AUTH_MODE: 'first-party' });
     try {
       const res = await request(app.getHttpServer())
         .post('/dev/auth/token')
         .send({ subject: 'dev|x-123' });
       expect([401, 404]).toContain(res.status);
       expect(res.status).not.toBe(200);
-    } finally {
-      await app.close();
-    }
-  });
-
-  it('denies with a retryable 503 (not a sign-out 401) when the IdP JWKS is unreachable', async () => {
-    const app = await start({
-      AUTH_MODE: 'oidc',
-      // Same origin as the issuer (config rule); nothing listens on port 1.
-      OIDC_ISSUER_URL: 'http://127.0.0.1:1/',
-      OIDC_AUDIENCE: 'karen-api',
-      OIDC_JWKS_URL: 'http://127.0.0.1:1/.well-known/jwks.json',
-      OIDC_ALLOWED_ALGORITHMS: 'RS256',
-    });
-    try {
-      const { privateKey } = await generateKeyPair('RS256');
-      const token = await new SignJWT({})
-        .setProtectedHeader({ alg: 'RS256', kid: 'k1' })
-        .setIssuer('http://127.0.0.1:1/')
-        .setAudience('karen-api')
-        .setSubject('someone')
-        .setIssuedAt()
-        .setExpirationTime('5m')
-        .sign(privateKey);
-      const res = await request(app.getHttpServer())
-        .get('/v1/me')
-        .set('authorization', `Bearer ${token}`)
-        .expect(503);
-      expect(res.body.error).toMatchObject({ code: 'DEPENDENCY_UNAVAILABLE', retryable: true });
     } finally {
       await app.close();
     }

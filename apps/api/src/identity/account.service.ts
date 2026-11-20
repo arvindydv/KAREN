@@ -19,6 +19,7 @@ import {
 } from '../infrastructure/database/prisma.service.js';
 import { GateSaturatedError } from '../security/concurrency-gate.js';
 import { PasswordHasher, type StoredPasswordHash } from '../security/password/password-hasher.js';
+import { SessionService } from './session.service.js';
 import {
   PASSWORD_RAW_MAX_UNITS,
   evaluatePassword,
@@ -79,6 +80,7 @@ export class AccountService {
     private readonly prisma: PrismaService,
     private readonly hasher: PasswordHasher,
     private readonly audit: AuditService,
+    private readonly sessions: SessionService,
     @Inject(API_ENV) env: ApiEnv,
   ) {
     this.pseudonymKey = env.LOG_PSEUDONYMIZATION_KEY ?? LOCAL_PSEUDONYMIZATION_KEY;
@@ -255,6 +257,8 @@ export class AccountService {
           retryable: true,
         });
       }
+      // Leaving ACTIVE ends every session in the same transaction (no window of access).
+      if (to !== 'ACTIVE') await this.sessions.revokeInTx(tx, userId, {}, 'account_status');
       await this.audit.record(
         {
           actorType: actor.actorType,

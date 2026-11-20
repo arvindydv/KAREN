@@ -69,7 +69,7 @@ credential storage and the removal of implicit provisioning.
 | M0        | ADRs 0015–0017, architecture, threat model, plan, roadmap deltas                                                                                                                                 | **DONE_LOCAL**                     | This PR (docs). Legal/infra items in §6 remain.                                                                                                |
 | M1        | Account state machine, e-mail canonicalization, credentials schema, Argon2id + pepper + gate, opaque-token primitive, explicit provisioning, guard auto-provisioning removed, `ACCOUNT_INACTIVE` | **DONE_LOCAL**                     | §5                                                                                                                                             |
 | M2        | Register / verify / resend / forgot / reset APIs, OTP challenges, Brevo e-mail (ADR-0018), per-address budget                                                                                    | **DONE_LOCAL** (login moved to M3) | §5.1. Brevo SMTP auth verified; inbox delivery NOT VERIFIED (`pnpm --filter @karen/api mail:smoke <to>`); sender domain + legal review pending |
-| M3        | Sessions, refresh rotation/reuse, logout(-all), devices, BFF cookie, access-token verifier, remove OIDC/Cognito config                                                                           | NOT_STARTED                        | KMS key for signing: local key file adapter until AWS access                                                                                   |
+| M3        | Login, sessions, refresh rotation/reuse, logout(-all), devices, revocation on reset/status, OIDC/Cognito removal (code, config, Terraform)                                                       | **DONE_LOCAL**                     | §5.2. Web cookie/BFF lands with the web UI (M9). KMS signing NOT VERIFIED (Secrets Manager keys)                                               |
 | M4        | Profile, preferences, addresses, e-mail change, password change                                                                                                                                  | NOT_STARTED                        | Avatar deferred (no malware scanning)                                                                                                          |
 | M5        | Onboarding (web + mobile), skip/resume                                                                                                                                                           | NOT_STARTED                        | Copy/translations need product + Hindi review                                                                                                  |
 | M6        | Notices, purpose catalog, grants, receipts (hash chain), enforcement                                                                                                                             | NOT_STARTED                        | **Legal**: notice texts, purposes, legal bases                                                                                                 |
@@ -124,6 +124,24 @@ IN_PROGRESS), breached-password corpus, any client UI.
 **Changed from the M0 design:** login moves to M3 (a login without sessions has nothing to return);
 the resend route is `POST /v1/auth/challenges/resend` (serves both purposes); OTP mail bypasses the
 outbox (ADR-0018). Session revocation on reset lands with sessions in M3.
+
+### 5.2 M3 evidence
+
+| Control                                                                                                                 | Test                                                    |
+| ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| ES256 `at+jwt` access tokens: forgery, `none`/HS256/RS256, typ/iss/aud/realm/sub/sid, expiry, unknown kid, key rotation | `src/security/access-token.test.ts`                     |
+| Mobile and web sign-in; generic failure for wrong password vs unknown e-mail                                            | `test/sessions.int.test.ts` "login"                     |
+| Unverified account + correct password → fresh code, no session; locked status only after correct password               | same                                                    |
+| Per-account throttle before hashing, identical for unknown e-mails                                                      | "per-account throttle…"                                 |
+| New-device notice e-mail (not for the first device)                                                                     | "e-mails a new-sign-in notice…"                         |
+| Refresh rotation; same-token retry returns the same successor; 5 concurrent refreshes → one successor                   | "refresh rotation"                                      |
+| Reuse after the window and foreign installation revoke the session (audited)                                            | "reuse of a consumed token…", "another installation…"   |
+| Logout / logout-all / revoke session or device; other users' ids → 404                                                  | "logout and revocation"                                 |
+| Password reset and lock/suspend revoke all sessions in the same transaction                                             | "a password reset signs out…", "locking or suspending…" |
+| Idle/absolute expiry; per-request liveness; no cross-user confusion                                                     | "expired web sessions…", "rejects a valid token…"       |
+| Verified token for a non-existent user/session never provisions anything                                                | `test/app.int.test.ts`                                  |
+| Deployed config requires shared signing keys; removed OIDC mode refused                                                 | `src/config/env.test.ts`                                |
+| Terraform: no OIDC/Cognito; new secrets in Secrets Manager                                                              | `node scripts/terraform-validate.mjs` (all 3 envs)      |
 
 ## 6. Items needing decisions or external validation
 

@@ -7,13 +7,13 @@ import {
   loadEnv,
   observabilityEnv,
   optionalString,
-  optionalUrl,
   port,
   redisEnv,
   requiredWhenDeployed,
   resolveRedisUrl,
 } from '@karen/config';
 import { z } from 'zod';
+import { parseSigningKeyIds } from '../security/access-token-keys.js';
 import { parsePepperKeys } from '../security/password/password-hasher.js';
 
 const csv = z
@@ -51,17 +51,30 @@ export const apiEnvShape = {
    */
   API_TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
   API_DOCS_ENABLED: booleanFlag(false),
-  AUTH_MODE: z.enum(['oidc', 'local-dev']).default('oidc'),
-  OIDC_ISSUER_URL: optionalUrl,
-  OIDC_AUDIENCE: optionalString,
-  OIDC_JWKS_URL: optionalUrl,
-  OIDC_ALLOWED_ALGORITHMS: csv.pipe(
-    z.array(z.enum(['RS256', 'RS384', 'RS512', 'PS256', 'ES256', 'ES384', 'EdDSA'])),
-  ),
-  /** `aud` (standard OIDC) or `client_id` (Amazon Cognito access tokens — ADR-0015). */
-  OIDC_AUDIENCE_CLAIM: z.enum(['aud', 'client_id']).default('aud'),
-  /** Required `token_use` claim (Cognito: `access`); empty = not checked. */
-  OIDC_REQUIRED_TOKEN_USE: optionalString,
+  /**
+   * `first-party` (always, when deployed): KAREN-issued sessions and access tokens (ADR-0015/16).
+   * `local-dev` additionally registers POST /dev/auth/token (local/test only).
+   */
+  AUTH_MODE: z.enum(['first-party', 'local-dev']).default('first-party'),
+  /**
+   * Access-token signing keys: JSON array of private EC P-256 JWKs, each with a unique `kid`
+   * (Secrets Manager when deployed; KMS-backed signing is a later hardening step). Keep the
+   * previous key listed for one access-token lifetime after rotating. Empty locally ⇒ an
+   * ephemeral key is generated at boot (single-process only).
+   */
+  ACCESS_TOKEN_SIGNING_KEYS: optionalString,
+  ACCESS_TOKEN_CURRENT_KID: optionalString,
+  ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().min(60).max(3600).default(600),
+  REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30),
+  WEB_SESSION_IDLE_HOURS: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 30)
+    .default(24),
+  WEB_SESSION_ABSOLUTE_DAYS: z.coerce.number().int().min(1).max(90).default(30),
+  /** Failed sign-ins per account (keyed by e-mail hash) within 15 min before a cool-down. */
+  LOGIN_MAX_FAILURES: z.coerce.number().int().min(3).max(100).default(10),
   /**
    * Password pepper keys (ADR-0015): "id:base64url,id2:base64url", each ≥ 32 bytes, from
    * Secrets Manager. Keep retired ids until every hash using them has been upgraded.
@@ -108,47 +121,25 @@ export function loadApiEnv(source: Record<string, string | undefined> = process.
         env.AUTH_MODE === 'local-dev' && env.APP_ENV !== 'local' && env.APP_ENV !== 'test'
           ? `AUTH_MODE: local-dev is forbidden when APP_ENV=${env.APP_ENV}`
           : undefined,
+      // Multi-instance deployments must share signing keys; an ephemeral key would make every
+      // other task reject this task's tokens.
+      requiredWhenDeployed('ACCESS_TOKEN_SIGNING_KEYS'),
+      requiredWhenDeployed('ACCESS_TOKEN_CURRENT_KID'),
+      (env) => {
+        if (!env.ACCESS_TOKEN_SIGNING_KEYS) return undefined;
+        try {
+          const kids = parseSigningKeyIds(env.ACCESS_TOKEN_SIGNING_KEYS);
+          return env.ACCESS_TOKEN_CURRENT_KID && kids.includes(env.ACCESS_TOKEN_CURRENT_KID)
+            ? undefined
+            : 'ACCESS_TOKEN_CURRENT_KID must name a key in ACCESS_TOKEN_SIGNING_KEYS';
+        } catch (error) {
+          // The parser's messages never include key material.
+          return error instanceof Error ? error.message : 'ACCESS_TOKEN_SIGNING_KEYS is invalid';
+        }
+      },
       (env) =>
-        env.AUTH_MODE === 'oidc' &&
-        (!env.OIDC_ISSUER_URL || !env.OIDC_AUDIENCE || !env.OIDC_JWKS_URL)
-          ? 'OIDC_ISSUER_URL, OIDC_AUDIENCE and OIDC_JWKS_URL are required when AUTH_MODE=oidc'
-          : undefined,
-      (env) =>
-        env.AUTH_MODE === 'oidc' && env.OIDC_ALLOWED_ALGORITHMS.length === 0
-          ? 'OIDC_ALLOWED_ALGORITHMS must list at least one asymmetric algorithm'
-          : undefined,
-      // Cognito access tokens carry no `aud`; validating `client_id` without also pinning
-      // token_use=access would let an ID token (whose `aud` is the client id) through.
-      (env) =>
-        env.AUTH_MODE === 'oidc' &&
-        env.OIDC_AUDIENCE_CLAIM === 'client_id' &&
-        env.OIDC_REQUIRED_TOKEN_USE !== 'access'
-          ? 'OIDC_REQUIRED_TOKEN_USE must be "access" when OIDC_AUDIENCE_CLAIM=client_id'
-          : undefined,
-      // Outbound security config: identity endpoints are reached over TLS when deployed.
-      (env) =>
-        isDeployedEnv(env.APP_ENV) &&
-        env.AUTH_MODE === 'oidc' &&
-        [env.OIDC_ISSUER_URL, env.OIDC_JWKS_URL].some((u) => u && !u.startsWith('https://'))
-          ? 'OIDC_ISSUER_URL and OIDC_JWKS_URL must use https:// in deployed environments'
-          : undefined,
-      // Keys must come from the issuer itself: a JWKS on another host could vouch for anything.
-      (env) =>
-        env.AUTH_MODE === 'oidc' &&
-        env.OIDC_ISSUER_URL &&
-        env.OIDC_JWKS_URL &&
-        new URL(env.OIDC_JWKS_URL).origin !== new URL(env.OIDC_ISSUER_URL).origin
-          ? 'OIDC_JWKS_URL must be served from the same origin as OIDC_ISSUER_URL'
-          : undefined,
-      // Cognito issuers are exact strings without a trailing slash; a mismatch rejects every
-      // token. Catch it at boot instead of as a production-wide 401.
-      (env) =>
-        env.AUTH_MODE === 'oidc' &&
-        env.OIDC_AUDIENCE_CLAIM === 'client_id' &&
-        !/^https:\/\/cognito-idp\.[a-z0-9-]+\.amazonaws\.com\/[a-z0-9-]+_[A-Za-z0-9]+$/.test(
-          env.OIDC_ISSUER_URL ?? '',
-        )
-          ? 'OIDC_ISSUER_URL must be https://cognito-idp.<region>.amazonaws.com/<pool-id> (no trailing slash) when OIDC_AUDIENCE_CLAIM=client_id'
+        env.WEB_SESSION_IDLE_HOURS > env.WEB_SESSION_ABSOLUTE_DAYS * 24
+          ? 'WEB_SESSION_IDLE_HOURS cannot exceed WEB_SESSION_ABSOLUTE_DAYS'
           : undefined,
       (env) =>
         env.APP_ENV === 'production' && env.API_DOCS_ENABLED

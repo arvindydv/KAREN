@@ -9,8 +9,10 @@ import { API_ENV } from '../config/config.module.js';
 import type { ApiEnv } from '../config/env.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../infrastructure/database/prisma.service.js';
+import { SessionService } from './session.service.js';
 
-const LAST_SEEN_REFRESH_MS = 60 * 60 * 1000;
+/** External-identity issuer used for local-dev provisioned accounts (seed, dev token route). */
+export const LOCAL_DEV_ISSUER = 'urn:karen:local-dev';
 const LOCAL_PSEUDONYMIZATION_KEY = 'local-only-pseudonymization-key';
 
 interface IdentityLink {
@@ -27,6 +29,7 @@ export class IdentityService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly sessions: SessionService,
     @Inject(API_ENV) env: ApiEnv,
   ) {
     // Config validation guarantees a real key outside local/test.
@@ -36,47 +39,42 @@ export class IdentityService {
   }
 
   /**
-   * Map a verified (issuer, subject) to an EXISTING internal user. Authentication never
-   * creates accounts (Phase 01 M1, ADR-0015): accounts are provisioned explicitly by
-   * AccountService (registration) or, in local/test only, by the dev token route. Unknown
-   * identities are denied. Roles come exclusively from server-side grants, never token claims.
+   * Resolves the caller from a server-verified session: ONE user-scoped transaction checks the
+   * session is live (not revoked/expired), the account status allows access, and loads staff
+   * grants. Roles come exclusively from server-side grants — never from token claims.
+   * Authentication never creates accounts (ADR-0015).
    */
-  async resolvePrincipal(issuer: string, subject: string): Promise<AuthenticatedPrincipal> {
-    const link = await this.lookup(issuer, subject);
-    if (!link) {
-      this.logger.warn({ reason: 'identity_not_provisioned' }, 'Rejected verified token');
+  async resolvePrincipalForSession(
+    userId: string,
+    sessionId: string,
+  ): Promise<AuthenticatedPrincipal> {
+    const resolved = await this.prisma.withUserScope(userId, async (tx) => {
+      const session = await this.sessions.resolveLive(tx, userId, sessionId);
+      if (!session) return null;
+      const user = await tx.user.findUnique({ where: { id: userId }, select: { status: true } });
+      if (!user) return null;
+      const grants = await tx.staffRoleGrant.findMany({ where: { userId } });
+      return { session, status: user.status, grants };
+    });
+    if (!resolved) {
+      this.logger.warn({ reason: 'session_not_live' }, 'Rejected credential');
       throw new ApiError('UNAUTHENTICATED', 'Authentication is required.');
     }
-    const { status, grants } = await this.prisma.withUserScope(link.userId, async (tx) => {
-      const user = await tx.user.findUniqueOrThrow({
-        where: { id: link.userId },
-        select: { status: true },
-      });
-      if (Date.now() - link.lastSeenAt.getTime() > LAST_SEEN_REFRESH_MS) {
-        await tx.externalIdentity.update({
-          where: { id: link.identityId },
-          data: { lastSeenAt: new Date() },
-        });
-      }
-      const staff = await tx.staffRoleGrant.findMany({ where: { userId: link.userId } });
-      return { status: user.status, grants: staff };
-    });
-    // Deny by default: only ACTIVE accounts get full access. Pending, locked, suspended,
-    // deletion-requested and deleted accounts may still hold unexpired credentials, so this is
-    // checked server-side on every request. (The restricted `deletion_pending` level gets its
-    // own routes in M7; until then it is denied like the others.)
-    if (accountAccessLevel(status) !== 'full') {
+    // Deny by default: only ACTIVE accounts get full access. (The restricted `deletion_pending`
+    // level gets its own routes in M7; until then it is denied like the others.)
+    if (accountAccessLevel(resolved.status) !== 'full') {
       throw new ApiError('ACCOUNT_INACTIVE', 'This account is not active.');
     }
-    const roles: Role[] = ['user', ...grants.map((g) => g.role)];
+    const roles: Role[] = ['user', ...resolved.grants.map((g) => g.role)];
     const permissions = [...new Set<Permission>(roles.flatMap((r) => ROLE_PERMISSIONS[r]))];
     return {
-      userId: link.userId,
-      issuer,
-      subject,
+      userId,
+      sessionId,
+      client: resolved.session.client,
+      authTime: resolved.session.authTime,
       roles,
       permissions,
-      userRef: pseudonymizeUserId(link.userId, this.pseudonymKey),
+      userRef: pseudonymizeUserId(userId, this.pseudonymKey),
     };
   }
 

@@ -5,7 +5,7 @@
  */
 import { syntheticUsers } from '@karen/test-fixtures';
 import { loadApiEnv } from '../config/env.js';
-import { LOCAL_DEV_ISSUER } from '../auth/local-dev-issuer.js';
+import { LOCAL_DEV_ISSUER } from '../identity/identity.service.js';
 import { PrismaService } from '../infrastructure/database/prisma.service.js';
 
 const env = loadApiEnv();

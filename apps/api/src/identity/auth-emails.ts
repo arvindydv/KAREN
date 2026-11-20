@@ -90,3 +90,28 @@ export function passwordChangedMail(to: string): OutgoingMail {
     ),
   };
 }
+
+const PLATFORM_LABEL: Record<'web' | 'ios' | 'android', string> = {
+  web: 'a web browser',
+  ios: 'an iPhone or iPad',
+  android: 'an Android device',
+};
+
+/** Sent when an account signs in from a device it has not used before. No user text inside. */
+export function newSignInMail(to: string, platform: 'web' | 'ios' | 'android'): OutgoingMail {
+  const where = PLATFORM_LABEL[platform];
+  return {
+    to,
+    template: 'auth.new_sign_in',
+    subject: 'New sign-in to your KAREN account',
+    text:
+      `Your KAREN account was just signed in from ${where} that has not been used before.\n\n` +
+      `If this was you, no action is needed. If not, reset your password now with ` +
+      `"Forgot password" — that signs out every device.`,
+    html: wrap(
+      'New sign-in to your account',
+      `<p>Your KAREN account was just signed in from ${where} that has not been used before.</p>` +
+        `<p>If this was you, no action is needed. If not, reset your password now with <b>Forgot password</b> — that signs out every device.</p>`,
+    ),
+  };
+}

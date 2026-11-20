@@ -11,6 +11,8 @@ export const API_ERROR_CODES = [
   /** One-time code/handle invalid, expired, used or exhausted (deliberately not distinguished). */
   'CHALLENGE_INVALID',
   'UNAUTHENTICATED',
+  /** Wrong e-mail/password (deliberately not distinguished). */
+  'INVALID_CREDENTIALS',
   'FORBIDDEN',
   /** Authenticated, but the account's status forbids this (pending, locked, suspended…). */
   'ACCOUNT_INACTIVE',
