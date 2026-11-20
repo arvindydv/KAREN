@@ -39,7 +39,7 @@ dev = [
 exclude-newer = "2026-11-05T00:00:00Z"
 
 [build-system]
-requires = ["uv_build>=0.9.10,<0.10.0"]
+requires = ["uv_build>=0.9.10,<0.14.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
