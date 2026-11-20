@@ -714,6 +714,249 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/staff/auth/login/options': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Staff sign-in step 1: password → security-key challenge */
+    post: operations['StaffAuthController_loginOptions_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/staff/auth/login/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Staff sign-in step 2: security-key assertion → staff session */
+    post: operations['StaffAuthController_loginVerify_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/staff/auth/enroll/options': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['StaffAuthController_enrollOptions_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/staff/auth/enroll/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['StaffAuthController_enrollVerify_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/staff/auth/step-up/options': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['StaffAuthController_stepUpOptions_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/staff/auth/step-up/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['StaffAuthController_stepUpVerify_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/staff/auth/logout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['StaffAuthController_logout_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/staff/auth/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['StaffAuthController_me_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/staff/invitations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['StaffAdminController_invite_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/staff/accounts/{id}/roles/{role}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations['StaffAdminController_grant_v1'];
+    post?: never;
+    delete: operations['StaffAdminController_revoke_v1'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/staff/accounts/{id}/disable': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['StaffAdminController_disable_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/staff/elevations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['StaffAdminController_elevations_v1'];
+    put?: never;
+    post: operations['StaffAdminController_requestElevation_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/staff/elevations/{id}/decision': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['StaffAdminController_decide_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/staff/users/{id}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Account status only; requires X-Access-Reason; audited */
+    get: operations['StaffAdminController_userStatus_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/system/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AdminSystemController_systemStatus_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -11951,6 +12194,4042 @@ export interface operations {
                 latency_ms: number | null;
                 error?: string;
               };
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAuthController_loginOptions_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          email: string;
+          password: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            ceremony_handle: string;
+            options: {
+              [key: string]: unknown;
+            };
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAuthController_loginVerify_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          ceremony_handle: string;
+          credential: {
+            [key: string]: unknown;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            session_token: string;
+            me: {
+              /** Format: uuid */
+              id: string;
+              email: string;
+              display_name: string;
+              roles: ('support_agent' | 'ops_admin' | 'security_admin')[];
+              elevated_roles: ('support_agent' | 'ops_admin' | 'security_admin')[];
+              permissions: (
+                | 'ops:read'
+                | 'ops:cases:write'
+                | 'flags:write'
+                | 'audit:read'
+                | 'staff:manage'
+                | 'users:read_status'
+              )[];
+              /** Format: date-time */
+              session_expires_at: string;
+              /** Format: date-time */
+              step_up_valid_until: string;
+            };
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAuthController_enrollOptions_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          enrollment_token: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            ceremony_handle: string;
+            options: {
+              [key: string]: unknown;
+            };
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAuthController_enrollVerify_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          ceremony_handle: string;
+          credential: {
+            [key: string]: unknown;
+          };
+          name: string;
+          password: string;
+        };
+      };
+    };
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAuthController_stepUpOptions_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            ceremony_handle: string;
+            options: {
+              [key: string]: unknown;
+            };
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAuthController_stepUpVerify_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          ceremony_handle: string;
+          credential: {
+            [key: string]: unknown;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            display_name: string;
+            roles: ('support_agent' | 'ops_admin' | 'security_admin')[];
+            elevated_roles: ('support_agent' | 'ops_admin' | 'security_admin')[];
+            permissions: (
+              | 'ops:read'
+              | 'ops:cases:write'
+              | 'flags:write'
+              | 'audit:read'
+              | 'staff:manage'
+              | 'users:read_status'
+            )[];
+            /** Format: date-time */
+            session_expires_at: string;
+            /** Format: date-time */
+            step_up_valid_until: string;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAuthController_logout_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAuthController_me_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            display_name: string;
+            roles: ('support_agent' | 'ops_admin' | 'security_admin')[];
+            elevated_roles: ('support_agent' | 'ops_admin' | 'security_admin')[];
+            permissions: (
+              | 'ops:read'
+              | 'ops:cases:write'
+              | 'flags:write'
+              | 'audit:read'
+              | 'staff:manage'
+              | 'users:read_status'
+            )[];
+            /** Format: date-time */
+            session_expires_at: string;
+            /** Format: date-time */
+            step_up_valid_until: string;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAdminController_invite_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          email: string;
+          display_name: string;
+          roles: ('support_agent' | 'ops_admin' | 'security_admin')[];
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            staff_id: string;
+            enrollment_token: string;
+            /** Format: date-time */
+            expires_at: string;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAdminController_grant_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        role: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAdminController_revoke_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        role: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAdminController_disable_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAdminController_elevations_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              staff_id: string;
+              /** @enum {string} */
+              role: 'support_agent' | 'ops_admin' | 'security_admin';
+              reason: string;
+              ticket_ref: string;
+              /** @enum {string} */
+              status: 'pending' | 'active' | 'rejected' | 'revoked' | 'expired';
+              /** Format: date-time */
+              requested_at: string;
+              /** Format: uuid */
+              decided_by: string | null;
+              /** Format: date-time */
+              expires_at: string | null;
+            }[];
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAdminController_requestElevation_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          role: 'support_agent' | 'ops_admin' | 'security_admin';
+          reason: string;
+          ticket_ref: string;
+          duration_minutes: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            staff_id: string;
+            /** @enum {string} */
+            role: 'support_agent' | 'ops_admin' | 'security_admin';
+            reason: string;
+            ticket_ref: string;
+            /** @enum {string} */
+            status: 'pending' | 'active' | 'rejected' | 'revoked' | 'expired';
+            /** Format: date-time */
+            requested_at: string;
+            /** Format: uuid */
+            decided_by: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAdminController_decide_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          decision: 'approve' | 'reject';
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            staff_id: string;
+            /** @enum {string} */
+            role: 'support_agent' | 'ops_admin' | 'security_admin';
+            reason: string;
+            ticket_ref: string;
+            /** @enum {string} */
+            status: 'pending' | 'active' | 'rejected' | 'revoked' | 'expired';
+            /** Format: date-time */
+            requested_at: string;
+            /** Format: uuid */
+            decided_by: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  StaffAdminController_userStatus_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            user_id: string;
+            status: string;
+            /** Format: date-time */
+            created_at: string;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  AdminSystemController_systemStatus_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            environment: string;
+            execution_paused: boolean;
+            /** @enum {string} */
+            ai_gateway_mode: 'mock' | 'live' | 'unknown';
+            /** Format: date-time */
+            generated_at: string;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
             };
           };
         };
