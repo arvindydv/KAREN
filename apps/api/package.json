@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@fastify/helmet": "13.2.0",
-    "@fastify/static": "10.1.10",
+    "@fastify/static": "10.1.11",
     "@karen/ai-model-contracts": "workspace:*",
     "@karen/api-contracts": "workspace:*",
     "@karen/config": "workspace:*",
