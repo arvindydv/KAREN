@@ -21,5 +21,6 @@ export const testEnv = (overrides: Record<string, string> = {}): ApiEnv =>
     API_RATE_LIMIT_PER_MINUTE: '1000',
     API_SENSITIVE_RATE_LIMIT_PER_MINUTE: '1000',
     API_BODY_LIMIT_BYTES: '4096',
+    ALLOW_DRAFT_NOTICES: 'true',
     ...overrides,
   });

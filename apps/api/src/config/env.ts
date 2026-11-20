@@ -106,6 +106,13 @@ export const apiEnvShape = {
    * attacker brute-force 6-digit codes offline and take over accounts via password reset.
    */
   OTP_HMAC_KEY: optionalString,
+  /**
+   * Serve DRAFT (not legally reviewed) notices. Local/test only — refused when deployed, so an
+   * unapproved notice can never be presented as approved to real users.
+   */
+  ALLOW_DRAFT_NOTICES: booleanFlag(false),
+  /** HMAC key for consent-receipt MACs (≥ 32 chars). Required when deployed. */
+  CONSENT_RECEIPT_KEY: optionalString,
   AI_SERVICE_URL: z.string().url().default('http://localhost:8100'),
   KAREN_EXECUTION_PAUSED: booleanFlag(false),
 };
@@ -158,6 +165,15 @@ export function loadApiEnv(source: Record<string, string | undefined> = process.
       requiredWhenDeployed('PASSWORD_PEPPERS'),
       requiredWhenDeployed('PASSWORD_PEPPER_CURRENT_ID'),
       requiredWhenDeployed('OTP_HMAC_KEY'),
+      requiredWhenDeployed('CONSENT_RECEIPT_KEY'),
+      (env) =>
+        env.CONSENT_RECEIPT_KEY !== undefined && env.CONSENT_RECEIPT_KEY.length < 32
+          ? 'CONSENT_RECEIPT_KEY must be at least 32 characters'
+          : undefined,
+      (env) =>
+        isDeployedEnv(env.APP_ENV) && env.ALLOW_DRAFT_NOTICES
+          ? 'ALLOW_DRAFT_NOTICES must be false when deployed (drafts are not legally reviewed)'
+          : undefined,
       (env) =>
         env.OTP_HMAC_KEY !== undefined && env.OTP_HMAC_KEY.length < 32
           ? 'OTP_HMAC_KEY must be at least 32 characters'

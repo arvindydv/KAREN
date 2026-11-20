@@ -69,6 +69,10 @@ GRANT SELECT, INSERT, UPDATE ON identity.onboarding_progress TO karen_api_runtim
 -- consent (RLS: own rows only; revocation is an UPDATE, never a DELETE)
 GRANT SELECT, INSERT, UPDATE ON consent.consent_grants TO karen_api_runtime;
 GRANT SELECT, INSERT ON consent.legal_acceptances TO karen_api_runtime;
+-- M6: notices are read-only to the API (written by operators after legal approval);
+-- receipts are append-only (INSERT + SELECT; a trigger also blocks UPDATE/DELETE).
+GRANT SELECT ON consent.notices TO karen_api_runtime;
+GRANT SELECT, INSERT ON consent.consent_receipts TO karen_api_runtime;
 
 -- platform
 GRANT SELECT, INSERT, UPDATE ON platform.idempotency_records TO karen_api_runtime;  -- RLS

@@ -24,6 +24,7 @@ const deployed = {
   PASSWORD_PEPPERS: `p1:${Buffer.alloc(32, 7).toString('base64url')}`,
   PASSWORD_PEPPER_CURRENT_ID: 'p1',
   OTP_HMAC_KEY: 'o'.repeat(40),
+  CONSENT_RECEIPT_KEY: 'c'.repeat(40),
   EMAIL_TRANSPORT: 'brevo-smtp',
   BREVO_SMTP_LOGIN: 'login@smtp-brevo.example',
   BREVO_SMTP_KEY: 'test-only-not-a-key',
@@ -143,5 +144,16 @@ describe('API environment validation', () => {
       }),
     ).toThrow(/EMAIL_FROM/);
     expect(loadApiEnv({ ...base, AUTH_MODE: 'local-dev' }).EMAIL_TRANSPORT).toBe('memory');
+  });
+
+  it('never serves draft notices when deployed and requires a receipt key', () => {
+    expect(() =>
+      loadApiEnv({ ...base, ...deployed, APP_ENV: 'production', ALLOW_DRAFT_NOTICES: 'true' }),
+    ).toThrow(/ALLOW_DRAFT_NOTICES/);
+    const { CONSENT_RECEIPT_KEY: _c, ...noKey } = deployed;
+    expect(() => loadApiEnv({ ...base, ...noKey, APP_ENV: 'staging' })).toThrow(
+      /CONSENT_RECEIPT_KEY/,
+    );
+    expect(loadApiEnv({ ...base, ALLOW_DRAFT_NOTICES: 'true' }).ALLOW_DRAFT_NOTICES).toBe(true);
   });
 });

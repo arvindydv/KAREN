@@ -73,6 +73,7 @@ model User {
   places             SavedPlace[]
   staffRoles         StaffRoleGrant[]
   consentGrants      ConsentGrant[]
+  consentReceipts    ConsentReceipt[]
   legalAcceptances   LegalAcceptance[]
 
   @@map("users")
@@ -334,6 +335,10 @@ enum ConsentPurpose {
   COMMUNICATIONS
   ACTION_EXECUTION
   PRODUCT_ANALYTICS
+  PERSONALIZATION
+  PRECISE_LOCATION
+  AUDIO_RETENTION
+  FAMILY_SHARING
 
   @@schema("consent")
 }
@@ -342,6 +347,7 @@ enum ConsentStatus {
   ACTIVE
   REVOKED
   EXPIRED
+  DENIED
 
   @@schema("consent")
 }
@@ -364,6 +370,7 @@ model ConsentGrant {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, purpose, scope])
   @@index([userId, purpose, status])
   @@map("consent_grants")
   @@schema("consent")
@@ -375,12 +382,62 @@ model LegalAcceptance {
   documentType    String   @map("document_type") @db.VarChar(64)
   documentVersion String   @map("document_version") @db.VarChar(32)
   locale          String   @db.VarChar(35)
+  /// sha256 of the exact notice text accepted (M6).
+  noticeSha256    String?  @map("notice_sha256") @db.VarChar(80)
   acceptedAt      DateTime @default(now()) @map("accepted_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, documentType, documentVersion])
   @@map("legal_acceptances")
+  @@schema("consent")
+}
+
+/// Versioned legal notices (M6). Approved rows are immutable (trigger); drafts are never served
+/// outside local/test. Content is reviewed by legal before approval — never by code.
+model Notice {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kind          String    @db.VarChar(32)
+  locale        String    @db.VarChar(8)
+  version       String    @db.VarChar(32)
+  state         String    @default("draft") @db.VarChar(16)
+  content       String
+  contentSha256 String    @map("content_sha256") @db.VarChar(80)
+  effectiveFrom DateTime? @map("effective_from") @db.Timestamptz(3)
+  approvedBy    String?   @map("approved_by") @db.VarChar(128)
+  approvedAt    DateTime? @map("approved_at") @db.Timestamptz(3)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([kind, locale, version])
+  @@map("notices")
+  @@schema("consent")
+}
+
+/// Append-only, per-user hash-chained consent receipts (M6). receipt_hash = sha256 over the
+/// canonical receipt including prev_hash; receipt_mac = HMAC(server key, receipt_hash).
+model ConsentReceipt {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String         @map("user_id") @db.Uuid
+  seq            Int
+  purpose        ConsentPurpose
+  scope          String         @default("*") @db.VarChar(255)
+  decision       String         @db.VarChar(16)
+  noticeKind     String         @map("notice_kind") @db.VarChar(32)
+  noticeVersion  String         @map("notice_version") @db.VarChar(32)
+  noticeSha256   String         @map("notice_sha256") @db.VarChar(80)
+  source         String         @db.VarChar(32)
+  method         String         @db.VarChar(64)
+  idempotencyKey String?        @map("idempotency_key") @db.VarChar(128)
+  occurredAt     DateTime       @map("occurred_at") @db.Timestamptz(3)
+  prevHash       String?        @map("prev_hash") @db.VarChar(80)
+  receiptHash    String         @map("receipt_hash") @db.VarChar(80)
+  receiptMac     String         @map("receipt_mac") @db.VarChar(100)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, seq])
+  @@unique([userId, idempotencyKey])
+  @@map("consent_receipts")
   @@schema("consent")
 }
 

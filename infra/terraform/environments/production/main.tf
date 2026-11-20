@@ -71,6 +71,7 @@ locals {
     "api/OTP_HMAC_KEY"              = { description = "HMAC key for one-time-code verifiers and auth rate-limit keys" }
     "api/BREVO_SMTP_LOGIN"          = { description = "Brevo SMTP relay login" }
     "api/BREVO_SMTP_KEY"            = { description = "Brevo SMTP relay key" }
+    "api/CONSENT_RECEIPT_KEY"       = { description = "HMAC key for consent receipts (ADR-0019)" }
   }
 
   s = module.secrets.secret_arns
@@ -99,6 +100,7 @@ locals {
       OTP_HMAC_KEY              = local.s["api/OTP_HMAC_KEY"]
       BREVO_SMTP_LOGIN          = local.s["api/BREVO_SMTP_LOGIN"]
       BREVO_SMTP_KEY            = local.s["api/BREVO_SMTP_KEY"]
+      CONSENT_RECEIPT_KEY       = local.s["api/CONSENT_RECEIPT_KEY"]
     })
     "ai-service" = merge(local.common_secrets, local.redis_secret, {
       AI_GATEWAY_API_KEY  = local.s["ai-service/AI_GATEWAY_API_KEY"]

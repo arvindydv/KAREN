@@ -291,9 +291,9 @@ gate. All routes `/v1`, Zod contracts in `@karen/api-contracts`, errors in the s
 | `POST /me/email-change`, `POST /me/email-change/confirm`                                             | S + current password | code to the NEW address; decoy if taken; other sessions revoked | **M4 ✔**  |
 | `POST /me/password`                                                                                  | S + current password | other sessions revoked; throttled like sign-in                  | **M4 ✔**  |
 | `GET /me/onboarding`, `PUT /me/onboarding/steps/:step`, `POST /me/onboarding/{skip,resume,complete}` | S                    | atomic set-union upserts; all idempotent                        | **M5 ✔**  |
-| `GET /consent/notices`, `GET /consent/notices/:kind/:version`                                        | P                    | —                                                               | M6        |
-| `GET /me/consents`, `PUT /me/consents/:purpose`, `GET /me/consents/history`                          | S                    | `Idempotency-Key` + per-purpose version                         | M6        |
-| `GET /me/consents/receipts/:id/verify`                                                               | S                    | —                                                               | M6        |
+| `GET /consent/notices`, `GET /consent/notices/:kind/:version`, `GET /consent/purposes`               | P                    | — (drafts only in local/test)                                   | **M6 ✔**  |
+| `GET /me/consents`, `PUT /me/consents/:purpose`, `GET /me/consents/history`                          | S                    | `If-Match` per purpose + optional `Idempotency-Key`             | **M6 ✔**  |
+| `GET /me/consents/receipts/verify`, `GET /me/legal`, `POST /me/legal/acceptances`                    | S                    | acceptance idempotent                                           | **M6 ✔**  |
 | `POST /me/data-rights/export`, `POST /me/data-rights/deletion`                                       | R / D                | one active request per kind                                     | M7        |
 | `GET /me/data-rights/:id`, `POST /me/data-rights/:id/cancel`                                         | S / D                | idempotent                                                      | M7        |
 | `/staff/auth/*`, `/staff/*`                                                                          | T / TS               | per route                                                       | M8        |
