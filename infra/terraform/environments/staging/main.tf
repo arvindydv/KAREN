@@ -61,10 +61,10 @@ locals {
     "provider-worker/PROVIDER_WEBHOOK_SECRETS" = {
       description = "JSON map of provider -> webhook signing secret"
     }
-    "api/DATABASE_URL"             = { description = "Postgres URL for the api DB role (sslmode=verify-full)" }
-    "ai-service/DATABASE_URL"      = { description = "Postgres URL for the ai-service DB role (sslmode=verify-full)" }
-    "temporal-worker/DATABASE_URL" = { description = "Postgres URL for the temporal-worker DB role (sslmode=verify-full)" }
-    "provider-worker/DATABASE_URL" = { description = "Postgres URL for the provider-worker DB role (sslmode=verify-full)" }
+    # Only the API has PostgreSQL access (least privilege; infra/database/roles.sql). This is the
+    # NON-OWNER runtime role (karen_api_runtime member); the migration role's URL is held by
+    # operators and never injected into a service.
+    "api/DATABASE_URL" = { description = "Postgres URL for the api DB role (sslmode=verify-full)" }
   }
 
   s = module.secrets.secret_arns
@@ -93,14 +93,11 @@ locals {
       AI_GATEWAY_API_KEY  = local.s["ai-service/AI_GATEWAY_API_KEY"]
       LANGFUSE_PUBLIC_KEY = local.s["ai-service/LANGFUSE_PUBLIC_KEY"]
       LANGFUSE_SECRET_KEY = local.s["ai-service/LANGFUSE_SECRET_KEY"]
-      DATABASE_URL        = local.s["ai-service/DATABASE_URL"]
     })
     "temporal-worker" = merge(local.common_secrets, local.temporal_secrets, local.redis_secret, {
-      DATABASE_URL = local.s["temporal-worker/DATABASE_URL"]
     })
     "provider-worker" = merge(local.common_secrets, local.temporal_secrets, local.redis_secret, {
       PROVIDER_WEBHOOK_SECRETS = local.s["provider-worker/PROVIDER_WEBHOOK_SECRETS"]
-      DATABASE_URL             = local.s["provider-worker/DATABASE_URL"]
     })
     "voice-agent" = merge(local.common_secrets, local.livekit_secrets)
     web           = { SENTRY_DSN = local.s["shared/SENTRY_DSN"] }
@@ -129,11 +126,19 @@ locals {
     api = merge(local.base_env, local.redis_env, local.livekit_env, {
       PORT                   = "4100"
       API_TRUSTED_PROXY_HOPS = tostring(var.api_trusted_proxy_hops)
-      AI_SERVICE_URL         = local.ai_service_url
-      TEMPORAL_TLS_ENABLED   = "true"
-      EVENT_BUS_NAME         = module.eventbridge.bus_name
-      USER_ARTIFACTS_BUCKET  = module.s3_user_artifacts.bucket_name
-      EVIDENCE_BUCKET        = module.s3_evidence.bucket_name
+      # Real IdP only (ADR-0015). Unset OIDC values make the API refuse to start: fail closed.
+      AUTH_MODE               = "oidc"
+      OIDC_ISSUER_URL         = var.oidc.issuer_url == null ? "" : var.oidc.issuer_url
+      OIDC_JWKS_URL           = var.oidc.jwks_url == null ? "" : var.oidc.jwks_url
+      OIDC_AUDIENCE           = var.oidc.audience == null ? "" : var.oidc.audience
+      OIDC_AUDIENCE_CLAIM     = var.oidc.audience_claim
+      OIDC_REQUIRED_TOKEN_USE = var.oidc.required_token_use == null ? "" : var.oidc.required_token_use
+      OIDC_ALLOWED_ALGORITHMS = join(",", var.oidc.allowed_algorithms)
+      AI_SERVICE_URL          = local.ai_service_url
+      TEMPORAL_TLS_ENABLED    = "true"
+      EVENT_BUS_NAME          = module.eventbridge.bus_name
+      USER_ARTIFACTS_BUCKET   = module.s3_user_artifacts.bucket_name
+      EVIDENCE_BUCKET         = module.s3_evidence.bucket_name
     })
     "ai-service" = merge(local.base_env, local.redis_env, {
       PORT                  = "8100"

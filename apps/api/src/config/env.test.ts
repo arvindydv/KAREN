@@ -34,6 +34,32 @@ describe('API environment validation', () => {
     },
   );
 
+  it('requires token_use=access when validating Cognito client_id instead of aud', () => {
+    expect(() => loadApiEnv({ ...base, ...oidc, OIDC_AUDIENCE_CLAIM: 'client_id' })).toThrow(
+      /OIDC_REQUIRED_TOKEN_USE/,
+    );
+    const cognito = {
+      ...base,
+      ...oidc,
+      OIDC_AUDIENCE_CLAIM: 'client_id',
+      OIDC_REQUIRED_TOKEN_USE: 'access',
+      OIDC_ISSUER_URL: 'https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_AbC123',
+      OIDC_JWKS_URL:
+        'https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_AbC123/.well-known/jwks.json',
+    };
+    expect(loadApiEnv(cognito).OIDC_AUDIENCE_CLAIM).toBe('client_id');
+    // Trailing slash would make every real token fail the exact `iss` match.
+    expect(() =>
+      loadApiEnv({ ...cognito, OIDC_ISSUER_URL: `${cognito.OIDC_ISSUER_URL}/` }),
+    ).toThrow(/no trailing slash/);
+  });
+
+  it('requires the JWKS to be served by the issuer origin', () => {
+    expect(() =>
+      loadApiEnv({ ...base, ...oidc, OIDC_JWKS_URL: 'https://keys.attacker.example/jwks.json' }),
+    ).toThrow(/same origin/);
+  });
+
   it('requires complete OIDC settings in oidc mode', () => {
     expect(() => loadApiEnv({ ...base, AUTH_MODE: 'oidc' })).toThrow(/OIDC_ISSUER_URL/);
   });

@@ -40,6 +40,17 @@ export interface TokenVerifierOptions {
   /** Key resolver: remote JWKS (OIDC) or a local key set (local-dev / tests). */
   keys: JWTVerifyGetKey;
   clockToleranceSeconds?: number;
+  /**
+   * Which claim carries the expected audience. Standard OIDC access tokens use `aud`.
+   * Amazon Cognito user-pool ACCESS tokens have no `aud`; they carry the app client id in
+   * `client_id` (ADR-0015), so the API validates that claim instead — still exact-match.
+   */
+  audienceClaim?: 'aud' | 'client_id';
+  /**
+   * When set, the token's `token_use` claim must equal this value (Cognito: `access`).
+   * Prevents an ID token from being replayed as an API access token.
+   */
+  requiredTokenUse?: string;
 }
 
 /**
@@ -57,30 +68,51 @@ export class TokenVerifier {
   async verify(token: string | undefined): Promise<VerifiedToken> {
     if (!token) throw new TokenVerificationError('MISSING_TOKEN');
     if (token.split('.').length !== 3) throw new TokenVerificationError('MALFORMED_TOKEN');
+    const audienceClaim = this.options.audienceClaim ?? 'aud';
+    let payload: JWTPayload;
     try {
-      const { payload } = await jwtVerify(token, this.options.keys, {
+      ({ payload } = await jwtVerify(token, this.options.keys, {
         issuer: this.options.issuer,
-        audience: this.options.audience,
+        ...(audienceClaim === 'aud' ? { audience: this.options.audience } : {}),
         algorithms: this.options.algorithms,
         clockTolerance: this.options.clockToleranceSeconds ?? 30,
         requiredClaims: ['sub', 'exp', 'iat'],
-      });
-      return {
-        issuer: payload.iss ?? this.options.issuer,
-        subject: payload.sub ?? '',
-        audience: payload.aud ?? this.options.audience,
-        expiresAt: payload.exp ?? 0,
-        acr: typeof payload.acr === 'string' ? payload.acr : undefined,
-        amr: Array.isArray(payload.amr) ? (payload.amr as string[]) : undefined,
-        claims: payload,
-      };
+      }));
     } catch (error) {
       throw new TokenVerificationError(classify(error));
     }
+    // Checked only after the signature is verified, so these claims are trustworthy.
+    if (audienceClaim === 'client_id' && payload.client_id !== this.options.audience) {
+      throw new TokenVerificationError('CLAIM_MISMATCH');
+    }
+    if (
+      this.options.requiredTokenUse !== undefined &&
+      payload.token_use !== this.options.requiredTokenUse
+    ) {
+      throw new TokenVerificationError('CLAIM_MISMATCH');
+    }
+    return {
+      issuer: payload.iss ?? this.options.issuer,
+      subject: payload.sub ?? '',
+      audience: payload.aud ?? this.options.audience,
+      expiresAt: payload.exp ?? 0,
+      acr: typeof payload.acr === 'string' ? payload.acr : undefined,
+      amr: Array.isArray(payload.amr) ? (payload.amr as string[]) : undefined,
+      claims: payload,
+    };
+  }
+}
+
+/** The IdP's JWKS endpoint could not be reached (network/DNS/TLS), as opposed to a bad token. */
+export class JwksUnavailableError extends Error {
+  constructor(cause: unknown) {
+    super('JWKS endpoint unreachable', { cause });
+    this.name = 'JwksUnavailableError';
   }
 }
 
 function classify(error: unknown): TokenRejection {
+  if (error instanceof JwksUnavailableError) return 'JWKS_UNAVAILABLE';
   if (error instanceof joseErrors.JWTExpired) return 'EXPIRED';
   if (error instanceof joseErrors.JWTClaimValidationFailed) return 'CLAIM_MISMATCH';
   if (error instanceof joseErrors.JWSSignatureVerificationFailed) return 'INVALID_SIGNATURE';
@@ -96,9 +128,24 @@ function classify(error: unknown): TokenRejection {
  * Remote JWKS with caching and rotation support: jose refetches when a token carries an
  * unknown `kid` (subject to a cooldown), so IdP key rotation needs no restart.
  */
-export const remoteJwks = (jwksUrl: string): JWTVerifyGetKey =>
-  createRemoteJWKSet(new URL(jwksUrl), {
+export const remoteJwks = (
+  jwksUrl: string,
+  tuning: { cooldownDuration?: number } = {},
+): JWTVerifyGetKey => {
+  const jwks = createRemoteJWKSet(new URL(jwksUrl), {
     timeoutDuration: 3_000,
-    cooldownDuration: 30_000,
+    cooldownDuration: tuning.cooldownDuration ?? 30_000,
     cacheMaxAge: 10 * 60_000,
   });
+  // jose surfaces network failures as a bare `TypeError: fetch failed`, which would otherwise be
+  // misclassified as a malformed token (401, "sign in again"). Tag them so callers can answer
+  // 503/retryable instead — still fail-closed: no key, no access.
+  return async (header, token) => {
+    try {
+      return await jwks(header, token);
+    } catch (error) {
+      if (error instanceof joseErrors.JOSEError) throw error;
+      throw new JwksUnavailableError(error);
+    }
+  };
+};

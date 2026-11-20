@@ -57,6 +57,10 @@ export const apiEnvShape = {
   OIDC_ALLOWED_ALGORITHMS: csv.pipe(
     z.array(z.enum(['RS256', 'RS384', 'RS512', 'PS256', 'ES256', 'ES384', 'EdDSA'])),
   ),
+  /** `aud` (standard OIDC) or `client_id` (Amazon Cognito access tokens — ADR-0015). */
+  OIDC_AUDIENCE_CLAIM: z.enum(['aud', 'client_id']).default('aud'),
+  /** Required `token_use` claim (Cognito: `access`); empty = not checked. */
+  OIDC_REQUIRED_TOKEN_USE: optionalString,
   AI_SERVICE_URL: z.string().url().default('http://localhost:8100'),
   KAREN_EXECUTION_PAUSED: booleanFlag(false),
 };
@@ -80,6 +84,32 @@ export function loadApiEnv(source: Record<string, string | undefined> = process.
       (env) =>
         env.AUTH_MODE === 'oidc' && env.OIDC_ALLOWED_ALGORITHMS.length === 0
           ? 'OIDC_ALLOWED_ALGORITHMS must list at least one asymmetric algorithm'
+          : undefined,
+      // Cognito access tokens carry no `aud`; validating `client_id` without also pinning
+      // token_use=access would let an ID token (whose `aud` is the client id) through.
+      (env) =>
+        env.AUTH_MODE === 'oidc' &&
+        env.OIDC_AUDIENCE_CLAIM === 'client_id' &&
+        env.OIDC_REQUIRED_TOKEN_USE !== 'access'
+          ? 'OIDC_REQUIRED_TOKEN_USE must be "access" when OIDC_AUDIENCE_CLAIM=client_id'
+          : undefined,
+      // Keys must come from the issuer itself: a JWKS on another host could vouch for anything.
+      (env) =>
+        env.AUTH_MODE === 'oidc' &&
+        env.OIDC_ISSUER_URL &&
+        env.OIDC_JWKS_URL &&
+        new URL(env.OIDC_JWKS_URL).origin !== new URL(env.OIDC_ISSUER_URL).origin
+          ? 'OIDC_JWKS_URL must be served from the same origin as OIDC_ISSUER_URL'
+          : undefined,
+      // Cognito issuers are exact strings without a trailing slash; a mismatch rejects every
+      // token. Catch it at boot instead of as a production-wide 401.
+      (env) =>
+        env.AUTH_MODE === 'oidc' &&
+        env.OIDC_AUDIENCE_CLAIM === 'client_id' &&
+        !/^https:\/\/cognito-idp\.[a-z0-9-]+\.amazonaws\.com\/[a-z0-9-]+_[A-Za-z0-9]+$/.test(
+          env.OIDC_ISSUER_URL ?? '',
+        )
+          ? 'OIDC_ISSUER_URL must be https://cognito-idp.<region>.amazonaws.com/<pool-id> (no trailing slash) when OIDC_AUDIENCE_CLAIM=client_id'
           : undefined,
       (env) =>
         env.APP_ENV === 'production' && env.API_DOCS_ENABLED

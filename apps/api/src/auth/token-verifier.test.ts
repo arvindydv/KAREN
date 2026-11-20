@@ -1,9 +1,9 @@
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { SignJWT, createRemoteJWKSet, exportJWK, generateKeyPair, type JWK } from 'jose';
+import { SignJWT, exportJWK, generateKeyPair, type JWK } from 'jose';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { LOCAL_DEV_AUDIENCE, LOCAL_DEV_ISSUER, LocalDevIssuer } from './local-dev-issuer.js';
-import { TokenVerifier, type TokenRejection } from './token-verifier.js';
+import { TokenVerifier, remoteJwks, type TokenRejection } from './token-verifier.js';
 
 const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url');
 
@@ -127,7 +127,7 @@ describe('TokenVerifier (remote JWKS rotation)', () => {
       issuer: 'https://idp.example',
       audience: 'karen-api',
       algorithms: ['RS256'],
-      keys: createRemoteJWKSet(new URL(url), { cooldownDuration: 0 }),
+      keys: remoteJwks(url, { cooldownDuration: 0 }),
     });
     await expect(verifier.verify(await sign(k1.privateKey, 'k1'))).resolves.toMatchObject({
       subject: 'user-1',
@@ -142,5 +142,74 @@ describe('TokenVerifier (remote JWKS rotation)', () => {
     // A key id that was never published by the IdP is rejected.
     const k3 = await keyPair('k3');
     expect(await rejection(verifier.verify(await sign(k3.privateKey, 'k3')))).toBe('KEY_NOT_FOUND');
+  });
+});
+
+describe('TokenVerifier (JWKS endpoint unreachable)', () => {
+  it('classifies a network failure as JWKS_UNAVAILABLE (not a bad token) and still denies', async () => {
+    const { privateKey } = await generateKeyPair('RS256');
+    const token = await new SignJWT({})
+      .setProtectedHeader({ alg: 'RS256', kid: 'k' })
+      .setIssuer('https://idp.example')
+      .setAudience('karen-api')
+      .setSubject('user-1')
+      .setIssuedAt()
+      .setExpirationTime('5m')
+      .sign(privateKey);
+    const verifier = new TokenVerifier({
+      issuer: 'https://idp.example',
+      audience: 'karen-api',
+      algorithms: ['RS256'],
+      keys: remoteJwks('http://127.0.0.1:1/jwks.json'),
+    });
+    expect(await rejection(verifier.verify(token))).toBe('JWKS_UNAVAILABLE');
+  });
+});
+
+describe('TokenVerifier (Cognito-shaped access tokens, ADR-0015)', () => {
+  const ISS = 'https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_EXAMPLE';
+  const CLIENT = 'example-app-client-id';
+  let sign: (claims: Record<string, unknown>) => Promise<string>;
+  let verifier: TokenVerifier;
+
+  beforeAll(async () => {
+    const { publicKey, privateKey } = await generateKeyPair('RS256');
+    const keys = async () => publicKey;
+    sign = (claims) =>
+      new SignJWT(claims)
+        .setProtectedHeader({ alg: 'RS256', kid: 'k1' })
+        .setIssuer(ISS)
+        .setSubject('8f1c2b9e-0000-4000-8000-000000000001')
+        .setIssuedAt()
+        .setExpirationTime('5m')
+        .sign(privateKey);
+    verifier = new TokenVerifier({
+      issuer: ISS,
+      audience: CLIENT,
+      algorithms: ['RS256'],
+      keys,
+      audienceClaim: 'client_id',
+      requiredTokenUse: 'access',
+    });
+  });
+
+  it('accepts an access token whose client_id matches (no aud claim)', async () => {
+    const v = await verifier.verify(await sign({ client_id: CLIENT, token_use: 'access' }));
+    expect(v.issuer).toBe(ISS);
+  });
+
+  it('rejects an ID token (token_use=id, aud=client) used as an access token', async () => {
+    expect(await rejection(verifier.verify(await sign({ aud: CLIENT, token_use: 'id' })))).toBe(
+      'CLAIM_MISMATCH',
+    );
+  });
+
+  it('rejects another app client and a missing client_id', async () => {
+    expect(
+      await rejection(verifier.verify(await sign({ client_id: 'other', token_use: 'access' }))),
+    ).toBe('CLAIM_MISMATCH');
+    expect(await rejection(verifier.verify(await sign({ token_use: 'access' })))).toBe(
+      'CLAIM_MISMATCH',
+    );
   });
 });
