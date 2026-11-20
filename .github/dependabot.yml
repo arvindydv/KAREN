@@ -1,0 +1,52 @@
+# Dependency update automation. The cooldown enforces the 7-day release-age policy (ADR-0010):
+# Dependabot will not propose a version until it has been public for at least 7 days.
+# Security updates are raised by Dependabot alerts independently of this schedule.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ['*']
+
+  - package-ecosystem: npm # pnpm workspace (reads pnpm-lock.yaml)
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
+    groups:
+      dev-tooling:
+        dependency-type: development
+        update-types: [minor, patch]
+
+  - package-ecosystem: uv
+    directories: [/apps/ai-service, /apps/voice-agent]
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: docker
+    directories: [/infra/docker, /apps/ai-service, /apps/voice-agent]
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: terraform
+    directories:
+      [
+        /infra/terraform/environments/dev,
+        /infra/terraform/environments/staging,
+        /infra/terraform/environments/production,
+      ]
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7

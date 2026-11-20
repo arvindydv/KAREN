@@ -57,6 +57,22 @@ export const providerDescriptorSchema = z
     dataResidency: z.string().min(2),
     rateLimitPerMinute: z.number().int().positive(),
     webhookSignature: z.enum(['HMAC_SHA256', 'NONE']),
+    /**
+     * How an ambiguous outcome is resolved (task safety contract §2.2 rule 4–5). Webhooks
+     * alone never prove an outcome; side effects need provider-authoritative read-back.
+     */
+    reconciliation: z
+      .enum(['STATUS_READBACK', 'WEBHOOK_AND_READBACK', 'MANUAL_ONLY', 'NONE'])
+      .default('NONE'),
+    // ── Capability-registry / feasibility metadata (roadmap F00-04) ──────────────────────
+    /** Accountable owner of the commercial/legal relationship (team or role, not a person's e-mail). */
+    contractOwner: z.string().min(2).max(120).optional(),
+    /** When the contract / API terms that grant access lapse (ISO 8601). */
+    legalAccessExpiresAt: z.iso.datetime({ offset: true }).optional(),
+    /** Consent scopes a user must have granted before this provider is used for them. */
+    requiredConsentScopes: z.array(z.string().regex(/^[a-z0-9_.:-]{1,64}$/)).default([]),
+    /** Fallback provider ids for the same capability (used for planning, never auto-execution). */
+    alternatives: z.array(z.string().regex(/^[a-z0-9][a-z0-9_-]{1,62}$/)).default([]),
   })
   .strict()
   .superRefine((d, ctx) => {
@@ -78,6 +94,12 @@ export const providerDescriptorSchema = z
             message: `Side-effecting capability "${c.capability}" needs an idempotency strategy`,
           });
         }
+        if (d.reconciliation !== 'STATUS_READBACK' && d.reconciliation !== 'WEBHOOK_AND_READBACK') {
+          ctx.addIssue({
+            code: 'custom',
+            message: `Side-effecting capability "${c.capability}" needs provider read-back reconciliation`,
+          });
+        }
         if (d.legalAccess === 'NOT_APPROVED') {
           ctx.addIssue({
             code: 'custom',
@@ -89,9 +111,34 @@ export const providerDescriptorSchema = z
     if (caps.includes('webhook') && d.webhookSignature === 'NONE') {
       ctx.addIssue({ code: 'custom', message: 'Webhook capability requires signature validation' });
     }
+    if (d.environment === 'PRODUCTION') {
+      if (d.legalAccess !== 'CONTRACTED' && d.legalAccess !== 'PUBLIC_API_TERMS') {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'A PRODUCTION provider needs CONTRACTED or PUBLIC_API_TERMS legal access',
+        });
+      }
+      if (!d.contractOwner || !d.legalAccessExpiresAt) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'A PRODUCTION provider must name a contractOwner and legalAccessExpiresAt',
+        });
+      }
+    }
   });
 
-export type ProviderDescriptor = z.infer<typeof providerDescriptorSchema>;
+export type ProviderDescriptor = z.input<typeof providerDescriptorSchema>;
+export type ValidatedProviderDescriptor = z.output<typeof providerDescriptorSchema>;
+
+/** False once the contract / API terms granting access have lapsed. Deny when unsure. */
+export const hasCurrentLegalAccess = (
+  d: Pick<ProviderDescriptor, 'environment' | 'legalAccess' | 'legalAccessExpiresAt'>,
+  now = new Date(),
+): boolean => {
+  if (d.legalAccess === 'NOT_APPROVED') return false;
+  if (d.legalAccessExpiresAt === undefined) return d.environment === 'SANDBOX';
+  return new Date(d.legalAccessExpiresAt).getTime() > now.getTime();
+};
 
 export const supportsCapability = (d: ProviderDescriptor, c: ProviderCapability): boolean =>
   d.capabilities.some((decl) => decl.capability === c);

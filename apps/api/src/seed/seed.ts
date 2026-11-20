@@ -13,7 +13,12 @@ if (env.APP_ENV !== 'local' && env.APP_ENV !== 'test') {
   throw new Error(`Refusing to seed when APP_ENV=${env.APP_ENV}`);
 }
 
-const prisma = new PrismaService(env);
+// Seeding writes staff role grants, which the RLS-bound runtime role cannot do by design:
+// connect as the migration/owner role when one is configured.
+const prisma = new PrismaService({
+  ...env,
+  DATABASE_URL: process.env.MIGRATION_DATABASE_URL ?? env.DATABASE_URL,
+});
 try {
   for (const u of syntheticUsers()) {
     const existing = await prisma.externalIdentity.findUnique({

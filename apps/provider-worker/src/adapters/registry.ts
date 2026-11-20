@@ -1,6 +1,8 @@
 import {
   ProviderCapabilityUnavailableError,
+  SIDE_EFFECTING_CAPABILITIES,
   assertCapability,
+  hasCurrentLegalAccess,
   providerDescriptorSchema,
   type ProviderCapability,
 } from '@karen/domain';
@@ -42,6 +44,10 @@ export class ProviderRegistry {
   require(providerId: string, capability: ProviderCapability): ProviderAdapter {
     const adapter = this.get(providerId);
     assertCapability(adapter.descriptor, capability);
+    // A lapsed contract / API terms means no side effects, even if the code still exists.
+    if (SIDE_EFFECTING_CAPABILITIES.has(capability) && !hasCurrentLegalAccess(adapter.descriptor)) {
+      throw new ProviderCapabilityUnavailableError(providerId, capability);
+    }
     const method =
       capability === 'search'
         ? 'search'

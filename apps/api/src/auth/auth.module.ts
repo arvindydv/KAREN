@@ -42,6 +42,10 @@ export class AuthModule {
                   audience: e.OIDC_AUDIENCE ?? '',
                   algorithms: e.OIDC_ALLOWED_ALGORITHMS,
                   keys: remoteJwks(e.OIDC_JWKS_URL ?? ''),
+                  audienceClaim: e.OIDC_AUDIENCE_CLAIM,
+                  ...(e.OIDC_REQUIRED_TOKEN_USE
+                    ? { requiredTokenUse: e.OIDC_REQUIRED_TOKEN_USE }
+                    : {}),
                 }),
         },
         { provide: APP_GUARD, useClass: AuthGuard },

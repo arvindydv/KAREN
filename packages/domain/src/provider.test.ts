@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ProviderCapabilityUnavailableError,
   assertCapability,
+  hasCurrentLegalAccess,
   isSearchOnly,
   providerDescriptorSchema,
 } from './provider.js';
@@ -66,6 +67,62 @@ describe('provider descriptor validation', () => {
     });
     expect(r.success).toBe(false);
     expect(providerDescriptorSchema.safeParse({ ...searchOnly, extra: 1 }).success).toBe(false);
+  });
+});
+
+describe('provider capability registry metadata (F00-04)', () => {
+  const transactional = {
+    ...searchOnly,
+    capabilities: [
+      {
+        capability: 'confirm',
+        idempotencySupport: 'NATIVE_KEY',
+        requiredApproval: 'TRANSACTION_APPROVAL',
+        userActionRequired: false,
+      },
+    ],
+  } as const;
+
+  it('side effects require provider read-back reconciliation (webhook alone is not proof)', () => {
+    const r = providerDescriptorSchema.safeParse(transactional);
+    expect(JSON.stringify(r.error?.issues)).toContain('read-back reconciliation');
+    expect(
+      providerDescriptorSchema.safeParse({ ...transactional, reconciliation: 'MANUAL_ONLY' })
+        .success,
+    ).toBe(false);
+    expect(
+      providerDescriptorSchema.safeParse({ ...transactional, reconciliation: 'STATUS_READBACK' })
+        .success,
+    ).toBe(true);
+  });
+
+  it('PRODUCTION providers need contracted access, an owner and an expiry', () => {
+    const prod = { ...searchOnly, environment: 'PRODUCTION', legalAccess: 'SANDBOX_ONLY' };
+    const r = providerDescriptorSchema.safeParse(prod);
+    expect(JSON.stringify(r.error?.issues)).toContain('CONTRACTED or PUBLIC_API_TERMS');
+    expect(JSON.stringify(r.error?.issues)).toContain('contractOwner');
+    expect(
+      providerDescriptorSchema.safeParse({
+        ...prod,
+        legalAccess: 'CONTRACTED',
+        contractOwner: 'partnerships',
+        legalAccessExpiresAt: '2027-12-31T00:00:00Z',
+      }).success,
+    ).toBe(true);
+  });
+
+  it('legal access lapses at its expiry and is denied when unknown in production', () => {
+    const now = new Date('2027-01-01T00:00:00Z');
+    const base = { ...searchOnly, environment: 'PRODUCTION', legalAccess: 'CONTRACTED' } as const;
+    expect(
+      hasCurrentLegalAccess({ ...base, legalAccessExpiresAt: '2027-06-01T00:00:00Z' }, now),
+    ).toBe(true);
+    expect(
+      hasCurrentLegalAccess({ ...base, legalAccessExpiresAt: '2026-06-01T00:00:00Z' }, now),
+    ).toBe(false);
+    expect(hasCurrentLegalAccess(base, now)).toBe(false);
+    expect(hasCurrentLegalAccess(searchOnly, now)).toBe(true);
+    expect(hasCurrentLegalAccess({ ...searchOnly, legalAccess: 'NOT_APPROVED' }, now)).toBe(false);
   });
 });
 

@@ -43,7 +43,9 @@ const worker = await Worker.create({
   connection,
   namespace: env.TEMPORAL_NAMESPACE,
   taskQueue: TASK_QUEUES.PROVIDER_OPERATIONS,
-  activities: createProviderActivities(registry),
+  activities: createProviderActivities(registry, {
+    executionPaused: () => env.KAREN_EXECUTION_PAUSED,
+  }),
   // Bounded concurrency protects partner rate limits.
   maxConcurrentActivityTaskExecutions: 20,
   shutdownGraceTime: '30 seconds',

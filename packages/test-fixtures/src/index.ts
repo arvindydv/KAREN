@@ -106,4 +106,5 @@ export const sandboxTransactionalProvider: ProviderDescriptor = {
   dataResidency: 'IN',
   rateLimitPerMinute: 120,
   webhookSignature: 'HMAC_SHA256',
+  reconciliation: 'STATUS_READBACK',
 };

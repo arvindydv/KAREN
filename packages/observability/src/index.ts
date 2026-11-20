@@ -15,3 +15,4 @@ export const ATTR = {
   MODEL_SERVED: 'karen.ai.served_model',
   COST_USD_ESTIMATED: 'karen.ai.estimated_cost_usd',
 } as const;
+export * from './metrics.js';

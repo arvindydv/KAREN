@@ -21,6 +21,12 @@ permissions:
   contents: read
   id-token: write
 
+# Never run two rollouts of the same service into the same environment at once; never cancel
+# an in-flight rollout (a half-cancelled deploy is harder to reason about than a queued one).
+concurrency:
+  group: deploy-${{ inputs.environment }}-${{ inputs.service }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
     if: vars.DEPLOYMENTS_ENABLED == 'true'
@@ -28,27 +34,35 @@ jobs:
     environment: ${{ inputs.environment }}
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ap-south-1
-      - uses: aws-actions/amazon-ecr-login@v2
+      - uses: aws-actions/amazon-ecr-login@7290e214a610b32bc0eef81748948b6d466a8783 # v2.2.0
         id: ecr
       - name: Build and push image (tag = commit SHA; images are immutable)
+        # Inputs reach the script through env, never via expression interpolation into shell text.
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          TARGET_ENV: ${{ inputs.environment }}
+          SERVICE: ${{ inputs.service }}
         run: |
           set -euo pipefail
-          IMAGE="${{ steps.ecr.outputs.registry }}/karen-${{ inputs.environment }}-${{ inputs.service }}:${GITHUB_SHA}"
-          case "${{ inputs.service }}" in
+          IMAGE="${REGISTRY}/karen-${TARGET_ENV}-${SERVICE}:${GITHUB_SHA}"
+          case "$SERVICE" in
             api) docker build -f infra/docker/node-service.Dockerfile --build-arg APP=api --build-arg HEALTH_PORT=4100 -t "$IMAGE" . ;;
             temporal-worker) docker build -f infra/docker/node-service.Dockerfile --build-arg APP=temporal-worker --build-arg HEALTH_PORT=4300 -t "$IMAGE" . ;;
             provider-worker) docker build -f infra/docker/node-service.Dockerfile --build-arg APP=provider-worker --build-arg HEALTH_PORT=4200 -t "$IMAGE" . ;;
-            ai-service|voice-agent) docker build -t "$IMAGE" "apps/${{ inputs.service }}" ;;
+            ai-service|voice-agent) docker build -t "$IMAGE" "apps/${SERVICE}" ;;
+            *) echo "unknown service: $SERVICE" >&2; exit 1 ;;
           esac
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
       - name: Roll out via Terraform image tag
+        env:
+          TARGET_ENV: ${{ inputs.environment }}
         run: |
           echo "Image pushed: $IMAGE"
-          echo "Rollout is performed by updating image_tags in Terraform for ${{ inputs.environment }} and applying with review."
+          echo "Rollout is performed by updating image_tags in Terraform for ${TARGET_ENV} and applying with review."
           echo "Database migrations are NEVER applied automatically by this workflow (see docs/runbooks/database-migrations.md)."

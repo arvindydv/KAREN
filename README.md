@@ -13,7 +13,7 @@ This repository is the engineering foundation: a pnpm/Turborepo TypeScript monor
 ```bash
 corepack enable && pnpm install && pnpm setup:env
 uv sync --project apps/ai-service
-pnpm infra:up && pnpm db:migrate:deploy && pnpm db:seed
+pnpm infra:up && pnpm db:migrate:deploy && pnpm db:roles && pnpm db:seed
 pnpm dev:core          # api :4100 · ai-service :8100 · temporal-worker · provider-worker
 pnpm dev:web           # :3000      pnpm dev:admin  # :3001      pnpm dev:mobile
 ```

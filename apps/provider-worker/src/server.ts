@@ -70,7 +70,17 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
       );
       return reply.status(200).send({ status: 'duplicate_ignored' });
     }
-    await deps.sink.accept(providerId, result.event);
+    try {
+      await deps.sink.accept(providerId, result.event);
+    } catch (error) {
+      // Hand-off failed: release the claim so the provider's retry (non-2xx) is processed.
+      await deps.replayGuard.release(providerId, result.event.eventId);
+      deps.log.error(
+        { provider_id: providerId, event_id: result.event.eventId, err: error },
+        'provider.webhook.sink_failed',
+      );
+      return reply.status(503).send({ error: 'temporarily_unavailable' });
+    }
     return reply.status(202).send({ status: 'accepted' });
   });
 

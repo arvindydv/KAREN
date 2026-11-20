@@ -61,6 +61,7 @@ const providerExecute = proxyActivities<Pick<ProviderActivities, 'executeProvide
       FAILURE_TYPES.PROVIDER_AMBIGUOUS,
       FAILURE_TYPES.PROVIDER_REJECTED,
       FAILURE_TYPES.CAPABILITY_UNAVAILABLE,
+      FAILURE_TYPES.EXECUTION_PAUSED,
     ],
   },
 });
@@ -146,11 +147,13 @@ export async function actionExecutionWorkflow(
     }
     const violations = verifyExecutionAgainstApproval(
       {
+        // Subject fields come from the APPROVAL, not from this workflow's input; otherwise
+        // the subject check would compare the input with itself and always pass.
         id: approval.approvalId,
-        userId: input.userId,
-        taskId: input.taskId,
-        actionType: input.actionCategory,
-        providerId: input.providerId,
+        userId: approval.userId,
+        taskId: approval.taskId,
+        actionType: approval.actionType,
+        providerId: approval.providerId,
         payloadHash: approval.payloadHash,
         maximumTotal: approval.maximumTotal,
         risk: decision.risk,
@@ -213,6 +216,12 @@ export async function actionExecutionWorkflow(
       error instanceof ActivityFailure && error.cause instanceof ApplicationFailure
         ? error.cause.type
         : undefined;
+    if (type === FAILURE_TYPES.EXECUTION_PAUSED) {
+      // The kill switch refused BEFORE dispatch: nothing reached the provider.
+      await moveTo('RECOVERY_IN_PROGRESS', 'execution paused by kill switch; nothing dispatched');
+      await moveTo('ESCALATED', 'held for human review while execution is paused');
+      return finish(null);
+    }
     if (type !== FAILURE_TYPES.PROVIDER_AMBIGUOUS) throw error;
     // Ambiguous: do NOT retry the side effect. Reconcile by idempotency key first.
     await moveTo('RECOVERY_IN_PROGRESS', 'ambiguous provider response; reconciling');

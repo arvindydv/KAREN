@@ -3,11 +3,13 @@ import { ConsentService } from '../src/consent/consent.service.js';
 import { pgvectorVersion, vectorL2Distance } from '../src/infrastructure/database/vector.js';
 import { PrismaService } from '../src/infrastructure/database/prisma.service.js';
 import { RedisService } from '../src/infrastructure/redis/redis.service.js';
-import { testEnv } from './env.js';
+import { TEST_OWNER_DATABASE_URL, testEnv } from './env.js';
 
 describe('database foundation (integration)', () => {
   const env = testEnv();
-  const prisma = new PrismaService(env);
+  // Schema-level behaviour (constraints, triggers) is asserted as the owner role; RLS and
+  // grants for the runtime role are covered in rls.int.test.ts.
+  const prisma = new PrismaService(testEnv({ DATABASE_URL: TEST_OWNER_DATABASE_URL }));
   const redis = new RedisService(env);
 
   beforeAll(async () => prisma.$connect());

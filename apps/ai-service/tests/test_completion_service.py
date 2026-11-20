@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from pathlib import Path
 
 import pytest
@@ -144,3 +145,34 @@ async def test_stream_error_after_partial_output_is_terminal(make_settings: Sett
     assert not any(isinstance(e, DoneEvent) for e in events)
     assert len(gateway.calls) == 1  # no replay
     assert sink.records[0].first_token_at is not None
+
+
+async def test_client_disconnect_mid_stream_settles_budget_and_records_cancel(
+    make_settings: SettingsFactory, tmp_path: Path
+) -> None:
+    """Failure drill (roadmap F00-02): the caller hangs up after the first delta.
+
+    The reservation must be settled conservatively (never leaked as in-flight, never refunded
+    to zero, since the provider may still bill), the invocation recorded as cancelled, and the
+    gateway call never replayed.
+    """
+    registry = write_registry(tmp_path / "priced.json", price=100.0)
+    tracker = InMemoryDailyBudgetTracker(1.0)
+    gateway, sink = MockGatewayClient(), InMemoryInvocationSink()
+    service = build_completion_service(
+        make_settings(karen_model_registry_path=registry), gateway=gateway, sink=sink, budget=tracker
+    )
+    prepared = await service.prepare(_request(max_output_tokens=200), stream=True)
+    assert prepared.reservation is not None
+    stream = service.stream_events(prepared)
+    assert isinstance(stream, AsyncGenerator)
+    assert isinstance(await anext(stream), StartEvent)
+    assert isinstance(await anext(stream), DeltaEvent)
+    await stream.aclose()  # what Starlette does when the HTTP client disconnects
+
+    assert await tracker.spent_today() == pytest.approx(prepared.estimated_cost_usd)
+    assert tracker._reserved == {}  # nothing left in flight
+    [record] = sink.records
+    assert record.status == "cancelled"
+    assert record.first_token_at is not None
+    assert len(gateway.calls) == 1

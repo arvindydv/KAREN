@@ -8,6 +8,11 @@ import type { Redis } from 'ioredis';
 export interface ReplayGuard {
   /** Returns true if this is the first time the event is seen. */
   claim(providerId: string, eventId: string): Promise<boolean>;
+  /**
+   * Undo a claim when the event could not be handed off, so the provider's retry is processed
+   * instead of being acknowledged as a duplicate and lost.
+   */
+  release(providerId: string, eventId: string): Promise<void>;
 }
 
 export class RedisReplayGuard implements ReplayGuard {
@@ -26,6 +31,10 @@ export class RedisReplayGuard implements ReplayGuard {
     );
     return result === 'OK';
   }
+
+  async release(providerId: string, eventId: string): Promise<void> {
+    await this.redis.del(`karen:webhook:seen:${providerId}:${eventId}`);
+  }
 }
 
 export class InMemoryReplayGuard implements ReplayGuard {
@@ -35,5 +44,10 @@ export class InMemoryReplayGuard implements ReplayGuard {
     if (this.seen.has(key)) return Promise.resolve(false);
     this.seen.add(key);
     return Promise.resolve(true);
+  }
+
+  release(providerId: string, eventId: string): Promise<void> {
+    this.seen.delete(`${providerId}:${eventId}`);
+    return Promise.resolve();
   }
 }

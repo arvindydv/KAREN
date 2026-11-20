@@ -52,9 +52,16 @@ export class AuthGuard implements CanActivate {
       if (error instanceof TokenVerificationError) {
         // Log the reason class only — never the token.
         this.logger.warn({ reason: error.reason }, 'Rejected access token');
-        throw new ApiError('UNAUTHENTICATED', 'Authentication is required.', {
-          retryable: error.reason === 'JWKS_UNAVAILABLE',
-        });
+        if (error.reason === 'JWKS_UNAVAILABLE') {
+          // IdP key endpoint down: deny (fail closed) but do not tell clients the session is
+          // invalid — a 401 would sign every user out during an IdP blip.
+          throw new ApiError(
+            'DEPENDENCY_UNAVAILABLE',
+            'Sign-in verification is temporarily unavailable. Please retry.',
+            { retryable: true },
+          );
+        }
+        throw new ApiError('UNAUTHENTICATED', 'Authentication is required.');
       }
       throw error;
     }
@@ -87,6 +94,8 @@ export class PermissionsGuard implements CanActivate {
         subjectType: 'route',
         subjectId: request.routeOptions.url ?? 'unknown',
         outcome: 'DENIED',
+        policyDecision: 'rbac:v1',
+        reasonCode: 'missing_permission',
         metadata: { missing: missing.join(',') },
       });
       throw new ApiError('FORBIDDEN', 'You do not have permission to perform this action.');

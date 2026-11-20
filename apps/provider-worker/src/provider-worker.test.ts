@@ -76,9 +76,42 @@ describe('provider registry & capability validation', () => {
     );
     expect(() => registry.require('nope', 'search')).toThrow(UnknownProviderError);
   });
+
+  it('refuses side effects once the legal access window has lapsed (reads still allowed)', () => {
+    const adapter = new MockSandboxAdapter({ webhookSecret: fixtures.secret });
+    const lapsed = Object.assign(Object.create(Object.getPrototypeOf(adapter) as object), adapter, {
+      descriptor: { ...MOCK_SANDBOX_DESCRIPTOR, legalAccessExpiresAt: '2020-01-01T00:00:00Z' },
+    }) as MockSandboxAdapter;
+    const registry = new ProviderRegistry({ allowSandbox: true }, [lapsed]);
+    expect(() => registry.require('mock-sandbox', 'confirm')).toThrow(
+      ProviderCapabilityUnavailableError,
+    );
+    expect(registry.require('mock-sandbox', 'status')).toBe(lapsed);
+  });
 });
 
 describe('provider activities', () => {
+  it('kill switch refuses side effects before contacting the provider; status still works', async () => {
+    const adapter = new MockSandboxAdapter({ webhookSecret: fixtures.secret });
+    let paused = true;
+    const acts = createProviderActivities(new ProviderRegistry({ allowSandbox: true }, [adapter]), {
+      executionPaused: () => paused,
+    });
+    await expect(acts.executeProviderOperation(request)).rejects.toMatchObject({
+      type: 'ExecutionPausedError',
+      nonRetryable: true,
+    });
+    const status = await acts.getProviderOperationStatus({
+      providerId: 'mock-sandbox',
+      idempotencyKey: request.idempotencyKey,
+    });
+    expect(status.status).not.toBe('CONFIRMED'); // nothing was executed while paused
+    paused = false;
+    await expect(acts.executeProviderOperation(request)).resolves.toMatchObject({
+      kind: 'ACCEPTED',
+    });
+  });
+
   it('confirm is idempotent per key and labelled SANDBOX', async () => {
     const adapter = new MockSandboxAdapter({ webhookSecret: fixtures.secret });
     const acts = createProviderActivities(new ProviderRegistry({ allowSandbox: true }, [adapter]));
@@ -128,9 +161,18 @@ describe('provider activities', () => {
 });
 
 describe('webhook endpoint', () => {
-  const setup = () => {
+  const setup = (failFirstAccepts = 0) => {
     const accepted: string[] = [];
-    const sink: InboundEventSink = { accept: async (_p, e) => void accepted.push(e.eventId) };
+    let failures = failFirstAccepts;
+    const sink: InboundEventSink = {
+      accept: async (_p, e) => {
+        if (failures > 0) {
+          failures -= 1;
+          throw new Error('sink unavailable');
+        }
+        accepted.push(e.eventId);
+      },
+    };
     const fixture0 = fixtures.fixtures[0];
     const app = buildServer({
       registry: new ProviderRegistry({ allowSandbox: true }, [
@@ -167,6 +209,18 @@ describe('webhook endpoint', () => {
       expect(res.statusCode).toBe(401);
       expect(accepted).toHaveLength(0);
     }
+  });
+
+  it('a failed hand-off is not swallowed: 503, claim released, the provider retry is processed', async () => {
+    const { app, accepted } = setup(1);
+    const valid = fixtures.fixtures.find((f) => f.expected === 'ACCEPT');
+    if (!valid) throw new Error('fixture missing');
+    const first = await post(app, valid.body, valid.header);
+    expect(first.statusCode).toBe(503);
+    expect(accepted).toHaveLength(0);
+    const retry = await post(app, valid.body, valid.header);
+    expect(retry.statusCode).toBe(202);
+    expect(accepted).toHaveLength(1);
   });
 
   it('acknowledges but does not re-process a replayed event', async () => {

@@ -20,7 +20,7 @@ import {
 
 const workflowsPath = createRequire(import.meta.url).resolve('../../dist/workflows/index.js');
 
-type Mode = 'confirm' | 'ambiguous-then-confirmed' | 'unknown-status';
+type Mode = 'confirm' | 'ambiguous-then-confirmed' | 'unknown-status' | 'paused';
 
 /** In-memory SANDBOX provider: idempotent per key, never touches the network. */
 function sandboxProvider(mode: () => Mode) {
@@ -28,6 +28,10 @@ function sandboxProvider(mode: () => Mode) {
   const calls: ProviderOperationRequest[] = [];
   const activities: ProviderActivities = {
     async executeProviderOperation(req) {
+      if (mode() === 'paused') {
+        // Mirrors apps/provider-worker: refused before any provider contact.
+        throw ApplicationFailure.nonRetryable('execution paused', 'ExecutionPausedError');
+      }
       calls.push(req);
       const existing = ops.get(req.idempotencyKey);
       const op = existing ?? { id: `mockop_${ops.size + 1}`, ref: `SANDBOX-REF-${ops.size + 1}` };
@@ -112,6 +116,10 @@ describe('actionExecutionWorkflow (Temporal time-skipping test server)', () => {
   ): Promise<ApprovalDecisionSignal> => ({
     approvalId: 'appr-1',
     decision: 'APPROVE',
+    userId: i.userId,
+    taskId: i.taskId,
+    actionType: i.actionCategory,
+    providerId: i.providerId,
     payloadHash: i.payloadHash,
     maximumTotal: i.total,
     // Expiry relative to the test server's (time-skipped) clock, not wall-clock time.
@@ -171,6 +179,35 @@ describe('actionExecutionWorkflow (Temporal time-skipping test server)', () => {
     );
     expect((await handle.result()).finalState).toBe('CANCELLED');
     expect(provider.calls.length).toBe(before);
+  });
+
+  it('refuses an approval issued for another task, user, action or provider', async () => {
+    for (const over of [
+      { taskId: 't-someone-elses-task' },
+      { userId: 'u-attacker' },
+      { actionType: 'SEARCH' },
+      { providerId: 'other-provider' },
+    ]) {
+      const i = input();
+      const before = provider.calls.length;
+      const handle = await start(i);
+      await handle.signal(approvalDecisionSignal, await approval(i, over));
+      expect((await handle.result()).finalState).toBe('CANCELLED');
+      expect(provider.calls.length).toBe(before);
+    }
+  });
+
+  it('holds an already-approved action when the kill switch is on (nothing dispatched)', async () => {
+    mode = 'paused';
+    const i = input();
+    const before = provider.calls.length;
+    const handle = await start(i);
+    await handle.signal(approvalDecisionSignal, await approval(i));
+    const result = await handle.result();
+    expect(result.finalState).toBe('ESCALATED');
+    expect(result.providerOperationId).toBeNull();
+    expect(provider.calls.length).toBe(before);
+    mode = 'confirm';
   });
 
   it('refuses an approval whose cap is below the actual total (₹1,500 approved, ₹15,000 requested)', async () => {

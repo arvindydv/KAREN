@@ -23,7 +23,12 @@ concept yet; if one is added it becomes a second key in every rule below.
 - Unknown principals are provisioned as a _new_ user; a token can never attach to an existing user
   except via its own `(issuer, subject)` link.
 
-## Layer 2 — PostgreSQL Row-Level Security (required, not yet enabled)
+## Layer 2 — PostgreSQL Row-Level Security (ENABLED 2026-11-20, Phase 00)
+
+> Implemented in migration `20261120090000_user_isolation_rls`, `PrismaService.withUserScope`,
+> and proven by `apps/api/test/rls.int.test.ts` (runtime role, real PostgreSQL). The table and
+> mechanism below are the design it implements; every NEW user-owned table must add its policy
+> and grants in the same change.
 
 RLS is defence in depth against a missed `where userId` (architecture §5). It is **required
 before real user data is stored** in the following tables, and must be added in the same
@@ -52,7 +57,10 @@ migration that creates each new user-owned table:
    narrow policies; staff access goes through audited API endpoints only.
 5. An integration test per table asserts that a query without the scope returns zero rows.
 
-## Layer 3 — database roles (blocker before first deploy)
+## Layer 3 — database roles (IMPLEMENTED locally 2026-11-20: `infra/database/roles.sql`, `pnpm db:roles`; not yet applied to any AWS database)
+
+> As built: only the API has PostgreSQL access (`karen_api_runtime`; other services' unused
+> `DATABASE_URL` secrets were removed from Terraform). The section below is the original plan.
 
 Terraform creates per-service `DATABASE_URL` secrets, but **no SQL creates the roles or grants**.
 Before the first deployed environment: add a reviewed SQL bootstrap (run by an operator, never

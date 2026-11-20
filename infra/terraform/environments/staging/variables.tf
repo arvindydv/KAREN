@@ -376,3 +376,37 @@ variable "api_trusted_proxy_hops" {
     error_message = "api_trusted_proxy_hops must be between 1 and 3."
   }
 }
+
+# ------------------------------------------------------------- Identity --
+
+variable "oidc" {
+  description = <<-EOT
+    End-user identity provider for the API (ADR-0015: Amazon Cognito user pool).
+    Cognito: issuer_url = https://cognito-idp.<region>.amazonaws.com/<pool-id>,
+    jwks_url = <issuer_url>/.well-known/jwks.json, audience = <app client id>,
+    audience_claim = "client_id", required_token_use = "access". Not secret.
+    Left null, the API refuses to start (fail closed) — it never falls back to dev auth.
+  EOT
+  type = object({
+    issuer_url         = optional(string)
+    jwks_url           = optional(string)
+    audience           = optional(string)
+    audience_claim     = optional(string, "client_id")
+    required_token_use = optional(string, "access")
+    allowed_algorithms = optional(list(string), ["RS256"])
+  })
+  default = {}
+
+  validation {
+    condition     = contains(["aud", "client_id"], var.oidc.audience_claim)
+    error_message = "oidc.audience_claim must be \"aud\" or \"client_id\"."
+  }
+  validation {
+    condition     = var.oidc.audience_claim != "client_id" || var.oidc.required_token_use == "access"
+    error_message = "client_id audience validation requires required_token_use = \"access\"."
+  }
+  validation {
+    condition     = var.oidc.issuer_url == null || startswith(coalesce(var.oidc.issuer_url, "x"), "https://")
+    error_message = "oidc.issuer_url must be an https URL."
+  }
+}

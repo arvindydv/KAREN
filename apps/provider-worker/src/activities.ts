@@ -11,9 +11,27 @@ import { ApplicationFailure } from '@temporalio/common';
 import { ProviderAmbiguousError } from './adapters/contract.js';
 import type { ProviderRegistry } from './adapters/registry.js';
 
-export function createProviderActivities(registry: ProviderRegistry) {
+export interface ProviderActivityOptions {
+  /**
+   * Global kill switch (KAREN_EXECUTION_PAUSED). Checked on every side-effecting call, at the
+   * last point before the provider is contacted, so already-approved workflows are held too.
+   * Read-only status checks keep working so open operations can still be reconciled.
+   */
+  executionPaused?: () => boolean;
+}
+
+export function createProviderActivities(
+  registry: ProviderRegistry,
+  options: ProviderActivityOptions = {},
+) {
   return {
     async executeProviderOperation(request: ProviderOperationRequest) {
+      if (options.executionPaused?.() === true) {
+        throw ApplicationFailure.nonRetryable(
+          'Execution is paused (kill switch); operation not dispatched',
+          FAILURE_TYPES.EXECUTION_PAUSED,
+        );
+      }
       try {
         const adapter = registry.require(request.providerId, request.operation);
         if (!adapter.execute)

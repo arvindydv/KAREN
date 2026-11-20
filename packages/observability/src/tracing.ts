@@ -3,8 +3,10 @@
  * startup never depends on observability credentials. Import and call this FIRST in a
  * service entrypoint (before importing instrumented libraries).
  */
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import * as Sentry from '@sentry/node';
 
@@ -25,11 +27,17 @@ export interface TelemetryHandle {
 export function initTelemetry(config: TelemetryConfig): TelemetryHandle {
   let sdk: NodeSDK | undefined;
   if (config.otlpEndpoint) {
+    const base = config.otlpEndpoint.replace(/\/$/, '');
     sdk = new NodeSDK({
       serviceName: config.serviceName,
-      traceExporter: new OTLPTraceExporter({
-        url: `${config.otlpEndpoint.replace(/\/$/, '')}/v1/traces`,
-      }),
+      traceExporter: new OTLPTraceExporter({ url: `${base}/v1/traces` }),
+      // Latency histograms + DB pool gauges (metrics.ts); p95/p99 computed by the backend.
+      metricReaders: [
+        new PeriodicExportingMetricReader({
+          exporter: new OTLPMetricExporter({ url: `${base}/v1/metrics` }),
+          exportIntervalMillis: 60_000,
+        }),
+      ],
       instrumentations: [
         new HttpInstrumentation({
           // Health probes are noise; never trace them.
