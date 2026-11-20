@@ -18,6 +18,7 @@ import { DatabaseModule } from './infrastructure/database/database.module.js';
 import { RedisThrottlerStorage } from './infrastructure/redis/redis-throttler.storage.js';
 import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { PolicyModule } from './policy/policy.module.js';
+import { SecurityModule } from './security/security.module.js';
 
 const stripQuery = (url: string | undefined): string => (url ?? '').split('?', 1)[0] ?? '';
 
@@ -74,6 +75,7 @@ export class AppModule {
         RedisModule,
         AiModule,
         AuditModule,
+        SecurityModule,
         IdentityModule,
         ConsentModule,
         PolicyModule,

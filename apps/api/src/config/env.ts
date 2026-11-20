@@ -14,6 +14,7 @@ import {
   resolveRedisUrl,
 } from '@karen/config';
 import { z } from 'zod';
+import { parsePepperKeys } from '../security/password/password-hasher.js';
 
 const csv = z
   .string()
@@ -61,6 +62,18 @@ export const apiEnvShape = {
   OIDC_AUDIENCE_CLAIM: z.enum(['aud', 'client_id']).default('aud'),
   /** Required `token_use` claim (Cognito: `access`); empty = not checked. */
   OIDC_REQUIRED_TOKEN_USE: optionalString,
+  /**
+   * Password pepper keys (ADR-0015): "id:base64url,id2:base64url", each ≥ 32 bytes, from
+   * Secrets Manager. Keep retired ids until every hash using them has been upgraded.
+   */
+  PASSWORD_PEPPERS: optionalString,
+  /** Pepper id used for NEW hashes; must be listed in PASSWORD_PEPPERS. */
+  PASSWORD_PEPPER_CURRENT_ID: optionalString,
+  /** Concurrent Argon2id computations per process (each ≈ 64 MiB). */
+  PASSWORD_HASH_MAX_CONCURRENCY: z.coerce.number().int().min(1).max(64).default(4),
+  /** Hash requests allowed to wait for a slot; beyond this → retryable 503 (never unbounded). */
+  PASSWORD_HASH_MAX_QUEUE: z.coerce.number().int().min(0).max(10_000).default(64),
+  PASSWORD_HASH_QUEUE_TIMEOUT_MS: z.coerce.number().int().min(50).max(30_000).default(2_000),
   AI_SERVICE_URL: z.string().url().default('http://localhost:8100'),
   KAREN_EXECUTION_PAUSED: booleanFlag(false),
 };
@@ -131,6 +144,24 @@ export function loadApiEnv(source: Record<string, string | undefined> = process.
           ? 'INTERNAL_SERVICE_HMAC_SECRET: required (>= 32 chars) when deployed'
           : undefined,
       requiredWhenDeployed('LOG_PSEUDONYMIZATION_KEY'),
+      // A database-only compromise must not yield offline-crackable password hashes.
+      requiredWhenDeployed('PASSWORD_PEPPERS'),
+      requiredWhenDeployed('PASSWORD_PEPPER_CURRENT_ID'),
+      (env) => {
+        try {
+          const keys = parsePepperKeys(env.PASSWORD_PEPPERS);
+          if (env.PASSWORD_PEPPER_CURRENT_ID && !keys.has(env.PASSWORD_PEPPER_CURRENT_ID)) {
+            return 'PASSWORD_PEPPER_CURRENT_ID must name a key in PASSWORD_PEPPERS';
+          }
+          if (!env.PASSWORD_PEPPER_CURRENT_ID && keys.size > 0) {
+            return 'PASSWORD_PEPPER_CURRENT_ID is required when PASSWORD_PEPPERS is set';
+          }
+          return undefined;
+        } catch (error) {
+          // The parser's messages never include key material.
+          return error instanceof Error ? error.message : 'PASSWORD_PEPPERS is invalid';
+        }
+      },
     ],
   });
   return { ...env, REDIS_URL: resolveRedisUrl(env) };

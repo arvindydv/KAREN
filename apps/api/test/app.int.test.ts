@@ -2,6 +2,8 @@ import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { SignJWT, generateKeyPair } from 'jose';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { LOCAL_DEV_ISSUER_TOKEN } from '../src/auth/auth.module.js';
+import type { LocalDevIssuer } from '../src/auth/local-dev-issuer.js';
 import { createApp } from '../src/bootstrap.js';
 import { ConsentService } from '../src/consent/consent.service.js';
 import { PrismaService } from '../src/infrastructure/database/prisma.service.js';
@@ -66,7 +68,7 @@ describe('API (integration: real PostgreSQL + Redis)', () => {
       .expect(401);
   });
 
-  it('GET /v1/me provisions the identity mapping once and scopes to the token subject', async () => {
+  it('GET /v1/me resolves the explicitly provisioned identity once and scopes to the token subject', async () => {
     const subject = unique();
     const t = await token(subject);
     const a = await request(app.getHttpServer())
@@ -115,20 +117,42 @@ describe('API (integration: real PostgreSQL + Redis)', () => {
     expect(ok.body).toMatchObject({ environment: 'test', execution_paused: false });
   });
 
-  it('denies valid tokens of suspended or deletion-requested accounts', async () => {
-    const t = await token(unique());
-    const me = await request(app.getHttpServer())
-      .get('/v1/me')
-      .set('authorization', `Bearer ${t}`)
-      .expect(200);
-    for (const status of ['SUSPENDED', 'DELETION_REQUESTED'] as const) {
-      await prisma.user.update({ where: { id: me.body.id as string }, data: { status } });
+  it('denies valid tokens of every non-ACTIVE account status (ACCOUNT_INACTIVE)', async () => {
+    // Each path is a legal transition sequence (the DB trigger enforces the state machine).
+    const paths = [
+      ['SUSPENDED'],
+      ['LOCKED'],
+      ['DELETION_REQUESTED'],
+      ['DELETION_REQUESTED', 'DELETED'],
+    ] as const;
+    for (const path of paths) {
+      const t = await token(unique());
+      const me = await request(app.getHttpServer())
+        .get('/v1/me')
+        .set('authorization', `Bearer ${t}`)
+        .expect(200);
+      for (const status of path) {
+        await prisma.user.update({ where: { id: me.body.id as string }, data: { status } });
+      }
       const res = await request(app.getHttpServer())
         .get('/v1/me')
         .set('authorization', `Bearer ${t}`)
         .expect(403);
-      expect(res.body.error.code).toBe('FORBIDDEN');
+      expect(res.body.error.code).toBe('ACCOUNT_INACTIVE');
     }
+  });
+
+  it('never provisions an account from a verified token alone (no guard auto-provisioning)', async () => {
+    const subject = unique();
+    // A correctly signed token for a subject that was never provisioned explicitly.
+    const issuer = app.get<LocalDevIssuer>(LOCAL_DEV_ISSUER_TOKEN);
+    const t = await issuer.issue(subject);
+    const res = await request(app.getHttpServer())
+      .get('/v1/me')
+      .set('authorization', `Bearer ${t}`)
+      .expect(401);
+    expect(res.body.error.code).toBe('UNAUTHENTICATED');
+    expect(await prisma.externalIdentity.count({ where: { subject } })).toBe(0);
   });
 
   it('client-supplied role claims in a token never grant permissions', async () => {
@@ -220,12 +244,8 @@ describe('API behaviour when PostgreSQL is unreachable', () => {
       await request(app.getHttpServer()).get('/health/live').expect(200);
       const ready = await request(app.getHttpServer()).get('/health/ready').expect(503);
       expect(ready.body.checks.database.status).toBe('down');
-      const t = (
-        await request(app.getHttpServer())
-          .post('/dev/auth/token')
-          .send({ subject: 'dev|db-down-check' })
-          .expect(200)
-      ).body.access_token as string;
+      // Mint directly: the dev route provisions in the DB, which is down in this scenario.
+      const t = await app.get<LocalDevIssuer>(LOCAL_DEV_ISSUER_TOKEN).issue('dev|db-down-check');
       const res = await request(app.getHttpServer())
         .get('/v1/me')
         .set('authorization', `Bearer ${t}`);

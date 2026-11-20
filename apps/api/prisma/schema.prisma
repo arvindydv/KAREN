@@ -26,10 +26,15 @@ datasource db {
   schemas  = ["identity", "consent", "audit", "platform"]
 }
 
+/// Account lifecycle (ADR-0015). Transitions are enforced by @karen/domain
+/// `ACCOUNT_TRANSITIONS` AND by the identity.enforce_user_status_transition trigger.
 enum UserStatus {
+  PENDING_VERIFICATION
   ACTIVE
+  LOCKED
   SUSPENDED
   DELETION_REQUESTED
+  DELETED
 
   @@schema("identity")
 }
@@ -47,12 +52,14 @@ model User {
   displayName String?    @map("display_name") @db.VarChar(120)
   locale      String     @default("en-IN") @db.VarChar(35)
   timezone    String     @default("Asia/Kolkata") @db.VarChar(64)
-  status      UserStatus @default(ACTIVE)
+  status      UserStatus @default(PENDING_VERIFICATION)
   version     Int        @default(0)
   createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   externalIdentities ExternalIdentity[]
+  email              UserEmail?
+  passwordCredential PasswordCredential?
   staffRoles         StaffRoleGrant[]
   consentGrants      ConsentGrant[]
   legalAcceptances   LegalAcceptance[]
@@ -75,6 +82,43 @@ model ExternalIdentity {
   @@unique([issuer, subject])
   @@index([userId])
   @@map("external_identities")
+  @@schema("identity")
+}
+
+/// The account's e-mail address (one per account in Phase 01). `email_canonical` is the
+/// case-insensitive identity key (rules: canonicalizeEmail in @karen/domain); `email` keeps the
+/// user's casing for display. A pending e-mail CHANGE lives in a challenge, not here (M4).
+model UserEmail {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String    @unique @map("user_id") @db.Uuid
+  email          String    @db.VarChar(254)
+  emailCanonical String    @unique @map("email_canonical") @db.VarChar(254)
+  verifiedAt     DateTime? @map("verified_at") @db.Timestamptz(3)
+  version        Int       @default(0)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_emails")
+  @@schema("identity")
+}
+
+/// Argon2id password verifier (ADR-0015). Never the password; never logged; never returned by
+/// any API. `pepper_id` names the Secrets-Manager-held pepper used (null = none).
+model PasswordCredential {
+  userId            String   @id @map("user_id") @db.Uuid
+  passwordHash      String   @map("password_hash")
+  pepperId          String?  @map("pepper_id") @db.VarChar(32)
+  scheme            String   @db.VarChar(32)
+  passwordChangedAt DateTime @default(now()) @map("password_changed_at") @db.Timestamptz(3)
+  version           Int      @default(0)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_credentials")
   @@schema("identity")
 }
 

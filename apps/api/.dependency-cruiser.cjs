@@ -13,7 +13,17 @@ module.exports = {
       name: 'infrastructure-is-leaf',
       severity: 'error',
       from: { path: '^src/infrastructure' },
-      to: { path: '^src/(identity|consent|audit|policy|admin|health|auth)/' },
+      to: { path: '^src/(identity|consent|audit|policy|admin|health|auth|security)/' },
+    },
+    {
+      // Security primitives (hashing, policy, gates, opaque tokens) are pure and reusable:
+      // no database, no feature modules (ADR-0015).
+      name: 'security-is-leaf',
+      severity: 'error',
+      from: { path: '^src/security/', pathNot: '\\.module\\.ts$' },
+      to: {
+        path: '^src/(identity|consent|audit|policy|admin|health|auth|infrastructure|generated)/',
+      },
     },
     {
       name: 'no-controller-imports-across-modules',

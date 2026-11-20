@@ -17,6 +17,8 @@ const deployed = {
   ...oidc,
   INTERNAL_SERVICE_HMAC_SECRET: 'x'.repeat(40),
   LOG_PSEUDONYMIZATION_KEY: 'k'.repeat(40),
+  PASSWORD_PEPPERS: `p1:${Buffer.alloc(32, 7).toString('base64url')}`,
+  PASSWORD_PEPPER_CURRENT_ID: 'p1',
 };
 
 describe('API environment validation', () => {
@@ -96,5 +98,23 @@ describe('API environment validation', () => {
     expect(() =>
       loadApiEnv({ ...base, ...deployed, APP_ENV: 'production', API_CORS_ALLOWED_ORIGINS: '*' }),
     ).toThrow(/CORS/);
+  });
+
+  it('requires a valid password pepper when deployed and validates it everywhere', () => {
+    const { PASSWORD_PEPPERS: _p, PASSWORD_PEPPER_CURRENT_ID: _c, ...noPepper } = deployed;
+    expect(() => loadApiEnv({ ...base, ...noPepper, APP_ENV: 'staging' })).toThrow(
+      /PASSWORD_PEPPERS: required/,
+    );
+    expect(() =>
+      loadApiEnv({ ...base, ...deployed, APP_ENV: 'staging', PASSWORD_PEPPER_CURRENT_ID: 'p9' }),
+    ).toThrow(/must name a key/);
+    expect(() =>
+      loadApiEnv({ ...base, AUTH_MODE: 'local-dev', PASSWORD_PEPPERS: 'p1:dG9vLXNob3J0' }),
+    ).toThrow(/≥ 32 bytes/);
+    expect(() =>
+      loadApiEnv({ ...base, AUTH_MODE: 'local-dev', PASSWORD_PEPPERS: deployed.PASSWORD_PEPPERS }),
+    ).toThrow(/CURRENT_ID is required/);
+    // Local development may run without a pepper.
+    expect(loadApiEnv({ ...base, AUTH_MODE: 'local-dev' }).PASSWORD_PEPPERS).toBeUndefined();
   });
 });
