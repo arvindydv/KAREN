@@ -60,7 +60,7 @@
     "@karen/eslint-config": "workspace:*",
     "@karen/test-fixtures": "workspace:*",
     "@karen/typescript-config": "workspace:*",
-    "@nestjs/cli": "12.0.12",
+    "@nestjs/cli": "12.0.13",
     "@nestjs/schematics": "12.0.13",
     "@nestjs/testing": "12.5.0",
     "@types/node": "24.19.2",
