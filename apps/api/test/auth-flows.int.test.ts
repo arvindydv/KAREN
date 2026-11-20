@@ -155,6 +155,11 @@ describe('auth flows (integration)', () => {
         .post('/v1/auth/register')
         .send({ email, password: STRONG, timezone: 'Mars/Olympus' })
         .expect(400);
+      // India's standard zone name is accepted (regression: ICU lists only Asia/Calcutta).
+      await http()
+        .post('/v1/auth/register')
+        .send({ email: addr('kolkata'), password: STRONG, timezone: 'Asia/Kolkata' })
+        .expect(202);
       expect(await owner.userEmail.count({ where: { emailCanonical: email } })).toBe(0);
     });
 

@@ -10,10 +10,12 @@ import { SessionService } from './session.service.js';
 import { SessionsController } from './sessions.controller.js';
 import { IdentityService } from './identity.service.js';
 import { MeController } from './me.controller.js';
+import { ProfileController } from './profile.controller.js';
+import { ProfileService } from './profile.service.js';
 
 @Global()
 @Module({
-  controllers: [MeController, AuthController, SessionsController],
+  controllers: [MeController, AuthController, SessionsController, ProfileController],
   providers: [
     IdentityService,
     AccountService,
@@ -23,6 +25,7 @@ import { MeController } from './me.controller.js';
     SessionService,
     LoginService,
     LoginThrottle,
+    ProfileService,
   ],
   exports: [IdentityService, AccountService, SessionService],
 })

@@ -35,6 +35,7 @@ export type RevokeReason =
   | 'device_revoked'
   | 'password_reset'
   | 'password_changed'
+  | 'email_changed'
   | 'account_status'
   | 'refresh_reuse'
   | 'device_mismatch';
