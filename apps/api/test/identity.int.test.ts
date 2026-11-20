@@ -254,14 +254,56 @@ describe('identity foundation (integration: PostgreSQL)', () => {
       const id = randomUUID();
       await owner.user.create({ data: { id, status: 'ACTIVE' } });
       const actor = { actorType: 'SYSTEM' as const, actorRef: 'identity-test', reasonCode: 'race' };
-      const results = await Promise.allSettled([
-        accounts.transitionStatus(id, 'LOCKED', actor),
-        accounts.transitionStatus(id, 'SUSPENDED', actor),
-      ]);
+      // Deterministic overlap: hold the row lock so BOTH transitions read ACTIVE/v0 and then
+      // block on their UPDATE. On release, the first commits and the second's version check
+      // matches no row → CONFLICT. (Without the barrier the two calls may run back to back,
+      // which is a different, legal scenario — covered by the next test.)
+      let results: PromiseSettledResult<void>[] = [];
+      await owner.$transaction(
+        async (tx) => {
+          await tx.$queryRaw`SELECT 1 FROM identity.users WHERE id = ${id}::uuid FOR UPDATE`;
+          const pending = Promise.allSettled([
+            accounts.transitionStatus(id, 'LOCKED', actor),
+            accounts.transitionStatus(id, 'SUSPENDED', actor),
+          ]);
+          await vi.waitFor(
+            async () => {
+              const [row] = await owner.$queryRaw<{ n: bigint }[]>`
+                SELECT count(*) AS n FROM pg_stat_activity
+                WHERE datname = current_database() AND wait_event_type = 'Lock'`;
+              expect(Number(row?.n)).toBeGreaterThanOrEqual(2);
+            },
+            { timeout: 10_000, interval: 25 },
+          );
+          void pending.then((r) => (results = r));
+        },
+        { timeout: 20_000 },
+      );
+      await vi.waitFor(() => expect(results).toHaveLength(2), { timeout: 10_000 });
       expect(results.filter((x) => x.status === 'fulfilled')).toHaveLength(1);
+      const rejected = results.find((x) => x.status === 'rejected');
+      expect(rejected?.reason).toMatchObject({ code: 'CONFLICT' });
       const final = await owner.user.findUniqueOrThrow({ where: { id } });
       expect(['LOCKED', 'SUSPENDED']).toContain(final.status);
       expect(final.version).toBe(1);
+    });
+
+    it('back-to-back transitions each re-validate against the committed state (no lost update)', async () => {
+      const id = randomUUID();
+      await owner.user.create({ data: { id, status: 'ACTIVE' } });
+      const actor = { actorType: 'SYSTEM' as const, actorRef: 'identity-test', reasonCode: 'seq' };
+      await accounts.transitionStatus(id, 'LOCKED', actor);
+      // LOCKED → SUSPENDED is legal, so applying it after the first commit is correct…
+      await accounts.transitionStatus(id, 'SUSPENDED', actor);
+      // …while SUSPENDED → LOCKED is not, and is refused against the committed state.
+      await expect(accounts.transitionStatus(id, 'LOCKED', actor)).rejects.toThrow(/not allowed/);
+      const final = await owner.user.findUniqueOrThrow({ where: { id } });
+      expect(final).toMatchObject({ status: 'SUSPENDED', version: 2 });
+      expect(
+        await owner.auditEvent.count({
+          where: { subjectId: id, action: 'identity.account.status_changed' },
+        }),
+      ).toBe(2);
     });
   });
 

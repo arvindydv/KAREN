@@ -88,6 +88,8 @@
                           "type": "string",
                           "enum": [
                             "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
                             "UNAUTHENTICATED",
                             "FORBIDDEN",
                             "ACCOUNT_INACTIVE",
@@ -168,6 +170,8 @@
                           "type": "string",
                           "enum": [
                             "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
                             "UNAUTHENTICATED",
                             "FORBIDDEN",
                             "ACCOUNT_INACTIVE",
@@ -248,6 +252,8 @@
                           "type": "string",
                           "enum": [
                             "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
                             "UNAUTHENTICATED",
                             "FORBIDDEN",
                             "ACCOUNT_INACTIVE",
@@ -328,6 +334,8 @@
                           "type": "string",
                           "enum": [
                             "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
                             "UNAUTHENTICATED",
                             "FORBIDDEN",
                             "ACCOUNT_INACTIVE",
@@ -408,6 +416,8 @@
                           "type": "string",
                           "enum": [
                             "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
                             "UNAUTHENTICATED",
                             "FORBIDDEN",
                             "ACCOUNT_INACTIVE",
@@ -482,6 +492,2440 @@
         ],
         "tags": [
           "identity"
+        ]
+      }
+    },
+    "/v1/auth/register": {
+      "post": {
+        "operationId": "AuthController_register_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 320
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  "locale": {
+                    "type": "string",
+                    "enum": [
+                      "en-IN",
+                      "hi-IN",
+                      "en-US",
+                      "en-GB"
+                    ]
+                  },
+                  "timezone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Code sent if the address can receive one",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "challenge_handle": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "expires_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "code_length": {
+                      "type": "number",
+                      "enum": [
+                        6
+                      ]
+                    },
+                    "delivery": {
+                      "type": "string",
+                      "enum": [
+                        "email"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "challenge_handle",
+                    "expires_at",
+                    "code_length",
+                    "delivery"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create an account and e-mail a verification code",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/verify-email": {
+      "post": {
+        "operationId": "AuthController_verifyEmail_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "challenge_handle": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "^\\d{6}$"
+                  }
+                },
+                "required": [
+                  "challenge_handle",
+                  "code"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "email_verified",
+                        "password_reset"
+                      ]
+                    },
+                    "next": {
+                      "type": "string",
+                      "enum": [
+                        "sign_in"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "next"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "summary": "Confirm the e-mail address with the 6-digit code",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/challenges/resend": {
+      "post": {
+        "operationId": "AuthController_resend_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "challenge_handle": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "challenge_handle"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "challenge_handle": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "expires_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "code_length": {
+                      "type": "number",
+                      "enum": [
+                        6
+                      ]
+                    },
+                    "delivery": {
+                      "type": "string",
+                      "enum": [
+                        "email"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "challenge_handle",
+                    "expires_at",
+                    "code_length",
+                    "delivery"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "summary": "Send a new code for an open verification or reset challenge",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/password/forgot": {
+      "post": {
+        "operationId": "AuthController_forgot_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 320
+                  }
+                },
+                "required": [
+                  "email"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "challenge_handle": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "expires_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "code_length": {
+                      "type": "number",
+                      "enum": [
+                        6
+                      ]
+                    },
+                    "delivery": {
+                      "type": "string",
+                      "enum": [
+                        "email"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "challenge_handle",
+                    "expires_at",
+                    "code_length",
+                    "delivery"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "summary": "E-mail a password reset code (same response for every address)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/password/reset": {
+      "post": {
+        "operationId": "AuthController_reset_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "challenge_handle": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "^\\d{6}$"
+                  },
+                  "new_password": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "challenge_handle",
+                  "code",
+                  "new_password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "email_verified",
+                        "password_reset"
+                      ]
+                    },
+                    "next": {
+                      "type": "string",
+                      "enum": [
+                        "sign_in"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "next"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "ACCOUNT_INACTIVE",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "PAYLOAD_TOO_LARGE",
+                            "RATE_LIMITED",
+                            "CONSENT_REQUIRED",
+                            "APPROVAL_REQUIRED",
+                            "PROVIDER_CAPABILITY_UNAVAILABLE",
+                            "DEPENDENCY_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "correlation_id": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "next_options": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "correlation_id",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set a new password with the e-mailed code (does not sign in)",
+        "tags": [
+          "auth"
         ]
       }
     },
@@ -698,6 +3142,8 @@
                           "type": "string",
                           "enum": [
                             "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
                             "UNAUTHENTICATED",
                             "FORBIDDEN",
                             "ACCOUNT_INACTIVE",
@@ -778,6 +3224,8 @@
                           "type": "string",
                           "enum": [
                             "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
                             "UNAUTHENTICATED",
                             "FORBIDDEN",
                             "ACCOUNT_INACTIVE",
@@ -858,6 +3306,8 @@
                           "type": "string",
                           "enum": [
                             "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
                             "UNAUTHENTICATED",
                             "FORBIDDEN",
                             "ACCOUNT_INACTIVE",
@@ -938,6 +3388,8 @@
                           "type": "string",
                           "enum": [
                             "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
                             "UNAUTHENTICATED",
                             "FORBIDDEN",
                             "ACCOUNT_INACTIVE",
@@ -1018,6 +3470,8 @@
                           "type": "string",
                           "enum": [
                             "VALIDATION_FAILED",
+                            "WEAK_PASSWORD",
+                            "CHALLENGE_INVALID",
                             "UNAUTHENTICATED",
                             "FORBIDDEN",
                             "ACCOUNT_INACTIVE",

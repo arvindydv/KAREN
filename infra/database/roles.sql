@@ -51,6 +51,9 @@ GRANT EXECUTE ON FUNCTION identity.lookup_external_identity(text, text) TO karen
 GRANT SELECT, INSERT, UPDATE ON identity.user_emails TO karen_api_runtime;
 GRANT SELECT, INSERT, UPDATE ON identity.password_credentials TO karen_api_runtime;
 GRANT EXECUTE ON FUNCTION identity.lookup_password_login(text) TO karen_api_runtime;
+-- One-time codes (M2). Closing a challenge is an UPDATE; rows are purged by the M7 worker.
+GRANT SELECT, INSERT, UPDATE ON identity.verification_challenges TO karen_api_runtime;
+GRANT EXECUTE ON FUNCTION identity.lookup_challenge(text) TO karen_api_runtime;
 
 -- consent (RLS: own rows only; revocation is an UPDATE, never a DELETE)
 GRANT SELECT, INSERT, UPDATE ON consent.consent_grants TO karen_api_runtime;
