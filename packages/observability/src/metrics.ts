@@ -122,3 +122,18 @@ export function histogramQuantile(
   }
   return boundaries[boundaries.length - 1];
 }
+
+/**
+ * Low-cardinality event counter (e.g. security events). Attributes must come from a fixed
+ * vocabulary — never user ids, e-mails, tokens or free text.
+ */
+export function createEventCounter(serviceName: string, name: string, description: string) {
+  const counter = metrics
+    .getMeter(serviceName)
+    .createCounter(name, { description, valueType: ValueType.INT });
+  return {
+    add(value: number, attributes: Record<string, string>): void {
+      counter.add(value, attributes);
+    },
+  };
+}

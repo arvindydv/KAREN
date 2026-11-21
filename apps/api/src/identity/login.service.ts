@@ -3,6 +3,7 @@ import { canonicalizeEmail } from '@karen/domain';
 import { Injectable } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service.js';
 import { ApiError } from '../common/api-error.js';
+import { securityEvent } from '../common/security-metrics.js';
 import { MailService } from '../infrastructure/mail/mail.service.js';
 import { AccountService } from './account.service.js';
 import { newSignInMail, verificationCodeMail } from './auth-emails.js';
@@ -38,6 +39,7 @@ export class LoginService {
 
     const check = await this.accounts.checkPasswordCredential(input.email, input.password);
     if (check.outcome === 'INVALID') {
+      securityEvent('karen.auth.login', { outcome: 'invalid_credentials' });
       await this.throttle.recordFailure(throttleKey);
       await this.audit.recordBestEffort({
         actorType: 'SYSTEM',
@@ -65,6 +67,7 @@ export class LoginService {
             verificationCodeMail(address.display, challenge.code, challenge.expiresAt),
           );
         }
+        securityEvent('karen.auth.login', { outcome: 'verification_required' });
         return {
           result: 'verification_required',
           challenge: {
@@ -100,6 +103,9 @@ export class LoginService {
       'password',
       status,
     );
+    securityEvent('karen.auth.login', {
+      outcome: status === 'ACTIVE' ? 'success' : 'success_restricted',
+    });
     if (newDevice && hadOtherDevices) {
       const address = await this.accounts.emailOf(userId);
       this.mail.dispatch(newSignInMail(address.display, input.client));
@@ -108,6 +114,7 @@ export class LoginService {
   }
 
   private inactive(userId: string, reason: string, message: string, next: string[]): ApiError {
+    securityEvent('karen.auth.login', { outcome: `refused_${reason}` });
     void this.audit.recordBestEffort({
       actorType: 'USER',
       actorRef: userId,

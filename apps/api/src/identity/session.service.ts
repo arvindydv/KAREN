@@ -9,6 +9,7 @@ import type {
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service.js';
 import { ApiError } from '../common/api-error.js';
+import { securityEvent } from '../common/security-metrics.js';
 import { API_ENV } from '../config/config.module.js';
 import type { ApiEnv } from '../config/env.js';
 import type { ClientKind as DbClientKind } from '../generated/prisma/client.js';
@@ -325,8 +326,12 @@ export class SessionService {
       return { kind: 'ok' as const, refreshToken: next.token, session };
     });
 
-    if (outcome.kind === 'invalid') throw invalid();
+    if (outcome.kind === 'invalid') {
+      securityEvent('karen.auth.refresh', { outcome: 'invalid' });
+      throw invalid();
+    }
     if (outcome.kind === 'theft') {
+      securityEvent('karen.auth.refresh', { outcome: outcome.reason });
       this.logger.warn({ reason: outcome.reason }, 'Refresh token reuse: session revoked');
       await this.audit.recordBestEffort({
         actorType: 'SYSTEM',
@@ -340,6 +345,7 @@ export class SessionService {
       });
       throw invalid();
     }
+    securityEvent('karen.auth.refresh', { outcome: 'rotated' });
     const access = await this.tokens.issue(loc.user_id, outcome.session.id);
     return {
       access_token: access.token,
@@ -376,6 +382,7 @@ export class SessionService {
       data: { revokedAt: new Date(), revokeReason: reason },
     });
     if (count > 0) {
+      securityEvent('karen.auth.session_revoked', { reason }, count);
       await this.audit.record(
         {
           actorType: 'USER',

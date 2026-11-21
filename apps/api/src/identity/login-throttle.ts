@@ -1,6 +1,7 @@
 import { createHmac } from 'node:crypto';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ApiError } from '../common/api-error.js';
+import { securityEvent } from '../common/security-metrics.js';
 import { API_ENV } from '../config/config.module.js';
 import type { ApiEnv } from '../config/env.js';
 import { RedisService } from '../infrastructure/redis/redis.service.js';
@@ -33,6 +34,7 @@ export class LoginThrottle {
     const count = await this.call((r) => r.get(this.redisKey(email)));
     if (Number(count ?? 0) >= this.max) {
       this.logger.warn({ limiter: 'login_per_account' }, 'Sign-in attempts blocked');
+      securityEvent('karen.auth.rate_limited', { limiter: 'login_per_account' });
       throw new ApiError(
         'RATE_LIMITED',
         'Too many sign-in attempts. Try again in 15 minutes, or reset your password.',

@@ -23,6 +23,7 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service.js';
 import { ApiError } from '../common/api-error.js';
+import { securityEvent } from '../common/security-metrics.js';
 import { API_ENV } from '../config/config.module.js';
 import type { ApiEnv } from '../config/env.js';
 import type { ConsentReceipt, ConsentStatus, Notice } from '../generated/prisma/client.js';
@@ -296,6 +297,9 @@ export class ConsentService {
           },
           tx,
         );
+        for (const r of receipts) {
+          securityEvent('karen.consent.decision', { purpose: r.purpose, decision: r.decision });
+        }
         const state = (await this.currentStatesTx(tx, userId)).find((s) => s.purpose === purpose);
         return { state: state as ConsentState, receipts: receipts.map(toReceiptDto) };
       });

@@ -1,6 +1,7 @@
 import { createHmac, randomInt } from 'node:crypto';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service.js';
+import { securityEvent } from '../common/security-metrics.js';
 import { API_ENV } from '../config/config.module.js';
 import type { ApiEnv } from '../config/env.js';
 import type { ChallengePurpose } from '../generated/prisma/client.js';
@@ -147,6 +148,10 @@ export class ChallengeService {
       if (!verifiersEqual(presented, row.code_mac)) {
         const attempts = row.attempts + 1;
         const exhausted = attempts >= row.max_attempts;
+        securityEvent('karen.auth.challenge', {
+          purpose,
+          outcome: exhausted ? 'attempts_exhausted' : 'code_mismatch',
+        });
         await tx.verificationChallenge.update({
           where: { id: row.id },
           data: {
@@ -179,6 +184,7 @@ export class ChallengeService {
             : undefined,
       });
       if (value === REFUSE) return { ok: false };
+      securityEvent('karen.auth.challenge', { purpose, outcome: 'accepted' });
       return { ok: true, userId: row.user_id, value };
     });
   }

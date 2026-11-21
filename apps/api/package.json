@@ -22,7 +22,8 @@
     "db:reset": "prisma migrate reset",
     "openapi:generate": "prisma generate && pnpm build && node --env-file-if-exists=.env dist/openapi/emit.js ../../packages/api-contracts/openapi/karen-api.v1.json && pnpm --filter @karen/api-contracts generate:types",
     "mail:smoke": "node --env-file-if-exists=.env scripts/mail-smoke.mjs",
-    "staff:bootstrap": "pnpm build && node --env-file-if-exists=.env dist/staff/bootstrap.js"
+    "staff:bootstrap": "pnpm build && node --env-file-if-exists=.env dist/staff/bootstrap.js",
+    "account:status": "pnpm build && node --env-file-if-exists=.env dist/identity/account-status-cli.js"
   },
   "dependencies": {
     "@fastify/helmet": "13.2.0",
@@ -33,9 +34,9 @@
     "@karen/domain": "workspace:*",
     "@karen/observability": "workspace:*",
     "@karen/types": "workspace:*",
-    "@nestjs/common": "12.4.2",
-    "@nestjs/core": "12.4.2",
-    "@nestjs/platform-fastify": "12.4.2",
+    "@nestjs/common": "12.5.0",
+    "@nestjs/core": "12.5.0",
+    "@nestjs/platform-fastify": "12.5.0",
     "@nestjs/swagger": "12.1.1",
     "@nestjs/throttler": "6.7.1",
     "@node-rs/argon2": "2.2.2",
@@ -61,7 +62,7 @@
     "@karen/typescript-config": "workspace:*",
     "@nestjs/cli": "12.0.12",
     "@nestjs/schematics": "12.0.13",
-    "@nestjs/testing": "12.4.2",
+    "@nestjs/testing": "12.5.0",
     "@types/node": "24.19.2",
     "@types/pg": "8.23.1",
     "@types/supertest": "6.0.3",
