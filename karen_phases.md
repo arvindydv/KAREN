@@ -177,6 +177,8 @@
 
 **Phase 00 status (2026-11-20, run 3, after hosted CI):** 10 DONE_LOCAL · 1 IN_PROGRESS (coverage artifacts) · 1 DEFERRED · 19 BLOCKED_EXTERNAL — hosted CI 16/16 green on PR #1 (not merged); Gate 00 **NOT PASSED** (staging, IdP/gateway trials, rollback rehearsal, branch protection); see `docs/PHASE_00_REPORT.md`.
 
+**Phase 00 status update (2026-11-21):** PR #1 merged. The repository is now **public**, so branch protection no longer needs a paid plan, but `main` is still **unprotected**. The IdP trial in Gate 00 criterion 4 is superseded by ADR-0015; replacement wording is proposed and awaits owner approval. Gate 00 **NOT PASSED** (staging, gateway trial, rollback rehearsal, branch protection). Checklist: `docs/PHASE_00_CLOSURE_CHECKLIST.md`.
+
 **Gate 00:** clean clone reproduces test suite; GitHub CI and deployed staging pass smoke checks; user-data access is isolated; real IdP/gateway spikes completed; on-call rollback path rehearsed. Production must remain inaccessible to public users until Phase 01 controls pass.
 
 ---
@@ -244,9 +246,21 @@
 **API minimum:** `/v1/identity/bootstrap`, `/v1/me`, `/v1/me/profile`, `/v1/me/devices`, `/v1/me/preferences`, `/v1/consent/notices`, `/v1/consent/grants`, `/v1/consent/requests`, `/v1/data-rights/export`, `/v1/data-rights/deletion`.  
 **Gate 01:** authenticated signup/login/recovery/logout work on web + physical iOS/Android; no unauthorized reads; consent receipts can be verified; end-to-end data request and RLS negative tests pass.
 
+**Phase 01 status (2026-11-21):** M0–M10 `DONE_LOCAL` on `main` (M9 web/admin/mobile clients merged via #29, `3bf9913`). Owner-reported manual pass of sign-up + OTP, login, password recovery and logout on a physical Android device, a physical iOS device and the web app; the evidence record (build, devices, artefacts) is incomplete and must be repeated on merged `main`. RLS, consent-receipt and data-request criteria pass locally and in CI. Gate 01 **NOT PASSED**; formal closure **NO-GO** (blockers B2–B7). See `docs/PHASE_01_REPORT.md` and `docs/PHASE_01_CLOSURE_CHECKLIST.md`.
+
+| Feature | Status                       | Notes                                                                                                                    |
+| ------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| F01-01  | `DONE_LOCAL` (partial)       | E-mail + password only; Google/Apple and passkeys `DEFERRED` (ADR-0015 §7); OTP lifetime and breached-password gaps open |
+| F01-02  | `DONE_LOCAL` (API + clients) | Clients merged (#29); Hindi copy review pending                                                                          |
+| F01-03  | `DONE_LOCAL` (partial)       | Avatar `DEFERRED` (malware scanning); mobile saved places / theme not built                                              |
+| F01-04  | `DONE_LOCAL`                 | Notice texts, purposes, legal bases and retention `BLOCKED_EXTERNAL` (legal); minors design only                         |
+| F01-05  | `DONE_LOCAL`                 | Physical security keys not verified; staff "end sessions" action and per-key removal not built                           |
+
 ---
 
 ## PHASE 02 — Real AI conversations and premium chat experience
+
+> **Status (2026-11-21):** `NOT_STARTED`. Technical proposal: `docs/PHASE_02_PROPOSAL.md` — **awaiting owner approval**; implementation must not start before it (entry criteria E1–E6).
 
 **User journey:** ask in natural language → receive streaming answer in preferred language → view evidence/uncertainty → continue conversation → optionally save item/create task → recover from partial failure.  
 **Tech:** existing NestJS SSE endpoint, Python FastAPI + `ModelRouter`, Vercel AI Gateway (live), Pydantic, Langfuse, OpenTelemetry, PostgreSQL messages, Redis budgets/rate limits, TanStack Query, virtualized message UI, S3 for attachments later.  
