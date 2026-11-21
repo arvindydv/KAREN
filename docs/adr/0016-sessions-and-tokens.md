@@ -98,3 +98,15 @@ Additional controls: refresh from a different installation id revokes the sessio
 (`device_mismatch`); leaving ACTIVE (lock/suspend/deletion request) and password reset revoke all
 sessions in the same transaction; per-account failed-login throttle keyed by an HMAC of the
 submitted e-mail (existing or not); new-device sign-in notice e-mail.
+
+## Implementation notes (Phase 01 M9, BFFs)
+
+- Web: `__Host-karen_session` (HttpOnly, Secure, SameSite=Lax); admin: `__Host-karen_staff`
+  (SameSite=Strict). Plain-http names only for `APP_ENV=local|test`. Double-submit CSRF cookies
+  use the `__Host-` prefix too, so a sibling subdomain cannot plant them. Per-request nonce CSP
+  (`script-src 'self' 'nonce-…' 'strict-dynamic'`, no `'unsafe-inline'` for scripts).
+- **Rate limits behind a BFF:** the BFF forwards the end-user IP (from its trusted proxy hops)
+  HMAC-signed with `INTERNAL_SERVICE_HMAC_SECRET`; the API's limiter key uses it only when the
+  signature verifies within 60 s (`@karen/domain/node` client-ip, `ClientIpThrottlerGuard`).
+  Otherwise every web user would share the BFF's single bucket. A captured signature lets its
+  holder claim that one IP for ≤ 60 s — accepted (it only affects that IP's own bucket).

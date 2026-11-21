@@ -1,5 +1,6 @@
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { randomUUID } from 'node:crypto';
+import { CLIENT_IP_HEADER, CLIENT_IP_SIGNATURE_HEADER, signClientIp } from '@karen/domain/node';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ACCESS_TOKEN_SERVICE, type AccessTokenService } from '../src/security/access-token.js';
@@ -287,6 +288,41 @@ describe('rate limiting (ADR-0013)', () => {
       await call().expect(200);
       const limited = await call().expect(429);
       expect(limited.body.error.code).toBe('RATE_LIMITED');
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('keys limits by the BFF-signed end-user IP; unsigned or forged headers change nothing', async () => {
+    const app = await start({ API_SENSITIVE_RATE_LIMIT_PER_MINUTE: '2' });
+    try {
+      await request(app.getHttpServer()).get('/health/ready').expect(200);
+      const secret = testEnv().INTERNAL_SERVICE_HMAC_SECRET as string;
+      const bff = `10.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}.9`;
+      const userIp = () =>
+        `203.0.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`;
+      const call = (headers: Record<string, string>) =>
+        request(app.getHttpServer())
+          .post('/dev/auth/token')
+          .set('x-forwarded-for', bff)
+          .set(headers)
+          .send({ subject: 'dev|rate-limit-signed' });
+      const signed = (ip: string) => ({
+        [CLIENT_IP_HEADER]: ip,
+        [CLIENT_IP_SIGNATURE_HEADER]: signClientIp(secret, ip, Math.floor(Date.now() / 1000)),
+      });
+      // Two users behind the same BFF: separate buckets (2 each), not one shared bucket.
+      const [alice, bob] = [userIp(), userIp()];
+      for (const ip of [alice, alice, bob, bob]) await call(signed(ip)).expect(200);
+      await call(signed(alice)).expect(429);
+      // A forged signature is ignored → counted against the BFF's own address.
+      const forged = {
+        [CLIENT_IP_HEADER]: userIp(),
+        [CLIENT_IP_SIGNATURE_HEADER]: 't=1,v1=' + '0'.repeat(64),
+      };
+      await call(forged).expect(200);
+      await call({ [CLIENT_IP_HEADER]: userIp() }).expect(200);
+      await call(forged).expect(429);
     } finally {
       await app.close();
     }

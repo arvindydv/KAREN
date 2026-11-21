@@ -30,6 +30,8 @@ locals {
 
     api_to_ai_service      = { from = "api", to = "ai_service", port = var.ports.ai_service, desc = "api to ai-service" }
     temporal_worker_to_api = { from = "temporal_worker", to = "api", port = var.ports.api, desc = "temporal-worker to api signed internal data-rights steps" }
+    web_to_api             = { from = "web", to = "api", port = var.ports.api, desc = "web BFF to api (service discovery)" }
+    admin_to_api           = { from = "admin", to = "api", port = var.ports.api, desc = "admin BFF to api (service discovery)" }
     voice_to_ai_service    = { from = "voice_agent", to = "ai_service", port = var.ports.ai_service, desc = "voice-agent to ai-service" }
 
     api_to_rds             = { from = "api", to = "rds", port = 5432, desc = "api to PostgreSQL" }

@@ -1,7 +1,14 @@
+import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
-import { Badge, Body, PrimaryButton, Screen } from '../src/components/primitives';
-import { mobileEnv } from '../src/lib/env';
-import { useTheme } from '../src/theme/theme';
+import {
+  Badge,
+  Body,
+  PrimaryButton,
+  Screen,
+  SecondaryButton,
+} from '../../src/components/primitives';
+import { mobileEnv } from '../../src/lib/env';
+import { useTheme } from '../../src/theme/theme';
 
 /** Decorative light ribbons (blue→violet and lime→green), blurred bands like the web hero. */
 function Ribbons() {
@@ -44,9 +51,10 @@ function Ribbons() {
   );
 }
 
-/** Launch / welcome screen. Sign-up arrives with the Authentication & Onboarding milestone. */
-export default function LaunchScreen() {
+/** Launch / welcome screen: entry to sign-up and sign-in. */
+export default function WelcomeScreen() {
   const t = useTheme();
+  const router = useRouter();
   return (
     <Screen padded={false}>
       <Ribbons />
@@ -116,13 +124,17 @@ export default function LaunchScreen() {
 
         <View style={{ gap: t.spacing.md, marginTop: t.spacing.xxl }}>
           <PrimaryButton
-            label="Get started"
-            hint="Sign-up opens in the next release"
-            onPress={() => undefined}
-            disabled
+            label="Create account"
+            hint="Sign up with your e-mail address"
+            onPress={() => router.push('/sign-up')}
+          />
+          <SecondaryButton
+            label="Sign in"
+            hint="Sign in to an existing account"
+            onPress={() => router.push('/sign-in')}
           />
           <Text style={{ color: t.colors.textSecondary, fontSize: 12, textAlign: 'center' }}>
-            Pre-release foundation build · {mobileEnv.EXPO_PUBLIC_APP_ENV} · sign-up coming soon
+            Pre-release build · {mobileEnv.EXPO_PUBLIC_APP_ENV}
           </Text>
         </View>
       </View>
