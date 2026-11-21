@@ -22,8 +22,8 @@ Requirement wording is summarised here; the official text is normative.
 
 **Evidence:**
 
-- Code paths are on `main` once PRs #22–#29 merge.
-- Web, admin and mobile evidence is in M9 (#29).
+- API code paths (#22–#28) are on `main` (merged 2026-11-20).
+- Web, admin and mobile evidence is in M9 (#29), merged 2026-11-21 (`3bf9913`).
 - "Test" names an automated test that exercises the control.
 
 **Statuses:**
@@ -180,3 +180,20 @@ This is a self-assessment by the implementers. It is **not** an independent ASVS
 | 7.3.1 mobile idle timeout                                         | Accept as documented (AAL1) or add a server idle window for refresh             | security + product |
 | 7.4.5 / 7.5.2 admin "end sessions" UI; re-auth to end one session | Staff console action; re-auth prompt                                            | engineering        |
 | 8.1.2 field-level authorization doc                               | Write it from the zod contracts                                                 | engineering        |
+
+The fix plan and owners for every row above are in `remediation-plan.md`.
+
+## Re-verification of open items (2026-11-21)
+
+Each open item was re-checked against the code on `main` (`25a77a6`) and on the #29 branch (`0b04f15`). This is still a self-assessment, not an independent verification.
+
+| ID     | Status (unchanged) | What was checked                                                                                                                                                               |
+| ------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 6.2.12 | GAP                | `security/password/password-policy.ts` states that no breached-password corpus is wired in                                                                                     |
+| 6.3.3  | PARTIAL            | No consumer second factor exists in `apps/api/src/identity`                                                                                                                    |
+| 6.5.2  | PARTIAL            | `challenge.service.ts` stores `hmac-sha256(OTP_HMAC_KEY, handle‖code)`. `OTP_HMAC_KEY` is required outside local/test (`config/env.ts`); the built-in key is used only locally |
+| 6.5.5  | GAP                | `CHALLENGE_TTL_MS = 15 * 60 * 1000` (`challenge.service.ts:19`)                                                                                                                |
+| 7.1.2  | GAP                | ADR-0016 has no concurrent-session section; no session cap in the code                                                                                                         |
+| 7.5.2  | PARTIAL            | `DELETE /v1/me/sessions/:id` and `DELETE /v1/me/devices/:id` (`sessions.controller.ts`) call `revokeOwned` with no re-authentication                                           |
+| 3.4.8  | PARTIAL (L3)       | `Cross-Origin-Opener-Policy` is set in `apps/admin/next.config.ts` on #29; not in `apps/web/next.config.ts`                                                                    |
+| 6.5.7  | MET, NOT VERIFIED  | The owner reports manual auth flows on physical Android and iOS devices (`PHASE_01_REPORT.md` §2.1), but did not report testing the biometric lock                             |

@@ -2,6 +2,7 @@
 
 Baseline: `main` @ `2d83cf9` (PR #1 merged; hosted CI 16/16 green on that commit).
 **Phase 00 stays open** — Gate 00 is independent of this plan (`docs/PHASE_00_REPORT.md`).
+**Status 2026-11-21:** M0–M8 and M10 are merged; M9 merged via #29 (`3bf9913`). M0–M10 are all `DONE_LOCAL`; Gate 01 is not passed. Current closure state: `docs/PHASE_01_CLOSURE_CHECKLIST.md`.
 Statuses: `NOT_STARTED` · `IN_PROGRESS` · `DONE_LOCAL` · `EXTERNALLY_BLOCKED` · `VERIFIED` · `RELEASE_READY`.
 
 ## 1. Direction change
