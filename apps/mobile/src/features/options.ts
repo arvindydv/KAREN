@@ -47,6 +47,14 @@ export const THEME_OPTIONS = [
   { value: 'dark', label: 'Dark' },
 ] as const;
 
+/** Reply language (ADR-0027): automatic = the language you write in. */
+export const REPLY_LANGUAGE_OPTIONS = [
+  { value: 'auto', label: 'Automatic' },
+  { value: 'en', label: 'English' },
+  { value: 'hi', label: 'हिन्दी' },
+  { value: 'hi-Latn', label: 'Hinglish' },
+] as const;
+
 /** Language choice → locale/script the profile and preferences should carry. */
 export const languageSettings = (language: 'en' | 'hi' | 'hinglish') =>
   language === 'hi'

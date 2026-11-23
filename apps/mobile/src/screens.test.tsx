@@ -6,12 +6,14 @@ import type * as ReactNative from 'react-native';
 import DeletionScheduledScreen from '../app/deletion-scheduled';
 import SignInScreen from '../app/(auth)/sign-in';
 import VerifyEmailScreen from '../app/(auth)/verify-email';
+import { clearCredential, holdCredential, takeCredential } from './auth/pending-credential';
 import { createAppServices, ServicesProvider, type AppServices } from './auth/services';
 import { ConsentToggles } from './features/consent-toggles';
 import { createInMemoryCredentialStore } from './lib/secure-storage';
 import { useChallengeStore } from './state/challenge-store';
 import { useSessionStore } from './state/session-store';
 
+let mockParams: Record<string, string> = {};
 const mockRouter = {
   push: jest.fn(),
   replace: jest.fn(),
@@ -22,7 +24,7 @@ jest.mock('expo-router', () => {
   const { Text } = jest.requireActual<typeof ReactNative>('react-native');
   return {
     useRouter: () => mockRouter,
-    useLocalSearchParams: () => ({}),
+    useLocalSearchParams: () => mockParams,
     Redirect: ({ href }: { href: string }) => <Text>{`redirect:${href}`}</Text>,
   };
 });
@@ -78,7 +80,9 @@ async function renderWith(ui: ReactNode, routes: Record<string, Route>) {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  useChallengeStore.setState({ pending: null, signInEmail: null, flash: null });
+  mockParams = {};
+  useChallengeStore.setState({ pending: null, signInEmail: null, flash: null, afterSignIn: null });
+  clearCredential();
   useSessionStore.setState({ status: 'signed_out', accountStatus: null, refreshProblem: null });
 });
 afterEach(() => {
@@ -92,6 +96,26 @@ describe('Sign in', () => {
     await fireEvent.changeText(screen.getByLabelText('Password'), 'a long enough passphrase');
     await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
   };
+
+  it('toggles password visibility with the eye button', async () => {
+    await renderWith(<SignInScreen />, {});
+    const field = screen.getByLabelText('Password');
+    expect(field.props.secureTextEntry).toBe(true);
+    await fireEvent.press(screen.getByRole('button', { name: 'Show password' }));
+    expect(screen.getByLabelText('Password').props.secureTextEntry).toBe(false);
+    await fireEvent.press(screen.getByRole('button', { name: 'Hide password' }));
+    expect(screen.getByLabelText('Password').props.secureTextEntry).toBe(true);
+  });
+
+  it('keeps Sign in disabled and sends nothing until both fields are filled', async () => {
+    const { calls } = await renderWith(<SignInScreen />, {});
+    const button = screen.getByRole('button', { name: 'Sign in' });
+    expect(button).toBeDisabled();
+    await fireEvent.changeText(screen.getByLabelText('E-mail'), 'asha@example.com');
+    await fireEvent(screen.getByLabelText('Password'), 'submitEditing');
+    expect(calls).toHaveLength(0);
+    expect(button).toBeDisabled();
+  });
 
   it('shows a safe message for INVALID_CREDENTIALS and keeps the user signed out', async () => {
     await renderWith(<SignInScreen />, {
@@ -170,6 +194,52 @@ describe('Verify e-mail', () => {
       signInEmail: 'asha@example.com',
       flash: expect.stringMatching(/verified/),
     });
+  });
+
+  const signedIn = {
+    result: 'signed_in',
+    user_id: '6f1c1f5e-8c1a-4c5e-9a39-0c1f8a9d2b11',
+    session_id: '0b8f7a43-3c1e-4f0e-8a51-6f9f3f7d1c22',
+    session_expires_at: '2026-12-20T10:00:00.000Z',
+    account_status: 'ACTIVE',
+    access_token: 'access',
+    access_token_expires_at: '2099-11-20T10:15:00.000Z',
+    refresh_token: 'refresh',
+  };
+
+  it('after sign-up, signs straight in and sends a new account to setup (no sign-in screen)', async () => {
+    useChallengeStore.setState({ pending });
+    mockParams = { from: 'sign-up' };
+    holdCredential('asha@example.com', 'a long enough passphrase');
+    const { calls } = await renderWith(<VerifyEmailScreen />, {
+      'POST /v1/auth/verify-email': () => json(200, { status: 'email_verified', next: 'sign_in' }),
+      'POST /v1/auth/login': () => json(200, signedIn),
+    });
+    await fireEvent.changeText(screen.getByLabelText('6-digit code'), '123456');
+    await fireEvent.press(screen.getByRole('button', { name: 'Verify' }));
+    await waitFor(() => expect(services.session.getSnapshot().status).toBe('signed_in'));
+    expect(calls.map((c) => c.path)).toEqual(['/v1/auth/verify-email', '/v1/auth/login']);
+    expect(calls[1]?.body).toMatchObject({
+      email: 'asha@example.com',
+      password: 'a long enough passphrase',
+    });
+    expect(useChallengeStore.getState().afterSignIn).toBe('/onboarding');
+    expect(mockRouter.replace).not.toHaveBeenCalledWith('/sign-in');
+    // Single use: the held password is gone.
+    expect(takeCredential('asha@example.com')).toBeNull();
+  });
+
+  it('falls back to sign-in when the automatic sign-in fails', async () => {
+    useChallengeStore.setState({ pending });
+    holdCredential('asha@example.com', 'a long enough passphrase');
+    await renderWith(<VerifyEmailScreen />, {
+      'POST /v1/auth/verify-email': () => json(200, { status: 'email_verified', next: 'sign_in' }),
+      'POST /v1/auth/login': () => apiError(503, 'UNAVAILABLE', 'Down'),
+    });
+    await fireEvent.changeText(screen.getByLabelText('6-digit code'), '123456');
+    await fireEvent.press(screen.getByRole('button', { name: 'Verify' }));
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/sign-in'));
+    expect(useChallengeStore.getState()).toMatchObject({ afterSignIn: null, pending: null });
   });
 
   it('shows CHALLENGE_INVALID and a resend cooldown', async () => {
@@ -308,7 +378,7 @@ describe('Deletion scheduled', () => {
     await waitFor(() => expect(services.session.getSnapshot().accountStatus).toBe('ACTIVE'));
     const cancel = calls.find((c) => c.path.endsWith('/cancel'));
     expect(cancel?.headers.get('authorization')).toBe('Bearer a1');
-    expect(await screen.findByText('redirect:/home')).toBeTruthy();
+    expect(await screen.findByText('redirect:/chat/new')).toBeTruthy();
   });
 
   it('signs out and clears local secrets', async () => {

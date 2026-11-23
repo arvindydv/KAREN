@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+import os
+import socket
 import time
 from collections.abc import AsyncIterator, Callable, Mapping
 from pathlib import Path
 from typing import Any, Final
+from urllib.parse import urlsplit
 
 import httpx2
 import pytest
@@ -29,6 +32,30 @@ TEST_GATEWAY_KEY: Final = "test-only-gateway-key-not-real"
 UNUSED_REDIS_URL: Final = "redis://127.0.0.1:1/0"
 
 SettingsFactory = Callable[..., Settings]
+
+
+_ALLOWED_TEST_HOSTS: Final = frozenset(
+    {"localhost", "127.0.0.1", "::1", urlsplit(os.environ.get("KAREN_TEST_REDIS_URL", "")).hostname or ""}
+) - {""}
+
+
+@pytest.fixture(autouse=True)
+def _no_external_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Hard guard: tests can never reach the real gateway (or any non-loopback host) and spend money.
+
+    Fake transports (``httpx2.MockTransport``/``ASGITransport``) never resolve names, and the
+    Redis integration tests use loopback (or ``KAREN_TEST_REDIS_URL``'s host), so only an
+    accidental real call trips this.
+    """
+    real_getaddrinfo = socket.getaddrinfo
+
+    def guarded(host: Any, *args: Any, **kwargs: Any) -> Any:
+        name = host.decode() if isinstance(host, bytes) else str(host)
+        if name not in _ALLOWED_TEST_HOSTS:
+            raise OSError(f"external network access is blocked in tests (host {name!r})")
+        return real_getaddrinfo(host, *args, **kwargs)
+
+    monkeypatch.setattr(socket, "getaddrinfo", guarded)
 
 
 @pytest.fixture(autouse=True)

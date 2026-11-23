@@ -54,6 +54,7 @@ const DEFAULT_PREFERENCES: Omit<Preferences, 'version'> = {
   notify_product_email: false,
   notify_push: false,
   quiet_hours: null,
+  reply_language: 'auto',
 };
 
 /**
@@ -160,6 +161,7 @@ export class ProfileService {
             quietHoursEnd: patch.quiet_hours?.end ?? null,
           }
         : {}),
+      ...(patch.reply_language !== undefined ? { replyLanguage: patch.reply_language } : {}),
     };
     const row = await this.prisma.withUserScope(userId, async (tx) => {
       const existing = await tx.userPreferences.findUnique({
@@ -471,6 +473,7 @@ function toPreferences(row: UserPreferences): Preferences {
       row.quietHoursStart && row.quietHoursEnd
         ? { start: row.quietHoursStart, end: row.quietHoursEnd }
         : null,
+    reply_language: row.replyLanguage as Preferences['reply_language'],
     version: row.version,
   };
 }

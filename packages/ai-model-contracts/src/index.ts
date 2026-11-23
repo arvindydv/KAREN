@@ -11,7 +11,7 @@
  */
 import { z } from 'zod';
 
-export const CONTRACT_VERSION = '2026-11-19.v1';
+export const CONTRACT_VERSION = '2026-11-23.v4';
 
 /** KAREN ModelRouter tiers (architecture §2.4). */
 export const ROUTE_TIERS = [
@@ -27,10 +27,16 @@ export const ROUTE_TIERS = [
 export const routeTierSchema = z.enum(ROUTE_TIERS);
 export type RouteTier = z.infer<typeof routeTierSchema>;
 
-/** Tiers that produce chat/text completions through the internal completion endpoint. */
-export const TEXT_GENERATION_TIERS = ['ECONOMY', 'BALANCED', 'REASONING'] as const;
+/**
+ * Tiers that produce chat/text completions through the internal completion endpoint. VISION
+ * answers in text about image inputs (feature-flagged, ADR-0026).
+ */
+export const TEXT_GENERATION_TIERS = ['ECONOMY', 'BALANCED', 'REASONING', 'VISION'] as const;
 
-/** Task kinds the router maps to tiers; callers state intent, never a model ID. */
+/**
+ * Task kinds the router maps to a task profile (tier, required capabilities, quality floor,
+ * latency preference; ADR-0026); callers state intent, never a model ID.
+ */
 export const TASK_KINDS = [
   'DETERMINISTIC',
   'INTENT_CLASSIFICATION',
@@ -41,6 +47,11 @@ export const TASK_KINDS = [
   'BASIC_PLANNING',
   'COMPLEX_PLANNING',
   'COMPARISON',
+  'CODING',
+  'DOCUMENT_ANALYSIS',
+  'RESEARCH',
+  'DECISION_SUPPORT',
+  'IMAGE_UNDERSTANDING',
 ] as const;
 export const taskKindSchema = z.enum(TASK_KINDS);
 export type TaskKind = z.infer<typeof taskKindSchema>;
@@ -61,16 +72,44 @@ export const modelCapabilitySchema = z
     /** ISO date the capabilities and prices were verified against the live gateway catalog. */
     verified_at: z.string().date().nullable(),
     notes: z.string().optional(),
+    /**
+     * Routing metadata from the live catalog (ADR-0026), all optional: Artificial Analysis
+     * intelligence index, time-to-first-token p50 (ms) and throughput p50 (tokens/s) of the
+     * slowest healthy endpoint, and the date they were observed.
+     */
+    quality_index: z.number().min(0).max(100).optional(),
+    latency_p50_ms: z.number().positive().optional(),
+    throughput_p50_tps: z.number().positive().optional(),
+    metadata_observed_at: z.string().date().optional(),
   })
   .strict();
 export type ModelCapability = z.infer<typeof modelCapabilitySchema>;
+
+/** Image input for IMAGE_UNDERSTANDING: an https URL or a base64 `data:image/...` URL. */
+export const IMAGE_URL_MAX_CHARS = 2_000_000;
+export const MAX_IMAGES_PER_MESSAGE = 4;
+export const imageInputSchema = z
+  .object({
+    url: z
+      .string()
+      .max(IMAGE_URL_MAX_CHARS)
+      .regex(/^(https:\/\/\S+|data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+)$/),
+    detail: z.enum(['low', 'high', 'auto']).optional(),
+  })
+  .strict();
 
 export const chatMessageSchema = z
   .object({
     role: z.enum(['system', 'user', 'assistant']),
     content: z.string().min(1).max(100_000),
+    /** v2: images attached to a user message (ADR-0026). */
+    images: z.array(imageInputSchema).min(1).max(MAX_IMAGES_PER_MESSAGE).optional(),
   })
-  .strict();
+  .strict()
+  .refine((m) => m.images === undefined || m.role === 'user', {
+    message: 'only user messages may carry images',
+    path: ['images'],
+  });
 
 /** POST /internal/v1/completions and /internal/v1/completions/stream request body. */
 export const completionRequestSchema = z
@@ -87,6 +126,29 @@ export const completionRequestSchema = z
     task_id: z.string().max(128).optional(),
     max_cost_usd: z.number().positive().max(10).optional(),
     prompt_version: z.string().max(64).optional(),
+    /**
+     * v2: the user's preferred BCP 47 locale (e.g. `hi-IN`) and IANA time zone. Hints only —
+     * the model answers in the language the user wrote in; deterministic answers (dates) use
+     * the time zone.
+     */
+    locale: z.string().min(2).max(35).optional(),
+    timezone: z.string().min(1).max(64).optional(),
+    /**
+     * v3 (ADR-0027): the user's saved reply-language choice. Omitted = reply in the language of
+     * the latest message (automatic). Set = always reply in this language.
+     */
+    reply_language: z.enum(['en', 'hi', 'hi-Latn']).optional(),
+    /**
+     * v3 (additive): the name the user wants KAREN to call them (preferred or display
+     * name), so she can address them personally. Letters, spaces and . ' - only — never free text
+     * that could carry instructions into the prompt.
+     */
+    user_name: z
+      .string()
+      .min(1)
+      .max(40)
+      .regex(/^[\p{L}\p{M}][\p{L}\p{M} .'-]*$/u)
+      .optional(),
   })
   .strict();
 export type CompletionRequest = z.infer<typeof completionRequestSchema>;
@@ -170,6 +232,11 @@ export const streamEventSchema = z.discriminatedUnion('event', [
       finish_reason: completionResponseSchema.shape.finish_reason,
       usage: usageSchema,
       estimated_cost_usd: z.number().nonnegative().nullable(),
+      /** v2: invocation metadata for the caller's usage ledger (never prompt content). */
+      requested_model: z.string().nullable(),
+      served_model: z.string().nullable(),
+      gateway_request_id: z.string().nullable(),
+      prompt_version: z.string().nullable(),
     })
     .strict(),
   z

@@ -31,14 +31,14 @@ ALTER ROLE karen_api_runtime NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPAS
 
 -- Nobody but the owner may create objects in public or in KAREN schemas.
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA identity, consent, audit, platform FROM PUBLIC;
+REVOKE ALL ON SCHEMA identity, consent, audit, platform, conversation FROM PUBLIC;
 
-GRANT USAGE ON SCHEMA identity, consent, audit, platform TO karen_api_runtime;
+GRANT USAGE ON SCHEMA identity, consent, audit, platform, conversation TO karen_api_runtime;
 
 -- Start from zero on every run so removed privileges do not linger.
-REVOKE ALL ON ALL TABLES IN SCHEMA identity, consent, audit, platform FROM karen_api_runtime;
-REVOKE ALL ON ALL SEQUENCES IN SCHEMA identity, consent, audit, platform FROM karen_api_runtime;
-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA identity, consent, audit, platform FROM karen_api_runtime;
+REVOKE ALL ON ALL TABLES IN SCHEMA identity, consent, audit, platform, conversation FROM karen_api_runtime;
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA identity, consent, audit, platform, conversation FROM karen_api_runtime;
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA identity, consent, audit, platform, conversation FROM karen_api_runtime;
 
 -- identity (RLS: own rows only)
 GRANT SELECT, INSERT, UPDATE ON identity.users TO karen_api_runtime;
@@ -82,6 +82,19 @@ GRANT EXECUTE ON FUNCTION identity.erase_user(uuid) TO karen_api_runtime;
 -- platform
 GRANT SELECT, INSERT, UPDATE ON platform.idempotency_records TO karen_api_runtime;  -- RLS
 GRANT INSERT ON platform.outbox_events TO karen_api_runtime;  -- relay gets its own role later
+-- Phase 02 (ADR-0023): AI invocation metadata is append-only; the ledger is upserted.
+GRANT SELECT, INSERT ON platform.ai_invocations TO karen_api_runtime;          -- RLS
+GRANT SELECT, INSERT, UPDATE ON platform.usage_ledger TO karen_api_runtime;     -- RLS
+
+-- conversation (Phase 02, ADR-0021; RLS: own rows only). Conversations are user content the
+-- user may delete outright (hard DELETE of a thread cascades to messages/events/feedback).
+-- Messages and stream events are never deleted individually by the request path.
+GRANT SELECT, INSERT, UPDATE, DELETE ON conversation.threads TO karen_api_runtime;
+GRANT SELECT, INSERT, UPDATE ON conversation.messages TO karen_api_runtime;
+GRANT SELECT, INSERT ON conversation.message_events TO karen_api_runtime;
+GRANT SELECT, INSERT, UPDATE, DELETE ON conversation.feedback TO karen_api_runtime;
+GRANT EXECUTE ON FUNCTION conversation.reap_stale_generations(timestamptz) TO karen_api_runtime;
+GRANT EXECUTE ON FUNCTION conversation.purge_expired(timestamptz, interval) TO karen_api_runtime;
 
 -- audit: append-only for the application (trigger also blocks UPDATE/DELETE/TRUNCATE)
 GRANT INSERT ON audit.audit_events TO karen_api_runtime;
@@ -105,8 +118,8 @@ ALTER ROLE karen_staff_runtime NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYP
 REVOKE ALL ON SCHEMA staff FROM PUBLIC;
 REVOKE ALL ON SCHEMA staff FROM karen_api_runtime;
 REVOKE ALL ON ALL TABLES IN SCHEMA staff FROM karen_api_runtime;
-REVOKE ALL ON ALL TABLES IN SCHEMA staff, identity, consent, audit, platform FROM karen_staff_runtime;
-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA staff, identity, consent, audit, platform FROM karen_staff_runtime;
+REVOKE ALL ON ALL TABLES IN SCHEMA staff, identity, consent, audit, platform, conversation FROM karen_staff_runtime;
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA staff, identity, consent, audit, platform, conversation FROM karen_staff_runtime;
 
 GRANT USAGE ON SCHEMA staff, audit, identity TO karen_staff_runtime;
 -- No DELETE anywhere: revocation, disablement and expiry are UPDATEs (kept for audit).

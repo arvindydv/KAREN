@@ -57,25 +57,71 @@ export function TextField({ label, hint, error, id, className, ...props }: Field
   );
 }
 
-/** Password input with a show/hide toggle. Never pre-filled; no composition rules (NIST). */
-export function PasswordField(props: FieldProps) {
-  const [shown, setShown] = useState(false);
+function EyeIcon({ open }: { open: boolean }) {
   return (
-    <div className="space-y-1">
-      <TextField
-        {...props}
-        type={shown ? 'text' : 'password'}
-        spellCheck={false}
-        autoCapitalize="none"
-      />
-      <button
-        type="button"
-        className="text-xs text-muted underline underline-offset-2"
-        onClick={() => setShown((s) => !s)}
-        aria-pressed={shown}
-      >
-        {shown ? 'Hide password' : 'Show password'}
-      </button>
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="2.8" />
+      {open ? null : <path d="M4 20 20 4" />}
+    </svg>
+  );
+}
+
+/** Password input with an eye show/hide toggle. Never pre-filled; no composition rules (NIST). */
+export function PasswordField({ label, hint, error, id, className, ...props }: FieldProps) {
+  const [shown, setShown] = useState(false);
+  const autoId = useId();
+  const inputId = id ?? autoId;
+  const hintId = `${inputId}-hint`;
+  const errorId = `${inputId}-error`;
+  const describedBy = [hint ? hintId : null, error ? errorId : null].filter(Boolean).join(' ');
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={inputId} className="block text-sm font-medium">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          id={inputId}
+          className={cn(inputClass, 'pr-12', className)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy || undefined}
+          spellCheck={false}
+          autoCapitalize="none"
+          {...props}
+          type={shown ? 'text' : 'password'}
+        />
+        <button
+          type="button"
+          onClick={() => setShown((s) => !s)}
+          aria-label={shown ? 'Hide password' : 'Show password'}
+          aria-pressed={shown}
+          aria-controls={inputId}
+          className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-[var(--karen-radius-md)] text-muted transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--karen-focus-ring)]"
+        >
+          <EyeIcon open={shown} />
+        </button>
+      </div>
+      {hint ? (
+        <p id={hintId} className="text-xs text-muted">
+          {hint}
+        </p>
+      ) : null}
+      {error ? (
+        <p id={errorId} className="text-xs text-[var(--karen-danger)]">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -218,8 +264,8 @@ export function AuthShell({
 }) {
   return (
     <div className="mx-auto max-w-5xl px-4 pt-28 pb-16 sm:px-6">
-      <Card className="mx-auto max-w-md space-y-5">
-        <div className="space-y-2">
+      <Card className="karen-rise mx-auto max-w-md space-y-5">
+        <div className="karen-stagger space-y-2">
           <h1 className="text-2xl font-semibold">{title}</h1>
           {intro ? <div className="text-sm text-muted">{intro}</div> : null}
         </div>

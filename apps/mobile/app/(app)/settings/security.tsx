@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import {
   authenticateLocally,
@@ -13,22 +13,27 @@ import { useServices } from '../../../src/auth/services';
 import {
   Body,
   Caption,
+  DangerLink,
   EmptyState,
   ErrorState,
   FormScreen,
   GlassCard,
   LinkRow,
+  ListCard,
+  Pill,
   SecondaryButton,
+  SectionTitle,
   ToggleRow,
 } from '../../../src/components/primitives';
 import { QueryView } from '../../../src/components/query-view';
 import { ScreenHeader } from '../../../src/components/screen-header';
 import { describeError, unwrap } from '../../../src/lib/api-error';
 import { reportError } from '../../../src/lib/error-reporting';
+import { formatDate, formatDateTime, plural } from '../../../src/lib/format';
 import { qk, useDevices, useSessions } from '../../../src/lib/queries';
 import { useSubmit } from '../../../src/lib/use-submit';
 
-const when = (iso: string) => new Date(iso).toLocaleString();
+const when = formatDateTime;
 const CLIENT_LABEL = { web: 'Web', ios: 'iOS app', android: 'Android app' } as const;
 
 export default function SecurityScreen() {
@@ -74,69 +79,75 @@ export default function SecurityScreen() {
   return (
     <FormScreen>
       <ScreenHeader title="Security" />
-      <GlassCard>
+      <ListCard>
         <LinkRow label="Change password" onPress={() => router.push('/settings/change-password')} />
         <LinkRow label="Change e-mail" onPress={() => router.push('/settings/change-email')} />
-      </GlassCard>
+      </ListCard>
 
       <AppLockSetting />
 
-      <Body>Signed-in sessions</Body>
+      <SectionTitle>Signed-in sessions</SectionTitle>
       <QueryView query={sessions} loadingLabel="Loading sessions">
         {(d) =>
           d.items.length === 0 ? (
             <EmptyState title="No active sessions." />
           ) : (
-            <View style={{ gap: 12 }}>
-              {d.items.map((s) => (
-                <GlassCard key={s.id} style={{ gap: 6 }}>
-                  <Body>
-                    {s.device_name ?? CLIENT_LABEL[s.client]}
-                    {s.current ? ' · this device' : ''}
-                  </Body>
-                  <Caption>
-                    {CLIENT_LABEL[s.client]} · last active {when(s.last_seen_at)} · expires{' '}
-                    {when(s.expires_at)}
-                  </Caption>
-                  <SecondaryButton
-                    label={s.current ? 'Sign out of this device' : 'Sign out this session'}
-                    destructive
-                    disabled={revokeSession.busy}
-                    onPress={() => revokeSession.run(s.id, s.current)}
+            <ListCard>
+              {d.items.map((s) => {
+                const name = s.device_name ?? CLIENT_LABEL[s.client];
+                return (
+                  <ItemRow
+                    key={s.id}
+                    title={name}
+                    current={s.current}
+                    meta={[
+                      ...(s.device_name ? [CLIENT_LABEL[s.client]] : []),
+                      `Active ${when(s.last_seen_at)}`,
+                    ].join(' · ')}
+                    action={
+                      <DangerLink
+                        label="Sign out"
+                        hint={s.current ? 'Signs you out of this device' : 'Ends that session'}
+                        disabled={revokeSession.busy}
+                        onPress={() => revokeSession.run(s.id, s.current)}
+                      />
+                    }
                   />
-                </GlassCard>
-              ))}
-            </View>
+                );
+              })}
+            </ListCard>
           )
         }
       </QueryView>
 
-      <Body>Devices</Body>
+      <SectionTitle>Devices</SectionTitle>
       <QueryView query={devices} loadingLabel="Loading devices">
         {(d) =>
           d.items.length === 0 ? (
             <EmptyState title="No devices yet." />
           ) : (
-            <View style={{ gap: 12 }}>
+            <ListCard>
               {d.items.map((dev) => (
-                <GlassCard key={dev.id} style={{ gap: 6 }}>
-                  <Body>
-                    {dev.name ?? CLIENT_LABEL[dev.platform]}
-                    {dev.current ? ' · this device' : ''}
-                  </Body>
-                  <Caption>
-                    First seen {when(dev.first_seen_at)} · {dev.active_sessions} active session(s)
-                  </Caption>
-                  <SecondaryButton
-                    label="Remove device"
-                    hint={dev.current ? 'Signs this device out' : 'Signs that device out'}
-                    destructive
-                    disabled={revokeDevice.busy}
-                    onPress={() => revokeDevice.run(dev.id, dev.current)}
-                  />
-                </GlassCard>
+                <ItemRow
+                  key={dev.id}
+                  title={dev.name ?? CLIENT_LABEL[dev.platform]}
+                  current={dev.current}
+                  meta={`First seen ${formatDate(dev.first_seen_at)} · ${plural(dev.active_sessions, 'active session')}`}
+                  // This device is signed out with "Sign out" above; removing it here would
+                  // be a confusing second way to do the same thing.
+                  action={
+                    dev.current ? null : (
+                      <DangerLink
+                        label="Remove"
+                        hint="Signs that device out and forgets it"
+                        disabled={revokeDevice.busy}
+                        onPress={() => revokeDevice.run(dev.id, dev.current)}
+                      />
+                    )
+                  }
+                />
               ))}
-            </View>
+            </ListCard>
           )
         }
       </QueryView>
@@ -150,6 +161,32 @@ export default function SecurityScreen() {
         onPress={() => signOutAll.run()}
       />
     </FormScreen>
+  );
+}
+
+/** One session/device row: name (+ "This device" pill), meta line, compact action on the right. */
+function ItemRow({
+  title,
+  meta,
+  current,
+  action,
+}: {
+  title: string;
+  meta: string;
+  current: boolean;
+  action: ReactNode;
+}) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <View style={{ flex: 1, gap: 4 }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+          <Body>{title}</Body>
+          {current ? <Pill label="This device" tone="accent" /> : null}
+        </View>
+        <Caption>{meta}</Caption>
+      </View>
+      {action}
+    </View>
   );
 }
 
@@ -189,7 +226,7 @@ function AppLockSetting() {
         ? 'Set up Face ID, Touch ID or fingerprint in your device settings first.'
         : undefined;
   return (
-    <GlassCard style={{ gap: 6 }}>
+    <GlassCard style={{ gap: 6, paddingVertical: 10 }}>
       <ToggleRow
         label="App lock"
         description="Ask for Face ID, fingerprint or your device passcode when opening KAREN. Only affects this device."

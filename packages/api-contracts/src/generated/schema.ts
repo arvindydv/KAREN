@@ -682,6 +682,173 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/conversations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ConversationController_list_v1'];
+    put?: never;
+    post: operations['ConversationController_create_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/conversations/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ConversationController_get_v1'];
+    put?: never;
+    post?: never;
+    /** Delete a conversation and all its messages (permanent) */
+    delete: operations['ConversationController_remove_v1'];
+    options?: never;
+    head?: never;
+    /** Rename, pin or archive (If-Match = version) */
+    patch: operations['ConversationController_update_v1'];
+    trace?: never;
+  };
+  '/v1/conversations/{id}/messages': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ConversationController_messages_v1'];
+    put?: never;
+    /** Send a message; the answer streams from `stream_path` */
+    post: operations['ConversationController_send_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/conversations/{id}/fork': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Edit a previous message: new conversation from that point */
+    post: operations['ConversationController_fork_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/conversations/{id}/messages/{messageId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ConversationController_message_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/conversations/{id}/messages/{messageId}/stream': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Server-sent events for an assistant message (resume with Last-Event-ID) */
+    get: operations['ConversationController_stream_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/conversations/{id}/messages/{messageId}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Stop a running answer (idempotent) */
+    post: operations['ConversationController_cancel_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/conversations/{id}/messages/{messageId}/regenerate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** New answer to the same question (latest answer only) */
+    post: operations['ConversationController_regenerate_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/conversations/{id}/messages/{messageId}/feedback': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['ConversationController_feedback_v1'];
+    delete: operations['ConversationController_clearFeedback_v1'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/ai-usage': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AiUsageController_get_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/health/live': {
     parameters: {
       query?: never;
@@ -1028,6 +1195,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1069,6 +1237,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1110,6 +1279,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1151,6 +1321,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1192,6 +1363,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1297,6 +1469,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1338,6 +1511,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1379,6 +1553,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1420,6 +1595,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1461,6 +1637,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1537,6 +1714,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1578,6 +1756,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1619,6 +1798,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1660,6 +1840,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1701,6 +1882,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1780,6 +1962,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1821,6 +2004,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1862,6 +2046,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1903,6 +2088,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -1944,6 +2130,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2017,6 +2204,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2058,6 +2246,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2099,6 +2288,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2140,6 +2330,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2181,6 +2372,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2256,6 +2448,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2297,6 +2490,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2338,6 +2532,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2379,6 +2574,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2420,6 +2616,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2495,6 +2692,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2536,6 +2734,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2577,6 +2776,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2618,6 +2818,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2659,6 +2860,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2733,6 +2935,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2774,6 +2977,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2815,6 +3019,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2856,6 +3061,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2897,6 +3103,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -2960,6 +3167,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3001,6 +3209,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3042,6 +3251,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3083,6 +3293,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3124,6 +3335,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3187,6 +3399,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3228,6 +3441,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3269,6 +3483,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3310,6 +3525,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3351,6 +3567,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3429,6 +3646,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3470,6 +3688,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3511,6 +3730,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3552,6 +3772,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3593,6 +3814,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3658,6 +3880,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3699,6 +3922,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3740,6 +3964,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3781,6 +4006,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3822,6 +4048,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3897,6 +4124,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3938,6 +4166,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -3979,6 +4208,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4020,6 +4250,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4061,6 +4292,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4126,6 +4358,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4167,6 +4400,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4208,6 +4442,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4249,6 +4484,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4290,6 +4526,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4374,6 +4611,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4415,6 +4653,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4456,6 +4695,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4497,6 +4737,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4538,6 +4779,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4637,6 +4879,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4678,6 +4921,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4719,6 +4963,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4760,6 +5005,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4801,6 +5047,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4856,6 +5103,8 @@ export interface operations {
               start: string;
               end: string;
             } | null;
+            /** @enum {string} */
+            reply_language: 'auto' | 'en' | 'hi' | 'hi-Latn';
             version: number;
           };
         };
@@ -4884,6 +5133,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4925,6 +5175,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -4966,6 +5217,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5007,6 +5259,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5048,6 +5301,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5100,6 +5354,8 @@ export interface operations {
             start: string;
             end: string;
           } | null;
+          /** @enum {string} */
+          reply_language?: 'auto' | 'en' | 'hi' | 'hi-Latn';
         };
       };
     };
@@ -5131,6 +5387,8 @@ export interface operations {
               start: string;
               end: string;
             } | null;
+            /** @enum {string} */
+            reply_language: 'auto' | 'en' | 'hi' | 'hi-Latn';
             version: number;
           };
         };
@@ -5159,6 +5417,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5200,6 +5459,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5241,6 +5501,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5282,6 +5543,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5323,6 +5585,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5401,6 +5664,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5442,6 +5706,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5483,6 +5748,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5524,6 +5790,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5565,6 +5832,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5655,6 +5923,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5696,6 +5965,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5737,6 +6007,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5778,6 +6049,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5819,6 +6091,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5914,6 +6187,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5955,6 +6229,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -5996,6 +6271,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6037,6 +6313,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6078,6 +6355,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6141,6 +6419,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6182,6 +6461,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6223,6 +6503,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6264,6 +6545,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6305,6 +6587,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6381,6 +6664,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6422,6 +6706,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6463,6 +6748,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6504,6 +6790,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6545,6 +6832,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6617,6 +6905,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6658,6 +6947,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6699,6 +6989,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6740,6 +7031,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6781,6 +7073,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6853,6 +7146,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6894,6 +7188,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6935,6 +7230,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -6976,6 +7272,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7017,6 +7314,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7091,6 +7389,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7132,6 +7431,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7173,6 +7473,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7214,6 +7515,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7255,6 +7557,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7331,6 +7634,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7372,6 +7676,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7413,6 +7718,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7454,6 +7760,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7495,6 +7802,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7591,6 +7899,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7632,6 +7941,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7673,6 +7983,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7714,6 +8025,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7755,6 +8067,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7838,6 +8151,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7879,6 +8193,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7920,6 +8235,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -7961,6 +8277,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8002,6 +8319,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8130,6 +8448,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8171,6 +8490,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8212,6 +8532,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8253,6 +8574,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8294,6 +8616,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8387,6 +8710,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8428,6 +8752,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8469,6 +8794,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8510,6 +8836,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8551,6 +8878,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8616,6 +8944,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8657,6 +8986,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8698,6 +9028,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8739,6 +9070,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8780,6 +9112,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8851,6 +9184,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8892,6 +9226,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8933,6 +9268,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -8974,6 +9310,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9015,6 +9352,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9096,6 +9434,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9137,6 +9476,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9178,6 +9518,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9219,6 +9560,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9260,6 +9602,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9362,6 +9705,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9403,6 +9747,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9444,6 +9789,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9485,6 +9831,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9526,6 +9873,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9630,6 +9978,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9671,6 +10020,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9712,6 +10062,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9753,6 +10104,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9794,6 +10146,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9896,6 +10249,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9937,6 +10291,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -9978,6 +10333,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10019,6 +10375,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10060,6 +10417,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10162,6 +10520,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10203,6 +10562,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10244,6 +10604,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10285,6 +10646,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10326,6 +10688,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10428,6 +10791,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10469,6 +10833,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10510,6 +10875,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10551,6 +10917,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10592,6 +10959,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10685,6 +11053,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10726,6 +11095,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10767,6 +11137,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10808,6 +11179,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10849,6 +11221,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10942,6 +11315,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -10983,6 +11357,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11024,6 +11399,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11065,6 +11441,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11106,6 +11483,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11197,6 +11575,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11238,6 +11617,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11279,6 +11659,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11320,6 +11701,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11361,6 +11743,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11421,6 +11804,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11462,6 +11846,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11503,6 +11888,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11544,6 +11930,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11585,6 +11972,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11684,6 +12072,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11725,6 +12114,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11766,6 +12156,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11807,6 +12198,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11848,6 +12240,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11941,6 +12334,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -11982,6 +12376,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12023,6 +12418,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12064,6 +12460,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12105,6 +12502,4180 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_list_v1: {
+    parameters: {
+      query?: {
+        archived?: 'exclude' | 'include' | 'only';
+        q?: string;
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              title: string;
+              locale: string;
+              /** @enum {string} */
+              mode: 'standard' | 'ephemeral';
+              pinned: boolean;
+              archived: boolean;
+              /** Format: date-time */
+              archived_at: string | null;
+              /** Format: date-time */
+              last_message_at: string | null;
+              /** Format: date-time */
+              expires_at: string | null;
+              /** Format: date-time */
+              created_at: string;
+              /** Format: date-time */
+              updated_at: string;
+              version: number;
+            }[];
+            next_cursor: string | null;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_create_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          title?: string;
+          locale?: string;
+          /**
+           * @default standard
+           * @enum {string}
+           */
+          mode: 'standard' | 'ephemeral';
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            locale: string;
+            /** @enum {string} */
+            mode: 'standard' | 'ephemeral';
+            pinned: boolean;
+            archived: boolean;
+            /** Format: date-time */
+            archived_at: string | null;
+            /** Format: date-time */
+            last_message_at: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            version: number;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_get_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            locale: string;
+            /** @enum {string} */
+            mode: 'standard' | 'ephemeral';
+            pinned: boolean;
+            archived: boolean;
+            /** Format: date-time */
+            archived_at: string | null;
+            /** Format: date-time */
+            last_message_at: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            version: number;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_remove_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_update_v1: {
+    parameters: {
+      query?: never;
+      header: {
+        'If-Match': string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          title?: string;
+          pinned?: boolean;
+          archived?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            locale: string;
+            /** @enum {string} */
+            mode: 'standard' | 'ephemeral';
+            pinned: boolean;
+            archived: boolean;
+            /** Format: date-time */
+            archived_at: string | null;
+            /** Format: date-time */
+            last_message_at: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            version: number;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_messages_v1: {
+    parameters: {
+      query?: {
+        limit?: number;
+        before?: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              conversation_id: string;
+              seq: number;
+              /** @enum {string} */
+              role: 'user' | 'assistant';
+              /** @enum {string} */
+              status:
+                | 'pending'
+                | 'accepted'
+                | 'streaming'
+                | 'completed'
+                | 'incomplete'
+                | 'failed'
+                | 'canceled';
+              content: string;
+              /** Format: uuid */
+              reply_to_message_id: string | null;
+              /** Format: uuid */
+              regenerated_from_message_id: string | null;
+              superseded: boolean;
+              error: {
+                code: string;
+                message: string;
+                retryable: boolean;
+              } | null;
+              is_mock: boolean | null;
+              route_tier: string | null;
+              feedback: {
+                /** @enum {string} */
+                rating: 'up' | 'down';
+                /** @enum {string|null} */
+                category:
+                  | 'wrong_fact'
+                  | 'too_slow'
+                  | 'language'
+                  | 'unsafe_action'
+                  | 'unhelpful'
+                  | 'other'
+                  | null;
+              } | null;
+              last_event_seq: number;
+              /** Format: date-time */
+              created_at: string;
+              /** Format: date-time */
+              completed_at: string | null;
+            }[];
+            next_cursor: string | null;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_send_v1: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          content: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            conversation: {
+              /** Format: uuid */
+              id: string;
+              title: string;
+              locale: string;
+              /** @enum {string} */
+              mode: 'standard' | 'ephemeral';
+              pinned: boolean;
+              archived: boolean;
+              /** Format: date-time */
+              archived_at: string | null;
+              /** Format: date-time */
+              last_message_at: string | null;
+              /** Format: date-time */
+              expires_at: string | null;
+              /** Format: date-time */
+              created_at: string;
+              /** Format: date-time */
+              updated_at: string;
+              version: number;
+            };
+            user_message: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              conversation_id: string;
+              seq: number;
+              /** @enum {string} */
+              role: 'user' | 'assistant';
+              /** @enum {string} */
+              status:
+                | 'pending'
+                | 'accepted'
+                | 'streaming'
+                | 'completed'
+                | 'incomplete'
+                | 'failed'
+                | 'canceled';
+              content: string;
+              /** Format: uuid */
+              reply_to_message_id: string | null;
+              /** Format: uuid */
+              regenerated_from_message_id: string | null;
+              superseded: boolean;
+              error: {
+                code: string;
+                message: string;
+                retryable: boolean;
+              } | null;
+              is_mock: boolean | null;
+              route_tier: string | null;
+              feedback: {
+                /** @enum {string} */
+                rating: 'up' | 'down';
+                /** @enum {string|null} */
+                category:
+                  | 'wrong_fact'
+                  | 'too_slow'
+                  | 'language'
+                  | 'unsafe_action'
+                  | 'unhelpful'
+                  | 'other'
+                  | null;
+              } | null;
+              last_event_seq: number;
+              /** Format: date-time */
+              created_at: string;
+              /** Format: date-time */
+              completed_at: string | null;
+            };
+            assistant_message: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              conversation_id: string;
+              seq: number;
+              /** @enum {string} */
+              role: 'user' | 'assistant';
+              /** @enum {string} */
+              status:
+                | 'pending'
+                | 'accepted'
+                | 'streaming'
+                | 'completed'
+                | 'incomplete'
+                | 'failed'
+                | 'canceled';
+              content: string;
+              /** Format: uuid */
+              reply_to_message_id: string | null;
+              /** Format: uuid */
+              regenerated_from_message_id: string | null;
+              superseded: boolean;
+              error: {
+                code: string;
+                message: string;
+                retryable: boolean;
+              } | null;
+              is_mock: boolean | null;
+              route_tier: string | null;
+              feedback: {
+                /** @enum {string} */
+                rating: 'up' | 'down';
+                /** @enum {string|null} */
+                category:
+                  | 'wrong_fact'
+                  | 'too_slow'
+                  | 'language'
+                  | 'unsafe_action'
+                  | 'unhelpful'
+                  | 'other'
+                  | null;
+              } | null;
+              last_event_seq: number;
+              /** Format: date-time */
+              created_at: string;
+              /** Format: date-time */
+              completed_at: string | null;
+            };
+            stream_path: string;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_fork_v1: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: uuid */
+          from_message_id: string;
+          content: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            conversation: {
+              /** Format: uuid */
+              id: string;
+              title: string;
+              locale: string;
+              /** @enum {string} */
+              mode: 'standard' | 'ephemeral';
+              pinned: boolean;
+              archived: boolean;
+              /** Format: date-time */
+              archived_at: string | null;
+              /** Format: date-time */
+              last_message_at: string | null;
+              /** Format: date-time */
+              expires_at: string | null;
+              /** Format: date-time */
+              created_at: string;
+              /** Format: date-time */
+              updated_at: string;
+              version: number;
+            };
+            user_message: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              conversation_id: string;
+              seq: number;
+              /** @enum {string} */
+              role: 'user' | 'assistant';
+              /** @enum {string} */
+              status:
+                | 'pending'
+                | 'accepted'
+                | 'streaming'
+                | 'completed'
+                | 'incomplete'
+                | 'failed'
+                | 'canceled';
+              content: string;
+              /** Format: uuid */
+              reply_to_message_id: string | null;
+              /** Format: uuid */
+              regenerated_from_message_id: string | null;
+              superseded: boolean;
+              error: {
+                code: string;
+                message: string;
+                retryable: boolean;
+              } | null;
+              is_mock: boolean | null;
+              route_tier: string | null;
+              feedback: {
+                /** @enum {string} */
+                rating: 'up' | 'down';
+                /** @enum {string|null} */
+                category:
+                  | 'wrong_fact'
+                  | 'too_slow'
+                  | 'language'
+                  | 'unsafe_action'
+                  | 'unhelpful'
+                  | 'other'
+                  | null;
+              } | null;
+              last_event_seq: number;
+              /** Format: date-time */
+              created_at: string;
+              /** Format: date-time */
+              completed_at: string | null;
+            };
+            assistant_message: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              conversation_id: string;
+              seq: number;
+              /** @enum {string} */
+              role: 'user' | 'assistant';
+              /** @enum {string} */
+              status:
+                | 'pending'
+                | 'accepted'
+                | 'streaming'
+                | 'completed'
+                | 'incomplete'
+                | 'failed'
+                | 'canceled';
+              content: string;
+              /** Format: uuid */
+              reply_to_message_id: string | null;
+              /** Format: uuid */
+              regenerated_from_message_id: string | null;
+              superseded: boolean;
+              error: {
+                code: string;
+                message: string;
+                retryable: boolean;
+              } | null;
+              is_mock: boolean | null;
+              route_tier: string | null;
+              feedback: {
+                /** @enum {string} */
+                rating: 'up' | 'down';
+                /** @enum {string|null} */
+                category:
+                  | 'wrong_fact'
+                  | 'too_slow'
+                  | 'language'
+                  | 'unsafe_action'
+                  | 'unhelpful'
+                  | 'other'
+                  | null;
+              } | null;
+              last_event_seq: number;
+              /** Format: date-time */
+              created_at: string;
+              /** Format: date-time */
+              completed_at: string | null;
+            };
+            stream_path: string;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_message_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        messageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            conversation_id: string;
+            seq: number;
+            /** @enum {string} */
+            role: 'user' | 'assistant';
+            /** @enum {string} */
+            status:
+              | 'pending'
+              | 'accepted'
+              | 'streaming'
+              | 'completed'
+              | 'incomplete'
+              | 'failed'
+              | 'canceled';
+            content: string;
+            /** Format: uuid */
+            reply_to_message_id: string | null;
+            /** Format: uuid */
+            regenerated_from_message_id: string | null;
+            superseded: boolean;
+            error: {
+              code: string;
+              message: string;
+              retryable: boolean;
+            } | null;
+            is_mock: boolean | null;
+            route_tier: string | null;
+            feedback: {
+              /** @enum {string} */
+              rating: 'up' | 'down';
+              /** @enum {string|null} */
+              category:
+                | 'wrong_fact'
+                | 'too_slow'
+                | 'language'
+                | 'unsafe_action'
+                | 'unhelpful'
+                | 'other'
+                | null;
+            } | null;
+            last_event_seq: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            completed_at: string | null;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_stream_v1: {
+    parameters: {
+      query?: {
+        after?: string;
+      };
+      header?: {
+        'Last-Event-ID'?: string;
+      };
+      path: {
+        id: string;
+        messageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_cancel_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        messageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            conversation_id: string;
+            seq: number;
+            /** @enum {string} */
+            role: 'user' | 'assistant';
+            /** @enum {string} */
+            status:
+              | 'pending'
+              | 'accepted'
+              | 'streaming'
+              | 'completed'
+              | 'incomplete'
+              | 'failed'
+              | 'canceled';
+            content: string;
+            /** Format: uuid */
+            reply_to_message_id: string | null;
+            /** Format: uuid */
+            regenerated_from_message_id: string | null;
+            superseded: boolean;
+            error: {
+              code: string;
+              message: string;
+              retryable: boolean;
+            } | null;
+            is_mock: boolean | null;
+            route_tier: string | null;
+            feedback: {
+              /** @enum {string} */
+              rating: 'up' | 'down';
+              /** @enum {string|null} */
+              category:
+                | 'wrong_fact'
+                | 'too_slow'
+                | 'language'
+                | 'unsafe_action'
+                | 'unhelpful'
+                | 'other'
+                | null;
+            } | null;
+            last_event_seq: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            completed_at: string | null;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_regenerate_v1: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+      };
+      path: {
+        id: string;
+        messageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            assistant_message: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              conversation_id: string;
+              seq: number;
+              /** @enum {string} */
+              role: 'user' | 'assistant';
+              /** @enum {string} */
+              status:
+                | 'pending'
+                | 'accepted'
+                | 'streaming'
+                | 'completed'
+                | 'incomplete'
+                | 'failed'
+                | 'canceled';
+              content: string;
+              /** Format: uuid */
+              reply_to_message_id: string | null;
+              /** Format: uuid */
+              regenerated_from_message_id: string | null;
+              superseded: boolean;
+              error: {
+                code: string;
+                message: string;
+                retryable: boolean;
+              } | null;
+              is_mock: boolean | null;
+              route_tier: string | null;
+              feedback: {
+                /** @enum {string} */
+                rating: 'up' | 'down';
+                /** @enum {string|null} */
+                category:
+                  | 'wrong_fact'
+                  | 'too_slow'
+                  | 'language'
+                  | 'unsafe_action'
+                  | 'unhelpful'
+                  | 'other'
+                  | null;
+              } | null;
+              last_event_seq: number;
+              /** Format: date-time */
+              created_at: string;
+              /** Format: date-time */
+              completed_at: string | null;
+            };
+            stream_path: string;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_feedback_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        messageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          rating: 'up' | 'down';
+          /** @enum {string} */
+          category?:
+            'wrong_fact' | 'too_slow' | 'language' | 'unsafe_action' | 'unhelpful' | 'other';
+          comment?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            conversation_id: string;
+            seq: number;
+            /** @enum {string} */
+            role: 'user' | 'assistant';
+            /** @enum {string} */
+            status:
+              | 'pending'
+              | 'accepted'
+              | 'streaming'
+              | 'completed'
+              | 'incomplete'
+              | 'failed'
+              | 'canceled';
+            content: string;
+            /** Format: uuid */
+            reply_to_message_id: string | null;
+            /** Format: uuid */
+            regenerated_from_message_id: string | null;
+            superseded: boolean;
+            error: {
+              code: string;
+              message: string;
+              retryable: boolean;
+            } | null;
+            is_mock: boolean | null;
+            route_tier: string | null;
+            feedback: {
+              /** @enum {string} */
+              rating: 'up' | 'down';
+              /** @enum {string|null} */
+              category:
+                | 'wrong_fact'
+                | 'too_slow'
+                | 'language'
+                | 'unsafe_action'
+                | 'unhelpful'
+                | 'other'
+                | null;
+            } | null;
+            last_event_seq: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            completed_at: string | null;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  ConversationController_clearFeedback_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        messageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            conversation_id: string;
+            seq: number;
+            /** @enum {string} */
+            role: 'user' | 'assistant';
+            /** @enum {string} */
+            status:
+              | 'pending'
+              | 'accepted'
+              | 'streaming'
+              | 'completed'
+              | 'incomplete'
+              | 'failed'
+              | 'canceled';
+            content: string;
+            /** Format: uuid */
+            reply_to_message_id: string | null;
+            /** Format: uuid */
+            regenerated_from_message_id: string | null;
+            superseded: boolean;
+            error: {
+              code: string;
+              message: string;
+              retryable: boolean;
+            } | null;
+            is_mock: boolean | null;
+            route_tier: string | null;
+            feedback: {
+              /** @enum {string} */
+              rating: 'up' | 'down';
+              /** @enum {string|null} */
+              category:
+                | 'wrong_fact'
+                | 'too_slow'
+                | 'language'
+                | 'unsafe_action'
+                | 'unhelpful'
+                | 'other'
+                | null;
+            } | null;
+            last_event_seq: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            completed_at: string | null;
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  AiUsageController_get_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            daily: {
+              used_ratio: number;
+              limit_reached: boolean;
+              /** Format: date-time */
+              resets_at: string;
+            };
+            monthly: {
+              used_ratio: number;
+              limit_reached: boolean;
+              /** Format: date-time */
+              resets_at: string;
+            };
+            /** @enum {string} */
+            gateway_mode: 'mock' | 'live';
+          };
+        };
+      };
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Authenticated but not permitted */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Rate limited */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
+                | 'CONSENT_REQUIRED'
+                | 'APPROVAL_REQUIRED'
+                | 'PROVIDER_CAPABILITY_UNAVAILABLE'
+                | 'DEPENDENCY_UNAVAILABLE'
+                | 'INTERNAL_ERROR';
+              message: string;
+              correlation_id: string;
+              retryable: boolean;
+              next_options?: string[];
+              details?: {
+                path: string;
+                message: string;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Internal error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            error: {
+              /** @enum {string} */
+              code:
+                | 'VALIDATION_FAILED'
+                | 'WEAK_PASSWORD'
+                | 'CHALLENGE_INVALID'
+                | 'UNAUTHENTICATED'
+                | 'INVALID_CREDENTIALS'
+                | 'FORBIDDEN'
+                | 'STEP_UP_REQUIRED'
+                | 'ACCOUNT_INACTIVE'
+                | 'NOT_FOUND'
+                | 'CONFLICT'
+                | 'PRECONDITION_FAILED'
+                | 'PRECONDITION_REQUIRED'
+                | 'PAYLOAD_TOO_LARGE'
+                | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12254,6 +16825,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12295,6 +16867,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12336,6 +16909,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12377,6 +16951,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12418,6 +16993,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12510,6 +17086,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12551,6 +17128,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12592,6 +17170,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12633,6 +17212,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12674,6 +17254,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12746,6 +17327,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12787,6 +17369,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12828,6 +17411,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12869,6 +17453,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12910,6 +17495,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -12979,6 +17565,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13020,6 +17607,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13061,6 +17649,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13102,6 +17691,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13143,6 +17733,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13209,6 +17800,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13250,6 +17842,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13291,6 +17884,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13332,6 +17926,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13373,6 +17968,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13462,6 +18058,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13503,6 +18100,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13544,6 +18142,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13585,6 +18184,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13626,6 +18226,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13684,6 +18285,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13725,6 +18327,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13766,6 +18369,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13807,6 +18411,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13848,6 +18453,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13928,6 +18534,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -13969,6 +18576,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14010,6 +18618,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14051,6 +18660,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14092,6 +18702,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14167,6 +18778,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14208,6 +18820,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14249,6 +18862,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14290,6 +18904,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14331,6 +18946,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14392,6 +19008,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14433,6 +19050,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14474,6 +19092,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14515,6 +19134,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14556,6 +19176,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14617,6 +19238,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14658,6 +19280,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14699,6 +19322,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14740,6 +19364,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14781,6 +19406,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14841,6 +19467,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14882,6 +19509,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14923,6 +19551,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -14964,6 +19593,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15005,6 +19635,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15085,6 +19716,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15126,6 +19758,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15167,6 +19800,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15208,6 +19842,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15249,6 +19884,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15337,6 +19973,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15378,6 +20015,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15419,6 +20057,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15460,6 +20099,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15501,6 +20141,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15588,6 +20229,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15629,6 +20271,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15670,6 +20313,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15711,6 +20355,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15752,6 +20397,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15821,6 +20467,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15862,6 +20509,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15903,6 +20551,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15944,6 +20593,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -15985,6 +20635,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -16053,6 +20704,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -16094,6 +20746,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -16135,6 +20788,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -16176,6 +20830,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'
@@ -16217,6 +20872,7 @@ export interface operations {
                 | 'PRECONDITION_REQUIRED'
                 | 'PAYLOAD_TOO_LARGE'
                 | 'RATE_LIMITED'
+                | 'USAGE_LIMIT_REACHED'
                 | 'CONSENT_REQUIRED'
                 | 'APPROVAL_REQUIRED'
                 | 'PROVIDER_CAPABILITY_UNAVAILABLE'

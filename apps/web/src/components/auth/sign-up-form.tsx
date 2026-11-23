@@ -3,7 +3,9 @@
 import { PASSWORD_MAX_CODE_POINTS, PASSWORD_MIN_CODE_POINTS } from '@karen/api-contracts';
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
-import { bff, hardNavigate } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { bff } from '@/lib/api';
+import { holdSignIn } from '@/lib/pending-credential';
 import { errorMessage, fieldErrors, type ApiErrorBody } from '@/lib/errors';
 import { FormAlert, PasswordField, SubmitButton, TextField, formString } from '../forms';
 
@@ -22,6 +24,7 @@ export function localPasswordError(pw: string): string | undefined {
 }
 
 export function SignUpForm() {
+  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<ApiErrorBody | null>(null);
   const [localError, setLocalError] = useState<string | undefined>();
@@ -41,10 +44,11 @@ export function SignUpForm() {
     } catch {
       timezone = undefined; // the API defaults the timezone; the user can set it in onboarding
     }
+    const email = formString(form, 'email', '');
     const res = await bff('/api/auth/register', {
       method: 'POST',
       json: {
-        email: formString(form, 'email', ''),
+        email,
         password,
         locale: 'en-IN',
         ...(timezone ? { timezone } : {}),
@@ -55,12 +59,19 @@ export function SignUpForm() {
       setPending(false);
       return;
     }
-    hardNavigate('/verify-email');
+    // Memory-only: lets the verify page sign straight in. Client-side navigation keeps it.
+    holdSignIn({ email, password, next: '/app/onboarding' });
+    router.push('/verify-email');
   }
 
   const fields = fieldErrors(error);
   return (
-    <form method="post" onSubmit={(e) => void onSubmit(e)} className="space-y-4" noValidate>
+    <form
+      method="post"
+      onSubmit={(e) => void onSubmit(e)}
+      className="karen-stagger space-y-4"
+      noValidate
+    >
       {error ? <FormAlert>{errorMessage(error)}</FormAlert> : null}
       <TextField
         label="E-mail"

@@ -1,0 +1,23 @@
+{
+  "id": "routing-decision-support-hinglish",
+  "description": "Hinglish decision-making request goes to the REASONING tier.",
+  "language": "hi-Latn",
+  "tags": [
+    "routing",
+    "phase-03"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "DECISION_SUPPORT",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Mujhe Pune mein flat lena chahiye ya rent pe rehna chahiye? Pros aur cons batao."
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "REASONING",
+    "no_model_call": false
+  }
+}

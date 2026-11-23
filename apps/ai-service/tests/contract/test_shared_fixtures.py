@@ -35,7 +35,7 @@ def fixture(name: str) -> Any:
 def _ts_string_array(const_name: str) -> list[str]:
     match = re.search(rf"export const {const_name} = \[(.*?)\] as const;", TS_SOURCE, re.S)
     assert match is not None, const_name
-    return re.findall(r"'([A-Z_]+)'", match.group(1))
+    return re.findall(r"'([A-Za-z0-9_-]+)'", match.group(1))
 
 
 def test_contract_version_matches_typescript() -> None:
@@ -92,3 +92,10 @@ def test_example_registry_entries_are_valid_and_unverified() -> None:
 
 def test_service_mock_registry_is_identical_to_shared_example() -> None:
     assert MOCK_REGISTRY_PATH.read_bytes() == (FIXTURES / "model-registry.example.json").read_bytes()
+
+
+def test_v4_drops_reply_style() -> None:
+    body = fixture("completion-request.valid.json")
+    body["reply_style"] = "spoken"
+    with pytest.raises(ValidationError, match="reply_style"):
+        CompletionRequest.model_validate(body)

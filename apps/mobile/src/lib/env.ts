@@ -22,7 +22,15 @@ export function parseMobileEnv(source: Record<string, string | undefined>): Mobi
   return env;
 }
 
+/**
+ * `process.env` is typed by the generated (gitignored) expo-env.d.ts locally but is `any` on a
+ * clean CI checkout; narrowing through `unknown` is correct in both. Keep the literal
+ * `process.env.EXPO_PUBLIC_*` references: Expo inlines only those.
+ */
+const asString = (value: unknown): string | undefined =>
+  typeof value === 'string' ? value : undefined;
+
 export const mobileEnv = parseMobileEnv({
-  EXPO_PUBLIC_APP_ENV: process.env.EXPO_PUBLIC_APP_ENV as string | undefined,
-  EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL as string | undefined,
+  EXPO_PUBLIC_APP_ENV: asString(process.env.EXPO_PUBLIC_APP_ENV),
+  EXPO_PUBLIC_API_BASE_URL: asString(process.env.EXPO_PUBLIC_API_BASE_URL),
 });

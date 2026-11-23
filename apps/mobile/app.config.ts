@@ -30,7 +30,7 @@ const config: ExpoConfig = {
           'KAREN uses Face ID to unlock the app on this device when you turn on app lock.',
       },
     ],
-    ['expo-splash-screen', { backgroundColor: '#060A1C', dark: { backgroundColor: '#060A1C' } }],
+    ['expo-splash-screen', { backgroundColor: '#0A0F24', dark: { backgroundColor: '#0A0F24' } }],
   ],
   experiments: { typedRoutes: true },
   extra: { variant },

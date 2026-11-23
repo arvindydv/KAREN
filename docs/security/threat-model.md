@@ -23,7 +23,7 @@ flowchart LR
   U --> CF; EXT --> CF
   ALB --> API; ALB -->|/webhooks/*| PW
   API -->|HMAC-signed| AI; VA -->|HMAC-signed| AI
-  AI -->|TLS, backend key| GW[Vercel AI Gateway]
+  AI -->|TLS, backend key| GW[OpenRouter]
   TW -->|TLS + API key| TC[Temporal Cloud]
   API --> PG; API --> R; PW --> R
 ```

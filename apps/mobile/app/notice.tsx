@@ -6,6 +6,7 @@ import { Banner, Body, Caption, EmptyState, FormScreen } from '../src/components
 import { ScreenHeader } from '../src/components/screen-header';
 import { unwrap } from '../src/lib/api-error';
 import { pickNotice, qk, useNotices } from '../src/lib/queries';
+import { formatDate } from '../src/lib/format';
 
 const KINDS = ['privacy_notice', 'terms_of_service', 'ai_disclosure'] as const;
 type Kind = (typeof KINDS)[number];
@@ -52,9 +53,7 @@ export default function NoticeScreen() {
               ) : null}
               <Caption>
                 Version {n.version} · {n.locale}
-                {n.effective_from
-                  ? ` · effective ${new Date(n.effective_from).toLocaleDateString()}`
-                  : ''}
+                {n.effective_from ? ` · effective ${formatDate(n.effective_from)}` : ''}
               </Caption>
               <Body>{n.content}</Body>
             </>

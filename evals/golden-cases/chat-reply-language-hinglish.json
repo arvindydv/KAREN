@@ -1,0 +1,24 @@
+{
+  "id": "chat-reply-language-hinglish",
+  "description": "A Hinglish question gets a Hinglish (Latin-script Hindi) answer.",
+  "language": "hi-Latn",
+  "tags": [
+    "chat",
+    "language",
+    "phase-02"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "CHAT",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Office ke liye healthy lunch ideas batao, jo 15 minute mein ban jaye."
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "BALANCED",
+    "reply_language": "hi-Latn"
+  }
+}

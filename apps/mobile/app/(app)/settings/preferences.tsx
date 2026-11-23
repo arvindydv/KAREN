@@ -1,12 +1,16 @@
 import type { Preferences } from '@karen/api-contracts';
 import { useCallback, useState } from 'react';
+import { Text, View } from 'react-native';
 import {
   Banner,
   Caption,
   ChoiceGroup,
   ErrorState,
   FormScreen,
+  GlassCard,
+  ListCard,
   PrimaryButton,
+  SectionTitle,
   TextField,
   ToggleRow,
 } from '../../../src/components/primitives';
@@ -19,11 +23,13 @@ import {
   TEXT_SIZE_OPTIONS,
   THEME_OPTIONS,
   TIME_FORMAT_OPTIONS,
+  REPLY_LANGUAGE_OPTIONS,
 } from '../../../src/features/options';
 import { describeError } from '../../../src/lib/api-error';
 import { usePatchPreferences } from '../../../src/lib/mutations';
 import { usePreferences } from '../../../src/lib/queries';
 import { useSubmit } from '../../../src/lib/use-submit';
+import { useTheme } from '../../../src/theme/theme';
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -51,6 +57,7 @@ function PreferencesForm({
   onResult: (r: SaveResult) => void;
   prefs: Preferences;
 }) {
+  const t = useTheme();
   const patch = usePatchPreferences();
   const [draft, setDraft] = useState(prefs);
   const [quiet, setQuiet] = useState(prefs.quiet_hours !== null);
@@ -78,88 +85,125 @@ function PreferencesForm({
   );
   return (
     <>
-      <ChoiceGroup
-        label="Language"
-        options={LANGUAGE_OPTIONS}
-        value={draft.language}
-        onChange={set('language')}
-      />
-      <ChoiceGroup
-        label="Script"
-        options={SCRIPT_OPTIONS}
-        value={draft.script}
-        onChange={set('script')}
-      />
-      <ChoiceGroup
-        label="Date format"
-        options={DATE_FORMAT_OPTIONS}
-        value={draft.date_format}
-        onChange={set('date_format')}
-      />
-      <ChoiceGroup
-        label="Time format"
-        options={TIME_FORMAT_OPTIONS}
-        value={draft.time_format}
-        onChange={set('time_format')}
-      />
-      <ChoiceGroup
-        label="Theme"
-        options={THEME_OPTIONS}
-        value={draft.theme}
-        onChange={set('theme')}
-      />
-      <ChoiceGroup
-        label="Text size"
-        options={TEXT_SIZE_OPTIONS}
-        value={draft.text_size}
-        onChange={set('text_size')}
-      />
-      <ToggleRow
-        label="Reduce motion"
-        value={draft.reduced_motion}
-        onChange={set('reduced_motion')}
-      />
-      <ToggleRow
-        label="High contrast"
-        value={draft.high_contrast}
-        onChange={set('high_contrast')}
-      />
-      <ToggleRow
-        label="Push notifications"
-        value={draft.notify_push}
-        onChange={set('notify_push')}
-      />
-      <ToggleRow
-        label="Product e-mails"
-        value={draft.notify_product_email}
-        onChange={set('notify_product_email')}
-      />
-      <Caption>Security e-mails are always sent.</Caption>
-      <ToggleRow
-        label="Quiet hours"
-        description="No non-urgent notifications during these hours."
-        value={quiet}
-        onChange={setQuiet}
-      />
-      {quiet ? (
-        <>
-          <TextField
-            label="Quiet from (HH:MM)"
-            value={start}
-            onChangeText={setStart}
-            keyboardType="numbers-and-punctuation"
-            maxLength={5}
+      <SectionTitle>Language & format</SectionTitle>
+      <GlassCard style={{ gap: 18 }}>
+        <ChoiceGroup
+          label="Language"
+          options={LANGUAGE_OPTIONS}
+          value={draft.language}
+          onChange={set('language')}
+        />
+        <ChoiceGroup
+          label="Script"
+          options={SCRIPT_OPTIONS}
+          value={draft.script}
+          onChange={set('script')}
+        />
+        <ChoiceGroup
+          label="Date format"
+          options={DATE_FORMAT_OPTIONS}
+          value={draft.date_format}
+          onChange={set('date_format')}
+        />
+        <ChoiceGroup
+          label="Time format"
+          options={TIME_FORMAT_OPTIONS}
+          value={draft.time_format}
+          onChange={set('time_format')}
+        />
+      </GlassCard>
+
+      <SectionTitle>Display & accessibility</SectionTitle>
+      <GlassCard style={{ gap: 18 }}>
+        <ChoiceGroup
+          label="Theme"
+          options={THEME_OPTIONS}
+          value={draft.theme}
+          onChange={set('theme')}
+        />
+        <ChoiceGroup
+          label="Text size"
+          options={TEXT_SIZE_OPTIONS}
+          value={draft.text_size}
+          onChange={set('text_size')}
+        />
+      </GlassCard>
+      <ListCard>
+        <ToggleRow
+          label="Reduce motion"
+          value={draft.reduced_motion}
+          onChange={set('reduced_motion')}
+        />
+        <ToggleRow
+          label="High contrast"
+          value={draft.high_contrast}
+          onChange={set('high_contrast')}
+        />
+      </ListCard>
+
+      <SectionTitle>Replies</SectionTitle>
+      <GlassCard style={{ gap: 18 }}>
+        <ChoiceGroup
+          label="Reply language"
+          options={REPLY_LANGUAGE_OPTIONS}
+          value={draft.reply_language}
+          onChange={set('reply_language')}
+        />
+        <Caption>Automatic replies in the language you write in.</Caption>
+      </GlassCard>
+
+      <SectionTitle>Notifications</SectionTitle>
+      <ListCard>
+        <ToggleRow
+          label="Push notifications"
+          value={draft.notify_push}
+          onChange={set('notify_push')}
+        />
+        <ToggleRow
+          label="Product e-mails"
+          description="Security e-mails are always sent."
+          value={draft.notify_product_email}
+          onChange={set('notify_product_email')}
+        />
+        <View style={{ gap: 12 }}>
+          <ToggleRow
+            label="Quiet hours"
+            description="No non-urgent notifications during these hours."
+            value={quiet}
+            onChange={setQuiet}
           />
-          <TextField
-            label="Quiet until (HH:MM)"
-            value={end}
-            onChangeText={setEnd}
-            keyboardType="numbers-and-punctuation"
-            maxLength={5}
-            error={quietError}
-          />
-        </>
-      ) : null}
+          {quiet ? (
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <View style={{ flex: 1 }}>
+                <TextField
+                  label="From"
+                  value={start}
+                  onChangeText={setStart}
+                  keyboardType="numbers-and-punctuation"
+                  placeholder="22:00"
+                  maxLength={5}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <TextField
+                  label="Until"
+                  value={end}
+                  onChangeText={setEnd}
+                  keyboardType="numbers-and-punctuation"
+                  placeholder="07:00"
+                  maxLength={5}
+                />
+              </View>
+            </View>
+          ) : null}
+          {quietError ? (
+            <Text accessibilityRole="alert" style={{ color: t.colors.danger, fontSize: 13 }}>
+              {quietError}
+            </Text>
+          ) : null}
+        </View>
+      </ListCard>
+
       <Caption>
         Saved to your account. This build doesn’t yet apply theme and text size inside the app.
       </Caption>

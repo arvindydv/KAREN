@@ -46,7 +46,7 @@ async def ready(request: Request) -> JSONResponse:
     )
 
 
-async def _parse_completion_request(request: Request) -> CompletionRequest:
+async def _parse_body(request: Request, model: type[CompletionRequest]) -> CompletionRequest:
     body = await request.body()
     try:
         raw: Any = json.loads(body)
@@ -55,13 +55,19 @@ async def _parse_completion_request(request: Request) -> CompletionRequest:
     if isinstance(raw, dict) and isinstance(raw.get("request_id"), str):
         request.state.body_request_id = raw["request_id"][:128]
     try:
-        parsed = CompletionRequest.model_validate(raw)
+        parsed = model.model_validate(raw)
     except ValidationError as exc:
+        # Locations only: never echo values (they may be prompts or personal data).
         locations = sorted({".".join(str(p) for p in err["loc"]) or "body" for err in exc.errors()})
         raise KarenAIError(
             "VALIDATION_ERROR", "Request failed contract validation at: " + ", ".join(locations[:10])
         ) from exc
     user_ref_var.set(parsed.user_ref)
+    return parsed
+
+
+async def _parse_completion_request(request: Request) -> CompletionRequest:
+    parsed = await _parse_body(request, CompletionRequest)
     task_id_var.set(parsed.task_id)
     return parsed
 

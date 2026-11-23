@@ -55,7 +55,7 @@ flowchart LR
   API & TW --> S3A[(S3 user-artifacts)]
   PW & TW --> S3E[(S3 evidence)]
 
-  Private -->|TLS egress via NAT| EXT[Vercel AI Gateway · Temporal Cloud :7233 ·<br/>LiveKit Cloud · partner APIs · Sentry · Langfuse]
+  Private -->|TLS egress via NAT| EXT[OpenRouter · Temporal Cloud :7233 ·<br/>LiveKit Cloud · partner APIs · Sentry · Langfuse]
 ```
 
 ## Trust boundaries
@@ -77,7 +77,7 @@ flowchart LR
 | ------------------------------------------------------ | :-: | :--------: | :-------------: | :-------------: | :---------: | :-------: |
 | INTERNAL_SERVICE_HMAC_SECRET, LOG_PSEUDONYMIZATION_KEY |  ✓  |     ✓      |        ✓        |        ✓        |      ✓      |           |
 | SENTRY_DSN                                             |  ✓  |     ✓      |        ✓        |        ✓        |      ✓      |     ✓     |
-| AI_GATEWAY_API_KEY                                     |     |     ✓      |                 |                 |             |           |
+| OPENROUTER_API_KEY                                     |     |     ✓      |                 |                 |             |           |
 | LANGFUSE_PUBLIC_KEY / SECRET_KEY                       |     |     ✓      |                 |                 |             |           |
 | TEMPORAL_ADDRESS / NAMESPACE / API_KEY                 |  ✓  |            |        ✓        |        ✓        |             |           |
 | LIVEKIT_API_KEY / SECRET                               |  ✓  |            |                 |                 |      ✓      |           |

@@ -1,6 +1,6 @@
 """Pre-call cost estimation and spend caps (architecture §2.7, layers 1-2).
 
-Gateway-side team/project/key budgets (layer 3) are a backstop configured in Vercel, not here.
+Gateway-side key credit limits (layer 3) are a backstop configured in OpenRouter, not here.
 """
 
 from __future__ import annotations
@@ -30,9 +30,17 @@ _BYTES_PER_TOKEN: Final = 3
 _MESSAGE_OVERHEAD_TOKENS: Final = 4
 
 
+# Conservative per-image allowance for pre-call checks (providers tokenise images differently;
+# a high-detail image is typically well under this). Not a billing figure.
+IMAGE_TOKENS_ESTIMATE: Final = 2_000
+
+
 def estimate_prompt_tokens(messages: Sequence[ChatMessage]) -> int:
     return sum(
-        math.ceil(len(m.content.encode()) / _BYTES_PER_TOKEN) + _MESSAGE_OVERHEAD_TOKENS for m in messages
+        math.ceil(len(m.content.encode()) / _BYTES_PER_TOKEN)
+        + _MESSAGE_OVERHEAD_TOKENS
+        + IMAGE_TOKENS_ESTIMATE * len(m.images or ())
+        for m in messages
     )
 
 
@@ -236,10 +244,14 @@ class RedisDailyBudgetTracker:
         return int(committed or 0) / _MICRO
 
 
+def budget_cap_usd(*, service_cap_usd: float, request_cap_usd: float | None) -> float:
+    return service_cap_usd if request_cap_usd is None else min(service_cap_usd, request_cap_usd)
+
+
 def check_request_budget(
     estimated_usd: float, *, service_cap_usd: float, request_cap_usd: float | None
 ) -> None:
-    cap = service_cap_usd if request_cap_usd is None else min(service_cap_usd, request_cap_usd)
+    cap = budget_cap_usd(service_cap_usd=service_cap_usd, request_cap_usd=request_cap_usd)
     if estimated_usd > cap:
         raise KarenAIError(
             "BUDGET_EXCEEDED",

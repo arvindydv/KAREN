@@ -49,7 +49,7 @@ locals {
   internet_tcp_egress = {
     api_https                = { sg = "api", port = 443, desc = "HTTPS to AWS APIs / partners" }
     api_temporal             = { sg = "api", port = var.temporal_cloud_port, desc = "Temporal Cloud gRPC (start/signal workflows)" }
-    ai_service_https         = { sg = "ai_service", port = 443, desc = "HTTPS to Vercel AI Gateway / Langfuse / AWS APIs" }
+    ai_service_https         = { sg = "ai_service", port = 443, desc = "HTTPS to OpenRouter / Langfuse / AWS APIs" }
     temporal_worker_https    = { sg = "temporal_worker", port = 443, desc = "HTTPS to AWS APIs / partners" }
     temporal_worker_temporal = { sg = "temporal_worker", port = var.temporal_cloud_port, desc = "Temporal Cloud gRPC" }
     provider_worker_https    = { sg = "provider_worker", port = 443, desc = "HTTPS to partner APIs / AWS APIs" }

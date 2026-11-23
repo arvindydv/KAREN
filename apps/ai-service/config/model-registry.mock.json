@@ -1,5 +1,5 @@
 {
-  "registry_version": "2026-11-19.v1",
+  "registry_version": "2026-11-22.v3",
   "models": [
     {
       "model_id": "mock/economy",
@@ -13,7 +13,11 @@
       "input_usd_per_million_tokens": 0,
       "output_usd_per_million_tokens": 0,
       "verified_at": null,
-      "notes": "Local mock adapter only. Not a real gateway model."
+      "notes": "Local mock adapter only. Not a real gateway model; routing metadata is synthetic.",
+      "quality_index": 20,
+      "latency_p50_ms": 400,
+      "throughput_p50_tps": 200,
+      "metadata_observed_at": "2026-11-21"
     },
     {
       "model_id": "mock/balanced",
@@ -27,7 +31,11 @@
       "input_usd_per_million_tokens": 0,
       "output_usd_per_million_tokens": 0,
       "verified_at": null,
-      "notes": "Local mock adapter only. Not a real gateway model."
+      "notes": "Local mock adapter only. Not a real gateway model; routing metadata is synthetic.",
+      "quality_index": 35,
+      "latency_p50_ms": 800,
+      "throughput_p50_tps": 120,
+      "metadata_observed_at": "2026-11-21"
     },
     {
       "model_id": "mock/reasoning",
@@ -41,7 +49,29 @@
       "input_usd_per_million_tokens": 0,
       "output_usd_per_million_tokens": 0,
       "verified_at": null,
-      "notes": "Local mock adapter only. Not a real gateway model."
+      "notes": "Local mock adapter only. Not a real gateway model; routing metadata is synthetic.",
+      "quality_index": 55,
+      "latency_p50_ms": 1500,
+      "throughput_p50_tps": 80,
+      "metadata_observed_at": "2026-11-21"
+    },
+    {
+      "model_id": "mock/vision",
+      "tiers": ["VISION"],
+      "supports_streaming": true,
+      "supports_tools": false,
+      "supports_json_schema": true,
+      "supports_vision": true,
+      "max_context_tokens": 64000,
+      "max_output_tokens": 4000,
+      "input_usd_per_million_tokens": 0,
+      "output_usd_per_million_tokens": 0,
+      "verified_at": null,
+      "notes": "Local mock adapter only. Not a real gateway model; routing metadata is synthetic.",
+      "quality_index": 30,
+      "latency_p50_ms": 900,
+      "throughput_p50_tps": 100,
+      "metadata_observed_at": "2026-11-21"
     }
   ]
 }

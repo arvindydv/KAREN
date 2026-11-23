@@ -1,0 +1,140 @@
+# OpenRouter — routing, budgets and verification
+
+Implementation: `apps/ai-service` (see its CLAUDE.md). Decisions: ADR-0008 (router), ADR-0025
+(OpenRouter, task routing). Replaces the former Vercel AI Gateway guide.
+
+## Request path
+
+```
+API (signed) -> ai-service ModelRouter -> policy + budget -> OpenRouterGatewayClient
+             -> https://openrouter.ai/api/v1/chat/completions -> upstream provider endpoint
+```
+
+The key never leaves ai-service. Clients (web/mobile) never see a model ID, the key or the
+gateway; the public-env guard rejects any `NEXT_PUBLIC_*`/`EXPO_PUBLIC_*` name containing
+`OPENROUTER`.
+
+## Task-based routing (ADR-0025, ADR-0026)
+
+Callers send a `task_kind`; its **task profile** sets the tier, required capabilities, a quality
+floor (catalog Artificial Analysis intelligence index) and a latency ceiling (TTFT p50). The
+router then picks the **least expensive qualified model** for the request:
+
+| Workload            | Task kinds                                                  | Tier      | Floor / ceiling          |
+| ------------------- | ----------------------------------------------------------- | --------- | ------------------------ |
+| Extraction          | `EXTRACTION`, `INTENT_CLASSIFICATION`, `SHORT_REWRITE`      | ECONOMY   | JSON schema; ≤ 3 s TTFT* |
+| General chat        | `CHAT`, `BASIC_PLANNING`                                    | BALANCED  | quality ≥ 25; ≤ 4 s TTFT |
+| Document analysis   | `DOCUMENT_ANALYSIS`, `SUMMARY`                              | BALANCED  | quality ≥ 25             |
+| Reasoning           | `COMPLEX_PLANNING`, `COMPARISON`, `DECISION_SUPPORT`        | REASONING | quality ≥ 40             |
+| Research            | `RESEARCH`                                                  | REASONING | quality ≥ 45             |
+| Coding              | `CODING`                                                    | REASONING | quality ≥ 40             |
+| Image understanding | `IMAGE_UNDERSTANDING` (flag `KAREN_FEATURE_VISION_ENABLED`) | VISION    | image input              |
+| Deterministic       | `DETERMINISTIC`, exact date/time chat questions             | NO_MODEL  | no gateway call          |
+
+\* intent classification and short rewrites only.
+
+- Candidates: registry models listing the tier, meeting the profile, fitting the context window
+  and (live) verified. Models whose worst-case cost for this request exceeds the per-request cap
+  (service cap ∧ caller `max_cost_usd`) are dropped first; if none remain → `BUDGET_EXCEEDED`
+  before any call. Ranking: cost, then latency, then quality. The next two capability-equivalent
+  candidates are sent as fallbacks (`models` array).
+- Unknown quality never meets a floor; unknown latency is allowed.
+- `KAREN_MODEL_<TIER>` / `KAREN_MODEL_CODING` / `KAREN_MODEL_DOCUMENT_ANALYSIS` **pin** a model
+  (operator override, e.g. during an incident). Leave them empty for automatic selection.
+- Images: `ChatMessage.images` (https or base64 data URL, ≤ 4) → content parts; vision required.
+- Floors and ceilings are engineering defaults: calibrate them with golden evals in live mode.
+
+Voice (speech-to-text / text-to-speech) was removed in ADR-0035 and returns in Phase 06.
+
+## Configuration
+
+| Variable                                                                                 | Purpose                                                                 |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `KAREN_AI_GATEWAY_MODE`                                                                  | `mock` (default, no network) or `live`                                  |
+| `OPENROUTER_BASE_URL`                                                                    | `https://openrouter.ai/api/v1` (https required in live mode)            |
+| `OPENROUTER_API_KEY`                                                                     | backend-only secret; Secrets Manager `ai-service/OPENROUTER_API_KEY`    |
+| `OPENROUTER_DATA_COLLECTION`                                                             | `deny` (default; production refuses `allow`)                            |
+| `OPENROUTER_ZDR`                                                                         | `true` (default): only zero-data-retention endpoints                    |
+| `KAREN_MODEL_<TIER>`, `KAREN_MODEL_<TIER>_FALLBACK`                                      | exact catalog slugs — **never** in code                                 |
+| `KAREN_MODEL_CODING`, `KAREN_MODEL_DOCUMENT_ANALYSIS`                                    | optional task-specific slugs                                            |
+| `KAREN_MODEL_REGISTRY_PATH`                                                              | JSON registry: capabilities + USD/MTok prices + `verified_at` per model |
+| `KAREN_AI_MAX_OUTPUT_TOKENS`, `KAREN_AI_REQUEST_TIMEOUT_SECONDS`, `KAREN_AI_MAX_RETRIES` | per-call rails                                                          |
+| `KAREN_AI_MAX_REQUEST_COST_USD`, `KAREN_AI_DAILY_BUDGET_USD`                             | KAREN-side budget layer (OpenRouter key limits are a separate backstop) |
+
+Copy model values from the `Suggested env:` note of each entry in
+`apps/ai-service/config/model-registry.live.json`.
+
+## Spend control (unchanged layers, ADR-0023)
+
+1. Per user (API): daily/monthly reserve-and-settle in micro-USD; the reservation is sent as
+   `max_cost_usd`.
+2. Per request and service-wide daily (ai-service): worst case over primary + fallbacks, computed
+   from registry prices **before** the call.
+3. OpenRouter: a per-key credit limit and low-balance alert (owner setting).
+
+Registry prices come from the live catalog (`pricing.prompt` / `pricing.completion`, USD per
+token). Where the catalog lists a higher price band above a prompt size
+(`pricing.overrides[].min_prompt_tokens`), the registry's `max_context_tokens` is capped at that
+threshold, so the router never sends a request that would be billed at the higher band.
+OpenRouter's in-response `usage.cost` is stored on the invocation record as
+`gateway_reported_cost_usd` for reconciliation (with `GET /generation?id=<gateway_request_id>`);
+budgets do not trust it.
+
+## Enabling live traffic — checklist
+
+Status 2026-11-22: the SP-1 probe passed for all 8 registry models (`verified_at` set) and live mode
+works end to end locally (ADR-0028). ECONOMY/BALANCED/VISION requests send
+`reasoning: {"enabled": false}` (default hidden reasoning could leave answers empty).
+
+1. **Owner:** create an OpenRouter account and a non-production key, set a hard credit limit on the
+   key and a low-balance alert, and review OpenRouter's privacy/ZDR settings and credit-purchase
+   terms. Buying credits needs the owner's explicit approval.
+2. Candidates per workload were chosen from the public catalog (`GET /models`, free, no key)
+   **(done)**: `config/model-registry.live.json`, all `verified_at: null`. Every candidate has a
+   Chat Completions endpoint, `max_tokens`, tools, structured outputs and at least one ZDR endpoint.
+3. Put the key in the untracked `apps/ai-service/.env` and run the SP-1 probe with the same
+   assignments (README), adding `--confirm-paid-calls`. It reads key limits (`GET /key`), checks
+   invalid-key 401, unknown-model rejection, `models` fallback, and runs complete + stream through
+   the real `OpenRouterGatewayClient` with the production data policy. The worst-case run cost is
+   computed from catalog prices first and capped (`--max-run-cost-usd`, default 0.05; the current
+   assignment set is ≈ 0.015 USD).
+4. `--write-registry` sets `verified_at` only for models that passed. Review each upstream
+   provider's data terms (OpenRouter-hosted inference is not in-India inference).
+5. Set `KAREN_AI_GATEWAY_MODE=live` in dev first; run golden evals in live mode; compare cost per
+   correct task. Watch REASONING models with mandatory reasoning (noted in the registry): reasoning
+   tokens count against `max_tokens`, which can end answers with `finish_reason=length`.
+6. Redis budget tracker is already required in deployed envs (ADR-0013).
+
+## OpenRouter facts used by the client
+
+From OpenRouter's API documentation (checked 2026-11-21). None is probe-verified yet.
+
+- Auth `Authorization: Bearer <key>`; base `https://openrouter.ai/api/v1`.
+- `max_tokens` is accepted by almost every catalog model (459/476 text models on 2026-11-21);
+  `max_completion_tokens` by far fewer, so the client sends `max_tokens`.
+- Fallback: `models: [...]` in priority order; any error (incl. rate limits, downtime, context
+  validation, moderation) moves to the next; the response `model` is the model that served and
+  was billed.
+- Provider routing: `provider.data_collection` (`allow`/`deny`), `provider.zdr` (restrict to ZDR
+  endpoints).
+- Usage is returned by default (`usage.include` and `stream_options.include_usage` are
+  deprecated no-ops). In streams it is in the last chunk before `[DONE]`. Fields used:
+  `prompt_tokens`, `completion_tokens`, `prompt_tokens_details.cached_tokens`,
+  `completion_tokens_details.reasoning_tokens`, `cost`.
+- Generation id: body `id` (`gen-…`), also header `X-Generation-Id`.
+- SSE comment lines (`: OPENROUTER PROCESSING`) are keep-alives and are ignored.
+- Errors: `{"error": {"code", "message", "metadata"}}`. 400 bad request, 401 key, 402 credits,
+  403 permission/guardrail/moderation/budget, 404 unknown model, 408 timeout, 429 rate limit,
+  502 provider down, 503 no eligible provider (also 524/529). Mid-stream errors arrive as an
+  HTTP-200 chunk with a top-level `error` and `finish_reason: "error"`. `Retry-After` may
+  accompany 429/503.
+- Mapping in KAREN: 4xx (except 408/429) → `GATEWAY_PROVIDER_ERROR`, not retried; 408/timeouts →
+  `GATEWAY_TIMEOUT`; 429 → `GATEWAY_RATE_LIMITED`; 5xx → `GATEWAY_PROVIDER_ERROR`, or
+  `FALLBACK_EXHAUSTED` when fallbacks were sent. Messages never echo upstream text.
+
+## Outage playbook (summary)
+
+Gateway errors surface as typed `GATEWAY_*` / `FALLBACK_EXHAUSTED` errors; the action plane
+(Temporal/provider-worker) keeps working without inference. See
+`docs/runbooks/model-gateway-outage.md`. Do not enable direct-provider fallback without an approved
+ADR. Stream interruptions are shown to the user; never silently replayed.

@@ -145,6 +145,31 @@ export const apiEnvShape = {
   STAFF_SESSION_ABSOLUTE_HOURS: z.coerce.number().int().min(1).max(12).default(8),
   STAFF_STEP_UP_MAX_AGE_SECONDS: z.coerce.number().int().min(60).max(900).default(300),
   AI_SERVICE_URL: z.string().url().default('http://localhost:8100'),
+  // ── Phase 02 chat (ADR-0022/0023). Limits are examples until product sets plan limits. ──
+  /** Per-user AI spend limits in USD (enforced on reserved worst case, settled to actual). */
+  CHAT_DAILY_LIMIT_USD: z.coerce.number().positive().max(1_000).default(0.5),
+  CHAT_MONTHLY_LIMIT_USD: z.coerce.number().positive().max(10_000).default(5),
+  /** Amount reserved per generation before the call (≥ the AI service's per-request cap). */
+  CHAT_REQUEST_RESERVE_USD: z.coerce.number().positive().max(10).default(0.1),
+  CHAT_MAX_OUTPUT_TOKENS: z.coerce.number().int().min(64).max(8_000).default(1_000),
+  /** Bounded context window: most recent messages of THIS conversation only (no memory). */
+  CHAT_CONTEXT_MAX_MESSAGES: z.coerce.number().int().min(2).max(200).default(40),
+  CHAT_CONTEXT_MAX_CHARS: z.coerce.number().int().min(1_000).max(400_000).default(24_000),
+  CHAT_MESSAGES_PER_MINUTE: z.coerce.number().int().min(1).max(600).default(12),
+  CHAT_MAX_ACTIVE_GENERATIONS_PER_USER: z.coerce.number().int().min(1).max(20).default(3),
+  CHAT_GENERATION_TIMEOUT_SECONDS: z.coerce.number().int().min(5).max(600).default(120),
+  /** A runner renews its lease; an expired lease means it died and the reaper closes it. */
+  CHAT_GENERATION_LEASE_SECONDS: z.coerce.number().int().min(5).max(300).default(30),
+  CHAT_STREAM_HEARTBEAT_SECONDS: z.coerce.number().int().min(1).max(60).default(15),
+  /** Stream events of finished messages are kept this long (resume/audit), then purged. */
+  CHAT_EVENT_RETENTION_HOURS: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 90)
+    .default(168),
+  /** Interval of the in-process maintenance sweep (reaper + retention). 0 disables (tests). */
+  CHAT_MAINTENANCE_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(3_600).default(30),
   KAREN_EXECUTION_PAUSED: booleanFlag(false),
 };
 

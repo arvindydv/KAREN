@@ -2,17 +2,15 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useApi } from '../../src/auth/services';
 import { CodeField, ResendButton, isSixDigits, useCooldown } from '../../src/components/code-entry';
+import { AuthScreen } from '../../src/components/auth-screen';
 import {
   Banner,
-  Body,
   EmptyState,
   ErrorState,
-  FormScreen,
   PrimaryButton,
   SecondaryButton,
   TextField,
 } from '../../src/components/primitives';
-import { ScreenHeader } from '../../src/components/screen-header';
 import { PASSWORD_RULES_HINT, describeError, unwrap } from '../../src/lib/api-error';
 import { useSubmit } from '../../src/lib/use-submit';
 import { passwordProblem } from '../../src/lib/validation';
@@ -54,25 +52,44 @@ export default function ResetPasswordScreen() {
 
   if (!pending || pending.purpose !== 'reset_password') {
     return (
-      <FormScreen>
-        <ScreenHeader title="Choose a new password" />
+      <AuthScreen
+        title="Choose a new password"
+        action={
+          <SecondaryButton
+            label="Reset password"
+            onPress={() => router.replace('/forgot-password')}
+          />
+        }
+      >
         <EmptyState
           title="No password reset in progress."
           message="Start again to get a new code."
         />
-        <SecondaryButton
-          label="Reset password"
-          onPress={() => router.replace('/forgot-password')}
-        />
-      </FormScreen>
+      </AuthScreen>
     );
   }
   const pwProblem = password === '' ? null : passwordProblem(password);
   const error = reset.error ?? resend.error;
   return (
-    <FormScreen>
-      <ScreenHeader title="Choose a new password" />
-      <Body muted>If {pending.email} has a KAREN account, we’ve sent it a 6-digit code.</Body>
+    <AuthScreen
+      title="Choose a new password"
+      subtitle={`If ${pending.email} has a KAREN account, we’ve sent it a 6-digit code.`}
+      action={
+        <>
+          <PrimaryButton
+            label={reset.busy ? 'Saving…' : 'Set new password'}
+            busy={reset.busy}
+            disabled={!isSixDigits(code) || password === '' || pwProblem !== null}
+            onPress={() => reset.run()}
+          />
+          <ResendButton
+            secondsLeft={cooldown.left}
+            busy={resend.busy}
+            onResend={() => resend.run()}
+          />
+        </>
+      }
+    >
       {resent ? <Banner tone="success">A new code is on its way.</Banner> : null}
       <CodeField value={code} onChange={setCode} />
       <TextField
@@ -87,12 +104,6 @@ export default function ResetPasswordScreen() {
         error={pwProblem}
       />
       {error ? <ErrorState message={describeError(error)} /> : null}
-      <PrimaryButton
-        label={reset.busy ? 'Saving…' : 'Set new password'}
-        disabled={reset.busy || !isSixDigits(code) || password === '' || pwProblem !== null}
-        onPress={() => reset.run()}
-      />
-      <ResendButton secondsLeft={cooldown.left} busy={resend.busy} onResend={() => resend.run()} />
-    </FormScreen>
+    </AuthScreen>
   );
 }

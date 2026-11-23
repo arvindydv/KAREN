@@ -15,6 +15,7 @@ import { QueryView } from '../../../src/components/query-view';
 import { ScreenHeader } from '../../../src/components/screen-header';
 import { describeError, unwrap } from '../../../src/lib/api-error';
 import { useConsentHistory, usePurposes } from '../../../src/lib/queries';
+import { formatDateTime } from '../../../src/lib/format';
 
 const DECISION = { granted: 'Turned on', denied: 'Declined', revoked: 'Turned off' } as const;
 
@@ -67,8 +68,8 @@ export default function ConsentHistoryScreen() {
                     {title(r.purpose)}: {DECISION[r.decision]}
                   </Body>
                   <Caption>
-                    #{r.seq} · {new Date(r.occurred_at).toLocaleString()} · notice v
-                    {r.notice_version} · via {r.source}
+                    #{r.seq} · {formatDateTime(r.occurred_at)} · notice v{r.notice_version} · via{' '}
+                    {r.source}
                     {r.method.startsWith('cascade:')
                       ? ' · automatically, because a required choice was turned off'
                       : ''}

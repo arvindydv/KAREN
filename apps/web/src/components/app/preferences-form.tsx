@@ -5,7 +5,7 @@ import { useState, type FormEvent } from 'react';
 import { bff } from '@/lib/api';
 import { errorMessage } from '@/lib/errors';
 import { FormAlert, SelectField, SubmitButton, TextField, Toggle, formString } from '../forms';
-import { LANGUAGE_OPTIONS } from './options';
+import { LANGUAGE_OPTIONS, REPLY_LANGUAGE_OPTIONS } from './options';
 import { useAction } from './use-action';
 
 export function PreferencesForm({ prefs }: { prefs: Preferences }) {
@@ -33,6 +33,7 @@ export function PreferencesForm({ prefs }: { prefs: Preferences }) {
       quiet_hours: quiet
         ? { start: formString(f, 'quiet_start', '22:00'), end: formString(f, 'quiet_end', '07:00') }
         : null,
+      reply_language: formString(f, 'reply_language', 'auto') as Preferences['reply_language'],
     };
     await action.run(
       () =>
@@ -62,6 +63,13 @@ export function PreferencesForm({ prefs }: { prefs: Preferences }) {
           name="language"
           defaultValue={prefs.language}
           options={LANGUAGE_OPTIONS}
+        />
+        <SelectField
+          label="Reply language in chat"
+          name="reply_language"
+          defaultValue={prefs.reply_language}
+          options={REPLY_LANGUAGE_OPTIONS}
+          hint="Automatic replies in the language you write in."
         />
         <SelectField
           label="Script"

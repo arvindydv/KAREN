@@ -29,7 +29,12 @@ export function ForgotForm() {
   }
 
   return (
-    <form method="post" onSubmit={(e) => void onSubmit(e)} className="space-y-4" noValidate>
+    <form
+      method="post"
+      onSubmit={(e) => void onSubmit(e)}
+      className="karen-stagger space-y-4"
+      noValidate
+    >
       {error ? <FormAlert>{errorMessage(error)}</FormAlert> : null}
       <TextField
         label="E-mail"

@@ -10,7 +10,7 @@ KAREN is an India-first, globally scalable **personal AI life agent**: it rememb
 
 ## Stack
 
-pnpm 10 + Turborepo · TypeScript 6.0 strict, all-ESM, Node 24 · NestJS 12 + Fastify · Prisma 7 + PostgreSQL 17 + pgvector · Redis · Temporal · Next.js 16 + Tailwind 4 · Expo SDK 58 + Expo Router · Python 3.12 + FastAPI + Pydantic + LangGraph (uv) · Vercel AI Gateway via KAREN ModelRouter · LiveKit · OpenTelemetry/Sentry · Terraform (AWS ap-south-1) · GitHub Actions.
+pnpm 10 + Turborepo · TypeScript 6.0 strict, all-ESM, Node 24 · NestJS 12 + Fastify · Prisma 7 + PostgreSQL 17 + pgvector · Redis · Temporal · Next.js 16 + Tailwind 4 · Expo SDK 58 + Expo Router · Python 3.12 + FastAPI + Pydantic + LangGraph (uv) · OpenRouter (ADR-0025) via KAREN ModelRouter · LiveKit · OpenTelemetry/Sentry · Terraform (AWS ap-south-1) · GitHub Actions.
 
 ## Navigation
 

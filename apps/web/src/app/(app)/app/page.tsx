@@ -32,7 +32,12 @@ const CAPABILITIES = [
     tone: 'success',
     href: '/app/settings/security',
   },
-  { title: 'Chat with KAREN', status: 'Not available yet', tone: 'neutral' },
+  {
+    title: 'Chat with KAREN',
+    status: 'Available',
+    tone: 'success',
+    href: '/app/chat',
+  },
   { title: 'Memory of what you share', status: 'Not available yet', tone: 'neutral' },
   { title: 'Reminders, tasks & bookings', status: 'Not available yet', tone: 'neutral' },
 ] as const;

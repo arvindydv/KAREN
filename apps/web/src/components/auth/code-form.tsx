@@ -5,7 +5,30 @@ import { useState, type FormEvent } from 'react';
 import { bff, hardNavigate } from '@/lib/api';
 import { errorMessage, fieldErrors, type ApiErrorBody } from '@/lib/errors';
 import { FormAlert, PasswordField, SubmitButton, TextField, formString } from '../forms';
+import { takeSignIn } from '@/lib/pending-credential';
 import { localPasswordError, passwordHint } from './sign-up-form';
+
+type LoginResult =
+  | { result: 'signed_in'; account_status: string; next: string | null }
+  | { result: 'verification_required' };
+
+/**
+ * After a successful verification, sign in with the credentials typed moments ago (held in
+ * memory only). Returns false — caller falls back to /sign-in — when nothing is held (page was
+ * reloaded) or the sign-in doesn't complete. The code is already spent either way.
+ */
+async function signInAfterVerify(): Promise<boolean> {
+  const held = takeSignIn();
+  if (!held) return false;
+  const res = await bff<LoginResult>('/api/auth/login', {
+    method: 'POST',
+    json: { email: held.email, password: held.password },
+  });
+  if (!res.ok || res.data.result !== 'signed_in') return false;
+  // Full navigation so server components pick up the new HttpOnly session cookie.
+  hardNavigate(res.data.next ?? held.next);
+  return true;
+}
 
 /**
  * Enter-the-code form for e-mail verification and password reset. The challenge handle lives
@@ -50,6 +73,7 @@ export function CodeForm({ mode }: { mode: 'verify' | 'reset' }) {
       setPending(false);
       return;
     }
+    if (mode === 'verify' && (await signInAfterVerify())) return;
     hardNavigate(`/sign-in?notice=${mode === 'verify' ? 'verified' : 'reset'}`);
   }
 
@@ -66,7 +90,12 @@ export function CodeForm({ mode }: { mode: 'verify' | 'reset' }) {
   const fields = fieldErrors(error);
   const restart = error?.code === 'CHALLENGE_INVALID';
   return (
-    <form method="post" onSubmit={(e) => void onSubmit(e)} className="space-y-4" noValidate>
+    <form
+      method="post"
+      onSubmit={(e) => void onSubmit(e)}
+      className="karen-stagger space-y-4"
+      noValidate
+    >
       {error ? (
         <FormAlert>
           {errorMessage(error)}

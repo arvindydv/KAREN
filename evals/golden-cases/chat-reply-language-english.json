@@ -1,0 +1,24 @@
+{
+  "id": "chat-reply-language-english",
+  "description": "An English question gets an English answer.",
+  "language": "en",
+  "tags": [
+    "chat",
+    "language",
+    "phase-02"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "CHAT",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Give me three tips to prepare for a job interview tomorrow."
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "BALANCED",
+    "reply_language": "en"
+  }
+}

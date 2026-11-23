@@ -58,7 +58,19 @@ export const PROXY_ALLOWLIST: readonly Rule[] = [
   rule(['POST'], 'me/data-rights/export'),
   rule(['POST'], 'me/data-rights/deletion'),
   rule(['POST'], `me/data-rights/${UUID}/cancel`),
+  // Conversations (Phase 02). The SSE stream has its own pass-through route (stream-proxy.ts).
+  rule(['GET'], 'me/ai-usage'),
+  rule(['GET', 'POST'], 'conversations'),
+  rule(['GET', 'PATCH', 'DELETE'], `conversations/${UUID}`),
+  rule(['GET', 'POST'], `conversations/${UUID}/messages`),
+  rule(['POST'], `conversations/${UUID}/fork`),
+  rule(['GET'], `conversations/${UUID}/messages/${UUID}`),
+  rule(['POST'], `conversations/${UUID}/messages/${UUID}/(?:cancel|regenerate)`),
+  rule(['POST', 'DELETE'], `conversations/${UUID}/messages/${UUID}/feedback`),
 ];
+
+/** The one streaming (SSE) path; served by the dedicated pass-through, never buffered. */
+export const STREAM_PATH = new RegExp(`^conversations/(${UUID})/messages/(${UUID})/stream$`);
 
 /** Each segment: conservative charset, never `.`/`..`, bounded. */
 const SEGMENT = /^[A-Za-z0-9._-]{1,64}$/;

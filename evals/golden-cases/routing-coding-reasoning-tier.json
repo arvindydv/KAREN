@@ -1,0 +1,23 @@
+{
+  "id": "routing-coding-reasoning-tier",
+  "description": "Coding help routes to the REASONING tier (CODING profile).",
+  "language": "en",
+  "tags": [
+    "routing",
+    "phase-03"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "CODING",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Write a Python function that validates an Indian PIN code and explain the edge cases."
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "REASONING",
+    "no_model_call": false
+  }
+}

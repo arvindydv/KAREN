@@ -17,6 +17,10 @@
       "cached_tokens": null,
       "reasoning_tokens": null
     },
-    "estimated_cost_usd": 0
+    "estimated_cost_usd": 0,
+    "requested_model": "mock/balanced",
+    "served_model": "mock/balanced",
+    "gateway_request_id": null,
+    "prompt_version": "chat.v2"
   }
 ]

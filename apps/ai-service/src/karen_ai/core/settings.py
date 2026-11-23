@@ -1,8 +1,12 @@
 """Service settings (pydantic-settings). Invalid configuration fails at startup, never later.
 
-Model IDs are never hardcoded: in ``mock`` mode the text tiers default to the local mock
-adapter IDs (``mock/*``), in ``live`` mode every enabled tier must be configured explicitly and
-point at a registry entry whose capabilities and prices were verified (``verified_at``).
+Model IDs are never hardcoded. Text tiers are routed automatically to the least expensive
+qualified registry model (ADR-0026); ``KAREN_MODEL_<TIER>`` optionally pins one. In ``live`` mode
+every enabled text tier needs a pinned or candidate registry entry whose capabilities and prices
+were verified (``verified_at``); feature tiers (EMBEDDING/RERANKING/AUDIO) still need a pin.
+
+The live gateway is OpenRouter (ADR-0025). ``OPENROUTER_API_KEY`` is read only here, held as a
+``SecretStr`` and never logged, returned or exposed to clients.
 """
 
 from __future__ import annotations
@@ -14,21 +18,30 @@ from urllib.parse import quote
 from pydantic import Field, PrivateAttr, SecretStr, StringConstraints, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from karen_ai.contracts import MODEL_ID_PATTERN, TEXT_GENERATION_TIERS, RouteTier
+from karen_ai.contracts import (
+    MODEL_ID_PATTERN,
+    TEXT_GENERATION_TIERS,
+    ModelCapability,
+    RouteTier,
+)
 from karen_ai.model_router.registry import ModelRegistry, RegistryError, load_registry
 
 AppEnv = Literal["local", "test", "dev", "staging", "production"]
 GatewayMode = Literal["mock", "live"]
 BudgetStore = Literal["memory", "redis"]
+DataCollection = Literal["allow", "deny"]
+# Workloads that may run on a dedicated model while keeping their tier's budget class (ADR-0025).
+TaskRoute = Literal["CODING", "DOCUMENT_ANALYSIS"]
+TASK_ROUTE_TIERS: Final[dict[TaskRoute, RouteTier]] = {
+    "CODING": "REASONING",
+    "DOCUMENT_ANALYSIS": "BALANCED",
+}
 
 SERVICE_ROOT: Final = Path(__file__).resolve().parents[3]
 MOCK_REGISTRY_PATH: Final = SERVICE_ROOT / "config" / "model-registry.mock.json"
 
-MOCK_TIER_MODELS: Final[dict[RouteTier, str]] = {
-    "ECONOMY": "mock/economy",
-    "BALANCED": "mock/balanced",
-    "REASONING": "mock/reasoning",
-}
+# Always-on text tiers; VISION is a text tier too but behind KAREN_FEATURE_VISION_ENABLED.
+BASE_TEXT_TIERS: Final[frozenset[RouteTier]] = frozenset({"ECONOMY", "BALANCED", "REASONING"})
 FEATURE_TIERS: Final[tuple[RouteTier, ...]] = ("VISION", "EMBEDDING", "RERANKING", "AUDIO")
 SIGNATURE_REQUIRED_ENVS: Final[frozenset[AppEnv]] = frozenset({"dev", "staging", "production"})
 MIN_HMAC_SECRET_LENGTH: Final = 32
@@ -49,16 +62,25 @@ class Settings(BaseSettings):
     ai_service_port: Annotated[int, Field(ge=1, le=65535)] = 8100
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
-    ai_gateway_base_url: Annotated[str, StringConstraints(pattern=r"^https?://\S+$")] = (
-        "https://ai-gateway.vercel.sh/v1"
+    openrouter_base_url: Annotated[str, StringConstraints(pattern=r"^https?://\S+$")] = (
+        "https://openrouter.ai/api/v1"
     )
-    ai_gateway_api_key: SecretStr | None = None
+    openrouter_api_key: SecretStr | None = None
+    # Provider routing policy sent with every request: only endpoints that do not collect
+    # prompts (deny) and, by default, only zero-data-retention endpoints (architecture §9).
+    openrouter_data_collection: DataCollection = "deny"
+    openrouter_zdr: bool = True
     karen_ai_gateway_mode: GatewayMode = "mock"
 
     karen_model_economy: ModelIdSetting = None
+    karen_model_economy_fallback: ModelIdSetting = None
     karen_model_balanced: ModelIdSetting = None
     karen_model_balanced_fallback: ModelIdSetting = None
     karen_model_reasoning: ModelIdSetting = None
+    karen_model_reasoning_fallback: ModelIdSetting = None
+    # Optional task-specific models; unset = the tier's model serves the task.
+    karen_model_coding: ModelIdSetting = None
+    karen_model_document_analysis: ModelIdSetting = None
     karen_model_vision: ModelIdSetting = None
     karen_model_embedding: ModelIdSetting = None
     karen_model_reranking: ModelIdSetting = None
@@ -157,12 +179,13 @@ class Settings(BaseSettings):
             "RERANKING": self.karen_feature_reranking_enabled,
             "AUDIO": self.karen_feature_audio_enabled,
         }
-        enabled: set[RouteTier] = {"NO_MODEL", *TEXT_GENERATION_TIERS}
+        enabled: set[RouteTier] = {"NO_MODEL", *BASE_TEXT_TIERS}
         enabled.update(tier for tier, on in flags.items() if on)
         return frozenset(enabled)
 
     @property
     def tier_models(self) -> dict[RouteTier, str | None]:
+        """Operator pins per tier (``None`` = the router chooses automatically)."""
         configured: dict[RouteTier, str | None] = {
             "ECONOMY": self.karen_model_economy,
             "BALANCED": self.karen_model_balanced,
@@ -172,10 +195,26 @@ class Settings(BaseSettings):
             "RERANKING": self.karen_model_reranking,
             "AUDIO": self.karen_model_audio,
         }
-        if self.is_mock:
-            for tier, mock_id in MOCK_TIER_MODELS.items():
-                configured[tier] = configured[tier] or mock_id
         return configured
+
+    @property
+    def tier_fallbacks(self) -> dict[RouteTier, str]:
+        """Gateway-side fallback model per text tier (only where configured)."""
+        configured: dict[RouteTier, str | None] = {
+            "ECONOMY": self.karen_model_economy_fallback,
+            "BALANCED": self.karen_model_balanced_fallback,
+            "REASONING": self.karen_model_reasoning_fallback,
+        }
+        return {tier: model for tier, model in configured.items() if model}
+
+    @property
+    def task_route_models(self) -> dict[TaskRoute, str]:
+        """Task-specific models (only where configured); they run on ``TASK_ROUTE_TIERS``."""
+        configured: dict[TaskRoute, str | None] = {
+            "CODING": self.karen_model_coding,
+            "DOCUMENT_ANALYSIS": self.karen_model_document_analysis,
+        }
+        return {route: model for route, model in configured.items() if model}
 
     # -------------------------------------------------------------------------- validation
 
@@ -234,10 +273,15 @@ class Settings(BaseSettings):
             raise ValueError("REDIS_URL or REDIS_HOST is required for the shared AI budget store")
 
     def _validate_live_gateway(self) -> None:
-        if self.ai_gateway_api_key is None:
-            raise ValueError("AI_GATEWAY_API_KEY is required when KAREN_AI_GATEWAY_MODE=live")
-        if not self.ai_gateway_base_url.startswith("https://"):
-            raise ValueError("AI_GATEWAY_BASE_URL must use https when KAREN_AI_GATEWAY_MODE=live")
+        if self.openrouter_api_key is None:
+            raise ValueError("OPENROUTER_API_KEY is required when KAREN_AI_GATEWAY_MODE=live")
+        if not self.openrouter_base_url.startswith("https://"):
+            raise ValueError("OPENROUTER_BASE_URL must use https when KAREN_AI_GATEWAY_MODE=live")
+        if self.app_env == "production" and self.openrouter_data_collection != "deny":
+            raise ValueError(
+                "OPENROUTER_DATA_COLLECTION=allow is not allowed when APP_ENV=production: user "
+                "prompts must not reach providers that store or train on them (architecture §9)"
+            )
         if self.karen_model_registry_path.resolve() == MOCK_REGISTRY_PATH.resolve():
             raise ValueError(
                 "KAREN_MODEL_REGISTRY_PATH points at the mock registry; live mode needs a registry "
@@ -245,23 +289,53 @@ class Settings(BaseSettings):
             )
 
     def _validate_tier_models(self) -> None:
-        models = self.tier_models
-        required: list[tuple[str, str | None]] = [
-            (f"KAREN_MODEL_{tier}", models[tier]) for tier in sorted(self.enabled_tiers - {"NO_MODEL"})
-        ]
-        if self.karen_model_balanced_fallback is not None:
-            required.append(("KAREN_MODEL_BALANCED_FALLBACK", self.karen_model_balanced_fallback))
-        for env_name, model_id in required:
-            tier_is_feature = env_name.removeprefix("KAREN_MODEL_") in FEATURE_TIERS
-            if model_id is None:
-                if self.is_mock and tier_is_feature:
+        pins = self.tier_models
+        for tier in sorted(self.enabled_tiers - {"NO_MODEL"}):
+            env_name, pin = f"KAREN_MODEL_{tier}", pins[tier]
+            if pin is not None:
+                entry = self._checked_entry(env_name, pin)
+                if tier not in entry.tiers:
+                    raise ValueError(f"{env_name}={pin} must list tier {tier} in the model registry")
+                if tier == "VISION" and not entry.supports_vision:
+                    raise ValueError(f"{env_name}={pin} does not support image input in the registry")
+                continue
+            if tier not in TEXT_GENERATION_TIERS:
+                if self.is_mock:
                     continue  # mock mode serves no feature tiers; requests get CAPABILITY_UNAVAILABLE
                 raise ValueError(f"{env_name} must be set for an enabled tier in live mode")
-            entry = self.registry.get(model_id)
-            if entry is None:
-                raise ValueError(f"{env_name}={model_id} is not present in the model registry")
-            if not self.is_mock and entry.verified_at is None:
+            if not self._has_candidate(tier):
                 raise ValueError(
-                    f"{env_name}={model_id} has verified_at=null in the registry; live mode "
-                    "requires capabilities and prices verified against the live gateway catalog"
+                    f"no {'verified ' if not self.is_mock else ''}registry model serves tier {tier}: "
+                    f"set {env_name} or add a candidate to the registry"
                 )
+        # (env name, model id, tier the entry must list)
+        optional: list[tuple[str, str, RouteTier]] = [
+            *((f"KAREN_MODEL_{tier}_FALLBACK", model, tier) for tier, model in self.tier_fallbacks.items()),
+            *(
+                (f"KAREN_MODEL_{route}", model, TASK_ROUTE_TIERS[route])
+                for route, model in self.task_route_models.items()
+            ),
+        ]
+        for env_name, model_id, tier in optional:
+            entry = self._checked_entry(env_name, model_id)
+            if tier not in entry.tiers:
+                raise ValueError(f"{env_name}={model_id} must list tier {tier} in the model registry")
+
+    def _has_candidate(self, tier: RouteTier) -> bool:
+        return any(
+            tier in m.tiers
+            and (self.is_mock or m.verified_at is not None)
+            and (tier != "VISION" or m.supports_vision)
+            for m in self.registry.models
+        )
+
+    def _checked_entry(self, env_name: str, model_id: str) -> ModelCapability:
+        entry = self.registry.get(model_id)
+        if entry is None:
+            raise ValueError(f"{env_name}={model_id} is not present in the model registry")
+        if not self.is_mock and entry.verified_at is None:
+            raise ValueError(
+                f"{env_name}={model_id} has verified_at=null in the registry; live mode "
+                "requires capabilities and prices verified against the live gateway catalog"
+            )
+        return entry

@@ -26,7 +26,7 @@ from pydantic import (
     model_validator,
 )
 
-CONTRACT_VERSION: Final = "2026-11-19.v1"
+CONTRACT_VERSION: Final = "2026-11-23.v4"
 
 RouteTier = Literal[
     "NO_MODEL",
@@ -40,7 +40,7 @@ RouteTier = Literal[
 ]
 ROUTE_TIERS: Final[tuple[RouteTier, ...]] = get_args(RouteTier)
 
-TextGenerationTier = Literal["ECONOMY", "BALANCED", "REASONING"]
+TextGenerationTier = Literal["ECONOMY", "BALANCED", "REASONING", "VISION"]
 TEXT_GENERATION_TIERS: Final[frozenset[RouteTier]] = frozenset(get_args(TextGenerationTier))
 
 TaskKind = Literal[
@@ -53,6 +53,11 @@ TaskKind = Literal[
     "BASIC_PLANNING",
     "COMPLEX_PLANNING",
     "COMPARISON",
+    "CODING",
+    "DOCUMENT_ANALYSIS",
+    "RESEARCH",
+    "DECISION_SUPPORT",
+    "IMAGE_UNDERSTANDING",
 ]
 TASK_KINDS: Final[tuple[TaskKind, ...]] = get_args(TaskKind)
 
@@ -110,7 +115,9 @@ class ContractModel(BaseModel):
 
 
 class ModelCapability(ContractModel):
-    _omittable: ClassVar[frozenset[str]] = frozenset({"notes"})
+    _omittable: ClassVar[frozenset[str]] = frozenset(
+        {"notes", "quality_index", "latency_p50_ms", "throughput_p50_tps", "metadata_observed_at"}
+    )
 
     model_id: ModelId
     tiers: Annotated[list[RouteTier], Field(min_length=1)]
@@ -124,19 +131,56 @@ class ModelCapability(ContractModel):
     output_usd_per_million_tokens: Annotated[float, Field(ge=0)]
     verified_at: IsoDate | None
     notes: str | None = None
+    # Routing metadata from the live catalog (ADR-0026); optional.
+    quality_index: Annotated[float, Field(ge=0, le=100)] | None = None
+    latency_p50_ms: Annotated[float, Field(gt=0)] | None = None
+    throughput_p50_tps: Annotated[float, Field(gt=0)] | None = None
+    metadata_observed_at: IsoDate | None = None
+
+
+IMAGE_URL_MAX_CHARS: Final = 2_000_000
+MAX_IMAGES_PER_MESSAGE: Final = 4
+IMAGE_URL_PATTERN: Final = r"^(https://\S+|data:image/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+)$"
+
+
+class ImageInput(ContractModel):
+    _omittable: ClassVar[frozenset[str]] = frozenset({"detail"})
+
+    url: Annotated[str, StringConstraints(max_length=IMAGE_URL_MAX_CHARS, pattern=IMAGE_URL_PATTERN)]
+    detail: Literal["low", "high", "auto"] | None = None
 
 
 class ChatMessage(ContractModel):
+    _omittable: ClassVar[frozenset[str]] = frozenset({"images"})
+
     role: Literal["system", "user", "assistant"]
     content: Annotated[str, StringConstraints(min_length=1, max_length=100_000)]
+    # v2: images attached to a user message (ADR-0026).
+    images: Annotated[list[ImageInput], Field(min_length=1, max_length=MAX_IMAGES_PER_MESSAGE)] | None = None
+
+    @model_validator(mode="after")
+    def _images_only_on_user_messages(self) -> ChatMessage:
+        if self.images is not None and self.role != "user":
+            raise ValueError("only user messages may carry images")
+        return self
 
 
 class CompletionRequest(ContractModel):
     _omittable: ClassVar[frozenset[str]] = frozenset(
-        {"route_tier", "max_output_tokens", "task_id", "max_cost_usd", "prompt_version"}
+        {
+            "route_tier",
+            "max_output_tokens",
+            "task_id",
+            "max_cost_usd",
+            "prompt_version",
+            "locale",
+            "timezone",
+            "reply_language",
+            "user_name",
+        }
     )
 
-    contract_version: Literal["2026-11-19.v1"]
+    contract_version: Literal["2026-11-23.v4"]
     request_id: Annotated[str, StringConstraints(min_length=8, max_length=128)]
     task_kind: TaskKind
     route_tier: RouteTier | None = None
@@ -146,6 +190,19 @@ class CompletionRequest(ContractModel):
     task_id: Annotated[str, StringConstraints(max_length=128)] | None = None
     max_cost_usd: Annotated[float, Field(gt=0, le=10)] | None = None
     prompt_version: Annotated[str, StringConstraints(max_length=64)] | None = None
+    # v2: preferred locale (BCP 47) and IANA time zone — hints, never authoritative.
+    locale: Annotated[str, StringConstraints(min_length=2, max_length=35)] | None = None
+    timezone: Annotated[str, StringConstraints(min_length=1, max_length=64)] | None = None
+    # v3 (ADR-0027): saved reply language; omitted = reply in the latest message's language.
+    reply_language: Literal["en", "hi", "hi-Latn"] | None = None
+    # v3 additive: what KAREN calls the user. Letters, spaces and . ' - only.
+    user_name: (
+        Annotated[
+            str,
+            StringConstraints(min_length=1, max_length=40, pattern=r"^[\p{L}\p{M}][\p{L}\p{M} .'-]*$"),
+        ]
+        | None
+    ) = None
 
 
 class Usage(ContractModel):
@@ -160,7 +217,7 @@ class Usage(ContractModel):
 
 
 class CompletionResponse(ContractModel):
-    contract_version: Literal["2026-11-19.v1"]
+    contract_version: Literal["2026-11-23.v4"]
     request_id: str
     route_tier: RouteTier
     requested_model: str | None
@@ -203,6 +260,11 @@ class DoneEvent(ContractModel):
     finish_reason: FinishReason
     usage: Usage
     estimated_cost_usd: Annotated[float, Field(ge=0)] | None
+    # v2: invocation metadata for the caller's usage ledger (never prompt content).
+    requested_model: str | None
+    served_model: str | None
+    gateway_request_id: str | None
+    prompt_version: str | None
 
 
 class ErrorEvent(ContractModel):

@@ -47,7 +47,7 @@ describe('AiServiceClient', () => {
     expect(headers['x-karen-signature']).toMatch(/^t=\d+,v1=[0-9a-f]{64}$/);
     expect(headers['x-karen-caller']).toBe('karen-api');
     expect(JSON.parse(captured?.init.body as string)).toMatchObject({
-      contract_version: '2026-11-19.v1',
+      contract_version: '2026-11-23.v4',
     });
   });
 
@@ -80,5 +80,82 @@ describe('AiServiceClient', () => {
         user_ref: 'usr_12345678',
       }),
     ).rejects.toBeInstanceOf(AiServiceError);
+  });
+});
+
+describe('AiServiceClient.stream', () => {
+  const input = {
+    request_id: 'req_stream_0001',
+    task_kind: 'CHAT' as const,
+    messages: [{ role: 'user' as const, content: 'hi' }],
+    user_ref: 'usr_hmac_test01',
+  };
+  const sse = (chunks: string[], status = 200) =>
+    new Response(
+      new ReadableStream<Uint8Array>({
+        start(controller) {
+          for (const c of chunks) controller.enqueue(new TextEncoder().encode(c));
+          controller.close();
+        },
+      }),
+      { status, headers: { 'content-type': 'text/event-stream' } },
+    );
+  const frames = (events: unknown[]) =>
+    events.map((e) => `event: x\ndata: ${JSON.stringify(e)}\n\n`);
+  const collect = async (client: AiServiceClient) => {
+    const out: unknown[] = [];
+    for await (const e of client.stream(input)) out.push(e);
+    return out;
+  };
+
+  it('parses the shared fixture stream, even when frames are split across chunks', async () => {
+    const events = fixture('stream-events.mock.json') as unknown[];
+    const text = frames(events).join('').replace(/\n/g, '\r\n');
+    const chunks = text.match(/[\s\S]{1,7}/g) ?? [];
+    let headers: Headers | undefined;
+    const client = new AiServiceClient(env, (async (_u: string, init: RequestInit) => {
+      headers = new Headers(init.headers);
+      return sse(chunks);
+    }) as typeof fetch);
+    expect(await collect(client)).toEqual(events);
+    expect(headers?.get('x-karen-signature')).toMatch(/^t=\d+,v1=[0-9a-f]{64}$/);
+    expect(headers?.get('accept')).toBe('text/event-stream');
+  });
+
+  it('turns a pre-stream refusal into AiServiceError with the contract code', async () => {
+    const client = new AiServiceClient(
+      env,
+      async () =>
+        new Response(JSON.stringify(fixture('error.budget-exceeded.json')), { status: 429 }),
+    );
+    await expect(collect(client)).rejects.toMatchObject({ code: 'BUDGET_EXCEEDED' });
+  });
+
+  it('rejects frames that violate the contract', async () => {
+    const client = new AiServiceClient(env, async () =>
+      sse(frames([{ event: 'delta', index: 0, text: 'x', extra: true }])),
+    );
+    await expect(collect(client)).rejects.toMatchObject({ code: 'AI_SERVICE_CONTRACT_VIOLATION' });
+  });
+
+  it('reports a stream that ends without done/error as dropped (retryable, never replayed)', async () => {
+    let calls = 0;
+    const client = new AiServiceClient(env, async () => {
+      calls++;
+      return sse(frames([{ event: 'delta', index: 0, text: 'partial' }]));
+    });
+    await expect(collect(client)).rejects.toMatchObject({
+      code: 'AI_SERVICE_STREAM_DROPPED',
+      retryable: true,
+    });
+    expect(calls).toBe(1);
+  });
+
+  it('maps a connection failure to AI_SERVICE_UNREACHABLE', async () => {
+    const client = new AiServiceClient(env, async () => {
+      throw new TypeError('fetch failed');
+    });
+    await expect(collect(client)).rejects.toBeInstanceOf(AiServiceError);
+    await expect(collect(client)).rejects.toMatchObject({ code: 'AI_SERVICE_UNREACHABLE' });
   });
 });

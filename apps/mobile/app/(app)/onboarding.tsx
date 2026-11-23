@@ -38,6 +38,7 @@ import { usePatchPreferences, usePatchProfile } from '../../src/lib/mutations';
 import { qk, useOnboarding, usePreferences, useProfile } from '../../src/lib/queries';
 import { useSubmit } from '../../src/lib/use-submit';
 import { deviceTimezone } from '../../src/lib/validation';
+import { useTheme } from '../../src/theme/theme';
 
 const TITLES: Record<OnboardingStep, string> = {
   welcome: 'Welcome',
@@ -98,6 +99,7 @@ function OnboardingFlow({
   prefs: Preferences;
   initialStep: OnboardingStep;
 }) {
+  const t = useTheme();
   const api = useApi();
   const router = useRouter();
   const client = useQueryClient();
@@ -204,14 +206,14 @@ function OnboardingFlow({
       }
       const done = await unwrap(api.POST('/v1/me/onboarding/complete'));
       client.setQueryData(qk.onboarding, done);
-      router.replace('/home');
+      router.replace('/chat/new');
     }, [api, client, index, router, saveStep, step]),
   );
   const skip = useSubmit(
     useCallback(async () => {
       const state = await unwrap(api.POST('/v1/me/onboarding/skip'));
       client.setQueryData(qk.onboarding, state);
-      router.replace('/home');
+      router.replace('/chat/new');
     }, [api, client, router]),
   );
   useEffect(() => next.setError(null), [step]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -365,10 +367,34 @@ function OnboardingFlow({
 
   return (
     <FormScreen>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Caption>
-          Step {index + 1} of {ONBOARDING_STEPS.length}
-        </Caption>
+      <View
+        style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          columnGap: 12,
+        }}
+      >
+        <View style={{ flexShrink: 1, flexGrow: 1, gap: 6, maxWidth: 220 }}>
+          <Caption>
+            Step {index + 1} of {ONBOARDING_STEPS.length}
+          </Caption>
+          <View
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={{ height: 4, borderRadius: 2, backgroundColor: t.glass.border }}
+          >
+            <View
+              style={{
+                width: `${Math.round(((index + 1) / ONBOARDING_STEPS.length) * 100)}%`,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: t.colors.accent,
+              }}
+            />
+          </View>
+        </View>
         <TextButton
           label="Skip for now"
           hint="Finish setup later from the home screen"
@@ -388,6 +414,7 @@ function OnboardingFlow({
       {index > 0 ? (
         <TextButton
           label="Back"
+          align="center"
           onPress={() => setStep(ONBOARDING_STEPS[index - 1] ?? 'welcome')}
         />
       ) : null}

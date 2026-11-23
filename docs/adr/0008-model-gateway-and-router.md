@@ -1,6 +1,7 @@
 # 0008 — Model gateway and router
 
-- Status: Accepted · Date: 2026-11-19
+- Status: Accepted · Date: 2026-11-19 · **Gateway vendor superseded by ADR-0025 (OpenRouter)** on 2026-11-21.
+  Router, mock-default, verified-registry, budget and retry rules below remain in force.
 
 ## Decision
 
@@ -14,4 +15,4 @@ Architecture §2 is implemented as `API → ai-service ModelRouter → policy + 
 
 ## Not verified
 
-Live gateway behaviour (fallback `providerOptions`, usage fields, request-id header, error shapes) — no credentials. See docs/gateway/vercel-ai-gateway.md for the verification checklist.
+Live gateway behaviour (fallback `providerOptions`, usage fields, request-id header, error shapes) — no credentials. Superseded: see ADR-0025 and docs/gateway/openrouter.md for the current gateway and verification checklist.

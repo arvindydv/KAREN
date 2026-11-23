@@ -1,7 +1,8 @@
 """Gateway-agnostic request/result types and the GatewayClient protocol.
 
-The application talks to ``GatewayClient`` only, which keeps KAREN decoupled from Vercel
-(architecture §2.1 "documented migration path").
+The application talks to ``GatewayClient`` only, which keeps KAREN decoupled from any one
+gateway vendor (architecture §2.1 "documented migration path"; ADR-0025 used it to move from
+Vercel AI Gateway to OpenRouter).
 """
 
 from __future__ import annotations
@@ -24,6 +25,9 @@ class GatewayRequest:
     max_output_tokens: int
     # Gateway-side fallback order; only models with equivalent registry capabilities.
     fallback_models: tuple[str, ...] = ()
+    # Turn off hidden reasoning (fast tiers). Without it, catalog models that reason by default
+    # can spend the whole output budget on reasoning and return an empty answer (observed live).
+    disable_reasoning: bool = False
 
 
 @dataclass(frozen=True)
@@ -35,6 +39,8 @@ class GatewayResult:
     gateway_request_id: str | None
     attempts: int
     served_provider: str | None = None
+    # Cost the gateway itself reported (reconciliation only; budgets use registry prices).
+    reported_cost_usd: float | None = None
 
 
 @dataclass(frozen=True)
@@ -50,6 +56,7 @@ class GatewayStreamEnd:
     gateway_request_id: str | None
     attempts: int
     served_provider: str | None = None
+    reported_cost_usd: float | None = None
 
 
 GatewayStreamItem = GatewayDelta | GatewayStreamEnd

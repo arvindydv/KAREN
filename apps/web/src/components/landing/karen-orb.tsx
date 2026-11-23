@@ -67,7 +67,7 @@ function MicGlyph() {
   return (
     <svg className="karen-orb-icon" viewBox="0 0 24 24" fill="none" focusable="false">
       <rect x="8" y="3.5" width="8" height="11.5" rx="4" fill="#fff" />
-      <circle cx="13.6" cy="7.6" r="1.15" fill="#1e3a8a" />
+      <circle cx="13.6" cy="7.6" r="1.15" fill="#22397a" />
       <path
         d="M5.8 11.3a6.2 6.2 0 0 0 12.4 0"
         stroke="#fff"

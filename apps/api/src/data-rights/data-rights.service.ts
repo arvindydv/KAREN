@@ -42,6 +42,8 @@ const EXCLUDED_FROM_EXPORT = [
   'password hash (security secret, not your data)',
   'session, refresh and one-time-code verifiers (security secrets)',
   'security audit log (kept for security; contains no contact details)',
+  'AI request metadata (model and timing records; contain no message text)',
+  'short-lived streaming event copies of messages (the messages themselves are included)',
 ];
 
 /**
@@ -388,6 +390,8 @@ export class DataRightsService {
       grants,
       receipts,
       legal,
+      threads,
+      usage,
     ] = await Promise.all([
       tx.user.findUniqueOrThrow({ where: { id: userId } }),
       tx.userEmail.findUnique({ where: { userId } }),
@@ -399,6 +403,13 @@ export class DataRightsService {
       tx.consentGrant.findMany({ where: { userId } }),
       tx.consentReceipt.findMany({ where: { userId }, orderBy: { seq: 'asc' } }),
       tx.legalAcceptance.findMany({ where: { userId } }),
+      // Phase 02: conversations with messages and feedback, and AI usage totals.
+      tx.conversationThread.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'asc' },
+        include: { messages: { orderBy: { seq: 'asc' }, include: { feedback: true } } },
+      }),
+      tx.usageLedgerEntry.findMany({ where: { userId }, orderBy: { periodStart: 'asc' } }),
     ]);
     const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
     return {
@@ -431,6 +442,7 @@ export class DataRightsService {
             notify_push: preferences.notifyPush,
             quiet_hours_start: preferences.quietHoursStart,
             quiet_hours_end: preferences.quietHoursEnd,
+            reply_language: preferences.replyLanguage,
           }
         : null,
       saved_places: places.map((p) => ({
@@ -488,6 +500,37 @@ export class DataRightsService {
         version: l.documentVersion,
         locale: l.locale,
         accepted_at: iso(l.acceptedAt),
+      })),
+      conversations: threads.map((t) => ({
+        id: t.id,
+        title: t.title,
+        mode: t.mode,
+        locale: t.locale,
+        pinned: t.pinned,
+        archived_at: iso(t.archivedAt),
+        created_at: iso(t.createdAt),
+        messages: t.messages.map((m) => ({
+          seq: m.seq,
+          role: m.role,
+          status: m.status,
+          content: m.content,
+          created_at: iso(m.createdAt),
+          superseded: m.supersededAt !== null,
+          produced_by_mock: m.role === 'assistant' ? m.isMock : null,
+          feedback: m.feedback
+            ? {
+                rating: m.feedback.rating,
+                category: m.feedback.category,
+                comment: m.feedback.comment,
+              }
+            : null,
+        })),
+      })),
+      ai_usage_by_day: usage.map((u) => ({
+        day: u.periodStart.toISOString().slice(0, 10),
+        requests: u.requests,
+        input_tokens: Number(u.inputTokens),
+        output_tokens: Number(u.outputTokens),
       })),
       not_included: EXCLUDED_FROM_EXPORT,
     };

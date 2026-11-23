@@ -20,3 +20,4 @@ apps/mobile/.expo-export-check
 **/uv.lock
 evals/**/*.json
 **/next-env.d.ts
+docs/product/instinct-reference-blueprint.md

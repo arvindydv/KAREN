@@ -3,10 +3,12 @@ import { useCallback, useState } from 'react';
 import { useServices } from '../../../src/auth/services';
 import {
   Banner,
-  Body,
+  Caption,
   ErrorState,
   FormScreen,
+  GlassCard,
   PrimaryButton,
+  SectionTitle,
   TextField,
   ToggleRow,
 } from '../../../src/components/primitives';
@@ -14,6 +16,7 @@ import { ScreenHeader } from '../../../src/components/screen-header';
 import { describeError, unwrap } from '../../../src/lib/api-error';
 import { useSubmit } from '../../../src/lib/use-submit';
 import { useChallengeStore } from '../../../src/state/challenge-store';
+import { formatDateTime } from '../../../src/lib/format';
 
 export default function DeleteAccountScreen() {
   const { api, session } = useServices();
@@ -28,7 +31,7 @@ export default function DeleteAccountScreen() {
         }),
       );
       setPassword('');
-      const when = req.scheduled_for ? new Date(req.scheduled_for).toLocaleString() : null;
+      const when = req.scheduled_for ? formatDateTime(req.scheduled_for) : null;
       useChallengeStore
         .getState()
         .setFlash(
@@ -42,29 +45,38 @@ export default function DeleteAccountScreen() {
   return (
     <FormScreen>
       <ScreenHeader title="Delete account" />
-      <Body>What happens</Body>
-      <Body muted>
-        Your account is scheduled for deletion and you’re signed out everywhere. During a short
-        waiting period you can sign in and cancel. After it, your profile, preferences, consents and
-        other personal data are deleted. Some records may be kept where the law or security
-        requires; you’ll see which once deletion is scheduled.
-      </Body>
+      <SectionTitle>What happens</SectionTitle>
+      <GlassCard style={{ gap: 8 }}>
+        <Caption>
+          Your account is scheduled for deletion and you’re signed out everywhere. During a short
+          waiting period you can sign in and cancel.
+        </Caption>
+        <Caption>
+          After it, your profile, preferences, consents and other personal data are deleted. Some
+          records may be kept where the law or security requires; you’ll see which once deletion is
+          scheduled.
+        </Caption>
+      </GlassCard>
       <Banner tone="warning">This can’t be undone after the waiting period ends.</Banner>
-      <TextField
-        label="Current password"
-        value={password}
-        onChangeText={setPassword}
-        secure
-        autoCapitalize="none"
-        autoComplete="current-password"
-      />
-      <ToggleRow
-        label="I understand my account and data will be deleted"
-        value={confirmed}
-        onChange={setConfirmed}
-      />
+      <SectionTitle>Confirm</SectionTitle>
+      <GlassCard style={{ gap: 12 }}>
+        <TextField
+          label="Current password"
+          value={password}
+          onChangeText={setPassword}
+          secure
+          autoCapitalize="none"
+          autoComplete="current-password"
+        />
+        <ToggleRow
+          label="I understand my account and data will be deleted"
+          value={confirmed}
+          onChange={setConfirmed}
+        />
+      </GlassCard>
       {submit.error ? <ErrorState message={describeError(submit.error)} /> : null}
       <PrimaryButton
+        tone="danger"
         label={submit.busy ? 'Scheduling…' : 'Delete my account'}
         hint="Requires your password and the confirmation above"
         disabled={submit.busy || password === '' || !confirmed}

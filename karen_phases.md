@@ -56,7 +56,7 @@
 | Admin/support              | Existing **Next.js admin** with separate staff IdP/audience and backend authorization                                                                                           | A redirect is not staff authentication; no staff access through ordinary user session                                                           |
 | Product API                | Existing **NestJS/Fastify** modules, Zod/OpenAPI clients, Prisma, strict DTOs                                                                                                   | Own user/business state; no AI bypass around policy or audit                                                                                    |
 | AI orchestration           | Existing **Python/FastAPI**; LangGraph where multi-step reasoning helps; Pydantic outputs                                                                                       | No direct AI write to financial/provider tables; use typed proposal APIs                                                                        |
-| Paid multi-model inference | **Vercel AI Gateway** with backend-only API key, version-pinned tested model slugs and three-tier budgets                                                                       | Gateway unifies supported inference billing, not AWS/voice/partners; check catalog and terms before activation                                  |
+| Paid multi-model inference | **OpenRouter** (ADR-0025; was Vercel AI Gateway) with backend-only API key, version-pinned tested model slugs and three-tier budgets                                            | Gateway unifies supported inference billing, not AWS/voice/partners; check catalog and terms before activation                                  |
 | Internal model selection   | Existing KAREN `ModelRouter` + capability registry: `NO_MODEL`, `ECONOMY`, `BALANCED`, `REASONING`, `VISION`, `EMBEDDING`, `AUDIO`                                              | Select by quality, privacy, tail latency and cost per correct outcome; enforce fallback compatibility                                           |
 | Live voice                 | Existing **LiveKit** worker, WebRTC, tested STT/TTS/realtime path                                                                                                               | Validate Gateway audio protocol with LiveKit; direct audio provider only as a documented exception                                              |
 | Durable actions            | Existing **Temporal TypeScript worker**, canonical state machine and human approval                                                                                             | Temporal retries do **not** make external side effects exactly-once; reconcile with partner references                                          |
@@ -169,7 +169,7 @@
 
 - [ ] **ADR-0015:** prototype Cognito Essentials managed login + Google/Apple federation + email OTP/password + passkeys + Expo PKCE + account recovery; compare Auth0/Clerk UX, current costs and operational burden before selecting. — **BLOCKED_EXTERNAL** (desk evaluation done (Cognito Essentials, conditional; report §5); hands-on spike needs AWS account)
 - [ ] Decide exact non-production identity issuer/audience/JWKS and staff-console identity approach; update existing JWT guard and Terraform; verify real token lifecycle. — **BLOCKED_EXTERNAL** (guard + config rules + Terraform done; real issuer/client id + token lifecycle need the spike)
-- [ ] Create paid/nonproduction Vercel AI Gateway account, separated keys and hard budgets; fetch live model catalog and pin benchmarked `creator/model` IDs (no fabricated slugs). — **BLOCKED_EXTERNAL** (paid account/key)
+- [ ] Create paid/nonproduction OpenRouter account (ADR-0025; Vercel account stayed blocked), separated keys and hard credit limits; fetch live model catalog and pin benchmarked `creator/model` IDs (no fabricated slugs). — **BLOCKED_EXTERNAL** (paid account/key)
 - [ ] Test Python gateway streaming/structured outputs/tools/timeouts/fallback/cost metadata from AWS Mumbai and collect live TTFT measurements. — **BLOCKED_EXTERNAL** (needs gateway key; no paid calls made)
 - [x] Create `provider_capability_registry`: capability/read/write, API permitted, contract owner, sandbox, quotas, callback signature, consent/scopes, region, reconciliation, expiry, alternatives. — **DONE_LOCAL** (descriptor schema + registry enforcement, tested)
 - [ ] Start Google/Microsoft OAuth verification, LiveKit test account, and **one** viable booking/commerce partner outreach early; record partner lead times and legal conditions. — **BLOCKED_EXTERNAL** (vendor/partner processes)
@@ -260,10 +260,10 @@
 
 ## PHASE 02 — Real AI conversations and premium chat experience
 
-> **Status (2026-11-21):** `NOT_STARTED`. Technical proposal: `docs/PHASE_02_PROPOSAL.md` — **awaiting owner approval**; implementation must not start before it (entry criteria E1–E6).
+> **Status (2026-11-21):** `DONE_LOCAL` (mock gateway) — implemented on branch `phase-02/conversations` after owner approval; live gateway `BLOCKED_EXTERNAL` (E5); Gate 02 not passed. Report: `docs/PHASE_02_REPORT.md`; ADRs 0021–0024.
 
 **User journey:** ask in natural language → receive streaming answer in preferred language → view evidence/uncertainty → continue conversation → optionally save item/create task → recover from partial failure.  
-**Tech:** existing NestJS SSE endpoint, Python FastAPI + `ModelRouter`, Vercel AI Gateway (live), Pydantic, Langfuse, OpenTelemetry, PostgreSQL messages, Redis budgets/rate limits, TanStack Query, virtualized message UI, S3 for attachments later.  
+**Tech:** existing NestJS SSE endpoint, Python FastAPI + `ModelRouter`, OpenRouter (live, ADR-0025), Pydantic, Langfuse, OpenTelemetry, PostgreSQL messages, Redis budgets/rate limits, TanStack Query, virtualized message UI, S3 for attachments later.  
 **Tables:** `conversation.threads`, `conversation.messages`, `conversation.message_events`, `conversation.sources`, `conversation.feedback`, `platform.ai_invocations`, `platform.model_registry`, `platform.prompt_versions`, `platform.usage_ledger`.
 
 ### F02-01 — Conversation model and APIs
@@ -504,8 +504,8 @@
 ## PHASE 06 — Natural, fast, multilingual voice companion
 
 **User journey:** tap/hold to talk → speak English/Hindi/Hinglish → see live transcript → interrupt KAREN when needed → hear response → confirm sensitive slots on device → see same task/conversation after call.  
-**Tech:** existing `voice-agent`, LiveKit Agents + WebRTC, Expo native audio SDK and audio focus, Gateway-validated realtime path **or** STT → Vercel AI Gateway LLM → TTS, turn detector/VAD, noise suppression, Opus codec, short-lived room tokens, Redis session state, Postgres transcript store only with consent.  
-**External gate:** Validate _specific_ LiveKit ↔ Vercel Gateway realtime/SDK/API compatibility. A text OpenAI-compatible base URL is insufficient proof. Direct speech API is approved only with ADR, privacy/billing disclosure and benchmark.
+**Tech:** existing `voice-agent`, LiveKit Agents + WebRTC, Expo native audio SDK and audio focus, Gateway-validated realtime path **or** STT → OpenRouter LLM → TTS, turn detector/VAD, noise suppression, Opus codec, short-lived room tokens, Redis session state, Postgres transcript store only with consent.  
+**External gate:** Validate _specific_ LiveKit ↔ gateway (OpenRouter) realtime/SDK/API compatibility; none is verified. A text OpenAI-compatible base URL is insufficient proof. Direct speech API is approved only with ADR, privacy/billing disclosure and benchmark.
 
 ### F06-01 — Voice UX and permissions
 
@@ -610,7 +610,7 @@
 ## PHASE 08 — Multimodal documents, research, location, evidence and discovery
 
 **User journey:** share a screenshot/document/receipt or ask to compare choices → KAREN extracts verified fields, sources fresh external data where available, compares relevant alternatives and offers a transparent shortlist or actionable next step.  
-**Tech:** private S3 + presigned URLs, AV scanning, verified Vercel Gateway vision/document models and structured Pydantic extractors, pypdf/pdfplumber where reliable, PostgreSQL full-text/pgvector, geocoding/maps API with user permission, cache with freshness tags.  
+**Tech:** private S3 + presigned URLs, AV scanning, verified OpenRouter vision/document models (task routes `VISION` / `DOCUMENT_ANALYSIS`, ADR-0025) and structured Pydantic extractors, pypdf/pdfplumber where reliable, PostgreSQL full-text/pgvector, geocoding/maps API with user permission, cache with freshness tags.  
 **Data:** `conversation.attachments`, `platform.document_jobs`, `platform.extracted_fields`, `platform.search_evidence`, `platform.geocoding_cache`, `consent.location_grants`.
 
 ### F08-01 — Attachments and document ingestion
@@ -970,7 +970,7 @@
 
 - [ ] Derive traffic profile from DAU/peak QPS, requests/active-minute, concurrent voice sessions, average messages/turn and provider rate limits.
 - [ ] p50/p95/p99 for auth, simple API, chat TTFT, full response, memory recall, AI Gateway overhead, provider quote, task verification and voice first audio.
-- [ ] Benchmark AWS Mumbai ↔ Vercel Gateway path; tune connection pooling/HTTP keep-alive, streaming relay, context token budget and model tier.
+- [ ] Benchmark AWS Mumbai ↔ OpenRouter path; tune connection pooling/HTTP keep-alive, streaming relay, context token budget and model tier.
 - [ ] Index review and query plans for user+timestamp, task status/deadline, provider op ref, notification schedules; use pagination and read replicas when justified.
 - [ ] Load and soak tests at realistic concurrency; saturation monitors for DB pool, Redis, queues, Temporal worker slots, CPU/memory and connection limits.
 - [ ] Horizontal autoscale ECS services independently; apply bounded concurrency/backpressure to noisy providers and expensive gateway models.
@@ -1067,7 +1067,7 @@
 | Voice                                        | `AUDIO` / composable pipeline | exact slot confirmation for sensitive action   | optimize end-of-turn→first audio                     |
 | Provider booking/payment status              | `NO_MODEL`                    | provider ledger/read-back/PSP status           | deterministic truth, no hallucinated completion      |
 
-**Fallback rules:** explicit compatible ordered models, same allowed tool schema, same retention/privacy/residency eligibility, total deadline, no replay of acknowledged side effects. A second model's agreement is not authoritative evidence of a transaction or fact. Verify current model pricing, endpoint support and provider policies in the live Vercel catalog; do not hardcode “best” forever.
+**Fallback rules:** explicit compatible ordered models, same allowed tool schema, same retention/privacy/residency eligibility, total deadline, no replay of acknowledged side effects. A second model's agreement is not authoritative evidence of a transaction or fact. Verify current model pricing, endpoint support and provider policies in the live OpenRouter catalog; do not hardcode “best” forever.
 
 ### 4.6 Availability, reliability and SLOs (targets, not promises)
 
@@ -1179,23 +1179,23 @@ apps/ai-service/
 
 ## 7. External partner capability and blocker ledger (must be kept live)
 
-| External area                            | Initial allowed product mode                                 | What unblocks real execution                                                                                | Safe fallback                                                              |
-| ---------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **Vercel AI Gateway**                    | mock only in current repo; enable real calls after P00 smoke | paid key/credits, verified model IDs and modalities, limits, data policy and billing review                 | transparent unavailable/degraded response; deterministic features continue |
-| **OIDC/identity**                        | scaffold verifier only today                                 | signed ADR, hosted login/PKCE and devices tested, issuer/JWKS configured, security review                   | no unauthorized partial login; public landing only                         |
-| **LiveKit**                              | worker shell only today                                      | LiveKit account, tokens, session pilot and Gateway audio path validation                                    | text chat                                                                  |
-| **Google Calendar**                      | not connected today                                          | OAuth scopes, user consent, API test account, verification if applicable                                    | draft event/manual open                                                    |
-| **Gmail**                                | not connected today                                          | approved scopes; restricted-scope verification/security assessment where applicable; backend token controls | copyable draft/manual email client                                         |
-| **Microsoft Graph**                      | not connected today                                          | app registration, scope/admin consent as required, test account and tenant policy                           | draft/export/manual open                                                   |
-| **WhatsApp Business**                    | not connected today                                          | business verification, opt-in, templates, policy-compliant API integration                                  | in-app push/email notification                                             |
-| **Flight/hotel**                         | research/read-only until source and rights verified          | ticketing/booking partner contract, inventory/quote/settlement access, webhook/PNR verification             | supplier booking link with “complete externally”                           |
-| **IRCTC trains**                         | planning/links only                                          | authorized IRCTC partner channel, production credentials, payment/ticketing rights                          | official website/app handoff                                               |
-| **Buses/cabs**                           | source-dependent read-only/deep link                         | official partner API permits booking in target region and live status                                       | official app handoff; no fictitious ride                                   |
-| **Food/grocery/ecommerce**               | list/search/deep link only until contract                    | approved catalog/cart/order/payment/status access and refund processes                                      | shopping list + merchant link                                              |
-| **Restaurant/events**                    | discovery/known reservations page                            | real inventory and confirmed booking/seat API contract                                                      | official reservation page/call route                                       |
-| **UPI/PSP**                              | user-mediated redirect/intent only where compliant           | PSP contract, webhooks/status readback, merchant-of-record and refund ownership                             | ask user to pay directly in partner app                                    |
-| **Financial account aggregation**        | manual import and explain only                               | regulated licensed partner/account aggregator, user consent and legal review                                | private manual budget tracking                                             |
-| **Government/DigiLocker/health systems** | documents/checklists/manual coordination                     | official API partnership and appropriate consent/regulated handling                                         | guide to authoritative portal/provider                                     |
+| External area                            | Initial allowed product mode                            | What unblocks real execution                                                                                | Safe fallback                                                              |
+| ---------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **OpenRouter** (ADR-0025)                | mock only in current repo; enable real calls after SP-1 | paid key/credits, verified model IDs and modalities, limits, data policy and billing review                 | transparent unavailable/degraded response; deterministic features continue |
+| **OIDC/identity**                        | scaffold verifier only today                            | signed ADR, hosted login/PKCE and devices tested, issuer/JWKS configured, security review                   | no unauthorized partial login; public landing only                         |
+| **LiveKit**                              | worker shell only today                                 | LiveKit account, tokens, session pilot and Gateway audio path validation                                    | text chat                                                                  |
+| **Google Calendar**                      | not connected today                                     | OAuth scopes, user consent, API test account, verification if applicable                                    | draft event/manual open                                                    |
+| **Gmail**                                | not connected today                                     | approved scopes; restricted-scope verification/security assessment where applicable; backend token controls | copyable draft/manual email client                                         |
+| **Microsoft Graph**                      | not connected today                                     | app registration, scope/admin consent as required, test account and tenant policy                           | draft/export/manual open                                                   |
+| **WhatsApp Business**                    | not connected today                                     | business verification, opt-in, templates, policy-compliant API integration                                  | in-app push/email notification                                             |
+| **Flight/hotel**                         | research/read-only until source and rights verified     | ticketing/booking partner contract, inventory/quote/settlement access, webhook/PNR verification             | supplier booking link with “complete externally”                           |
+| **IRCTC trains**                         | planning/links only                                     | authorized IRCTC partner channel, production credentials, payment/ticketing rights                          | official website/app handoff                                               |
+| **Buses/cabs**                           | source-dependent read-only/deep link                    | official partner API permits booking in target region and live status                                       | official app handoff; no fictitious ride                                   |
+| **Food/grocery/ecommerce**               | list/search/deep link only until contract               | approved catalog/cart/order/payment/status access and refund processes                                      | shopping list + merchant link                                              |
+| **Restaurant/events**                    | discovery/known reservations page                       | real inventory and confirmed booking/seat API contract                                                      | official reservation page/call route                                       |
+| **UPI/PSP**                              | user-mediated redirect/intent only where compliant      | PSP contract, webhooks/status readback, merchant-of-record and refund ownership                             | ask user to pay directly in partner app                                    |
+| **Financial account aggregation**        | manual import and explain only                          | regulated licensed partner/account aggregator, user consent and legal review                                | private manual budget tracking                                             |
+| **Government/DigiLocker/health systems** | documents/checklists/manual coordination                | official API partnership and appropriate consent/regulated handling                                         | guide to authoritative portal/provider                                     |
 
 **Universal partner rule:** if ability is not verified, use `UNAVAILABLE` or `DEEPLINK`, never silently web-scrape or present a mock as actual integration. Provider documents, statuses and redirects are inputs to KAREN; authoritative completion must still be independently established.
 
@@ -1220,7 +1220,7 @@ The following E2E scenarios should ultimately work across the relevant phases. E
 13. **Incomplete supply:** no IRCTC/food/ride booking rights → show honest source/planning info, partner link and manual steps → no “booked” claim.
 14. **Household isolation:** parent shares grocery list, not Gmail/memories → other member sees only list → delegation revoked → pending action blocked.
 15. **Payment entitlement:** user purchases monthly subscription in app → server notification verifies → plan unlocked across devices → restore, cancel, refund and expired grace period handled accurately.
-16. **Provider outage:** Vercel unavailable → error/degraded deterministic features; supplier down → task remains safely pending; user gets timely factual status without fabricated outcomes.
+16. **Provider outage:** OpenRouter unavailable → error/degraded deterministic features; supplier down → task remains safely pending; user gets timely factual status without fabricated outcomes.
 17. **Data rights:** user revokes memory/analytics/connection purpose → new processing blocked → export/deletion job status visible → derived copies cleared per documented policy.
 18. **Staff support:** agent can view scoped redacted case but not general chat; access is ticket-audited; dangerous reconcile needs approved staff permission and emits immutable event.
 
@@ -1239,7 +1239,7 @@ The following E2E scenarios should ultimately work across the relevant phases. E
 - [ ] A03: write IdP Terraform variables/secrets, webhook/callback allowlists and staff identity plan.
 - [ ] A04: implement minimal DB app roles, RLS + `FORCE` policy review; negative tests and pooled connection reset.
 - [ ] A05: GitHub Actions SHA pinning, remote Terraform state, IAM OIDC and staging deploy, rollback smoke test.
-- [ ] A06: Live Vercel AI Gateway **test** key/models/budgets and capability ledger; keep production model calls disabled.
+- [ ] A06: Live OpenRouter **test** key/models/credit limits and capability ledger; keep production model calls disabled.
 
 ### Work package B — Real user identity and first home
 
@@ -1253,7 +1253,7 @@ The following E2E scenarios should ultimately work across the relevant phases. E
 ### Work package C — First real AI conversation
 
 - [ ] C01: conversation/message persistence and ownership-migration indexes; Zod/OpenAPI generated client.
-- [ ] C02: connect existing ModelRouter to tested Vercel Gateway, with an isolated live smoke; no hardcoded model IDs.
+- [ ] C02: connect existing ModelRouter to tested OpenRouter gateway, with an isolated live smoke; no hardcoded model IDs.
 - [ ] C03: streaming SSE events, client reconnection/cancel, request idempotency, partial response semantics and mobile draft persistence.
 - [ ] C04: basic English/Hindi/Hinglish prompt, ambiguity/amount/date extraction schema; eval fixtures.
 - [ ] C05: budget/usage ledger, gateway fallbacks, observability and limits by user/tier.
@@ -1307,7 +1307,7 @@ Current PR goal: <one independently testable vertical slice>
    + staff visibility + automated tests.
 5. Preserve strict TS/Python typing, existing domain task state machine,
    observed architectural boundaries and operational controls. Use
-   Vercel AI Gateway only through KAREN ModelRouter, not from clients.
+   OpenRouter only through KAREN ModelRouter, not from clients.
 6. For side effects, enforce exact approval, expiry, capability, audit,
    unique external op reference, safe recovery and provider read-back.
 7. Run relevant unit, Python, integration, contract, lint, Playwright,
@@ -1347,7 +1347,7 @@ Work on ONE feature ID / vertical slice per PR, not all phases in one pass.
 - Maintain weekly roadmap status by feature ID, with release environment evidence and a **single owner**.
 - Every new public capability must have an explicit support matrix by provider/geography/action; “global” branding doesn't mean global booking rights.
 - An external blocker is not an engineering task to “just code around”; mark `BLOCKED_EXTERNAL`, begin approved contract/onboarding and ship a truthful manual fallback.
-- Model choices are benchmark-led. Keep Vercel AI Gateway as the single default AI inference billing provider while supported; direct model SDK only with a documented exception and independent cost tracking.
+- Model choices are benchmark-led. Keep OpenRouter (ADR-0025) as the single default AI inference billing provider while supported; direct model SDK only with a documented exception and independent cost tracking.
 - Prioritize frictionless **trusted daily utility** over broad unfinished verticals; measure real completed tasks per active customer and repeat usage.
 - No feature may skip auth, audit, consent, risk policy and acceptance criteria solely because it is “only a prototype.” Test-only mock modes must be impossible to mistake for real actions.
 - Proposed future ideas should be separate `BACKLOG_DISCOVERY` items, not commitments: on-device models, offline speech, always-listening wake word, custom LLM training, open third-party agent marketplace, autonomous financial delegation, ubiquitous browser-action automation.
@@ -1358,8 +1358,8 @@ Work on ONE feature ID / vertical slice per PR, not all phases in one pass.
 
 **Checked for this roadmap on 20 November 2026. These are documentation starting points, not evidence of KAREN deployment or guaranteed vendor access. Recheck releases, availability, prices and terms before coding.**
 
-- Vercel AI Gateway overview and model catalog: https://vercel.com/docs/ai-gateway and https://vercel.com/ai-gateway/models
-- Vercel AI Gateway supported realtime/audio announcement (29 Jun 2026): https://vercel.com/changelog/realtime-voice-speech-and-transcription-now-supported-on-ai-gateway
+- OpenRouter API documentation and model catalog: https://openrouter.ai/docs/api-reference/overview and https://openrouter.ai/api/v1/models (current gateway, ADR-0025)
+- Former gateway (superseded by ADR-0025): Vercel AI Gateway https://vercel.com/docs/ai-gateway
 - Amazon Cognito OIDC, managed login, passkeys and plan limitations: https://docs.aws.amazon.com/cognito/latest/developerguide/authentication.html and https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-authentication-flow-methods.html
 - LiveKit turn handling/interruptions: https://docs.livekit.io/agents/logic/turns/
 - Temporal idempotent activities/retries: https://docs.temporal.io/activity-definition and https://docs.temporal.io/workflow-definition

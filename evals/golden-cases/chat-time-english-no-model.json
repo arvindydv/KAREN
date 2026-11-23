@@ -1,0 +1,25 @@
+{
+  "id": "chat-time-english-no-model",
+  "description": "English time question in CHAT takes the deterministic fast path.",
+  "language": "en",
+  "tags": [
+    "chat",
+    "routing",
+    "no-model",
+    "phase-02"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "CHAT",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What time is it?"
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "NO_MODEL",
+    "no_model_call": true
+  }
+}

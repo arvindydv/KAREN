@@ -7,6 +7,9 @@ import {
   challengeHandleSchema,
 } from './auth.js';
 
+/** Language KAREN replies in: `auto` mirrors the language of the latest message. */
+export const REPLY_LANGUAGES = ['auto', 'en', 'hi', 'hi-Latn'] as const;
+
 /**
  * Phase 01 M4 — profile, preferences, saved places, e-mail and password change.
  * Concurrency: GET returns `version` (and an ETag); PATCH/PUT/DELETE on versioned resources
@@ -91,6 +94,11 @@ export const preferencesSchema = z
       })
       .strict()
       .nullable(),
+    /**
+     * Language KAREN replies in. `auto` = the language of your latest
+     * message, detected automatically; otherwise always this language.
+     */
+    reply_language: z.enum(REPLY_LANGUAGES),
     version: z.number().int().min(0),
   })
   .strict()

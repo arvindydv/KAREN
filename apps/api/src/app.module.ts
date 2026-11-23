@@ -11,6 +11,7 @@ import { isNotSensitiveRoute } from './common/rate-limit.js';
 import { ConfigModule } from './config/config.module.js';
 import type { ApiEnv } from './config/env.js';
 import { ConsentModule } from './consent/consent.module.js';
+import { ConversationModule } from './conversation/conversation.module.js';
 import { HealthModule } from './health/health.module.js';
 import { IdentityModule } from './identity/identity.module.js';
 import { AiModule } from './infrastructure/ai/ai.module.js';
@@ -87,6 +88,7 @@ export class AppModule {
         OnboardingModule,
         TemporalModule,
         DataRightsModule,
+        ConversationModule,
         PolicyModule,
         AuthModule.forRoot(env),
         HealthModule,

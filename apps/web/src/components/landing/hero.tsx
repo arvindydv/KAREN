@@ -63,14 +63,14 @@ function Ribbons({ className }: { className: string }) {
     >
       <defs>
         <linearGradient id="ribbon-cool" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0" stopColor="#2563eb" stopOpacity="0" />
-          <stop offset="0.35" stopColor="#2563eb" />
-          <stop offset="1" stopColor="#8b5cf6" />
+          <stop offset="0" stopColor="#3a6fe0" stopOpacity="0" />
+          <stop offset="0.35" stopColor="#3a6fe0" />
+          <stop offset="1" stopColor="#8e7ceb" />
         </linearGradient>
         <linearGradient id="ribbon-warm" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#c6f432" />
-          <stop offset="0.6" stopColor="#22c55e" />
-          <stop offset="1" stopColor="#22c55e" stopOpacity="0" />
+          <stop offset="0" stopColor="#cde77a" />
+          <stop offset="0.6" stopColor="#3fbf7f" />
+          <stop offset="1" stopColor="#3fbf7f" stopOpacity="0" />
         </linearGradient>
         <filter id="ribbon-soft" x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="18" />

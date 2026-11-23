@@ -1,8 +1,9 @@
 # Phase 02 technical proposal — real AI conversations and premium chat
 
-- **Date:** 2026-11-21. **Status:** **PROPOSAL — NOT APPROVED.** No Phase 02 feature code may be written until the owner approves this proposal in writing (PR approval or an ADR).
+- **Date:** 2026-11-21. **Status:** **APPROVED by the owner on 2026-11-21** (instruction to implement Phase 02); implemented locally — see `docs/PHASE_02_REPORT.md`.
 - **Roadmap:** `karen_phases.md` Phase 02 (F02-01 … F02-04, Gate 02).
-- **Architecture:** `karen_architecture.md` §1–2, §12; ADR-0006 (wire contracts), ADR-0008 (gateway and router), ADR-0013 (fail-closed coordination); `docs/gateway/vercel-ai-gateway.md`.
+- **Architecture:** `karen_architecture.md` §1–2, §12; ADR-0006 (wire contracts), ADR-0008 (gateway and router), ADR-0013 (fail-closed coordination); `docs/gateway/openrouter.md` (was `vercel-ai-gateway.md`).
+- **Amendment 2026-11-21:** the gateway changed from Vercel AI Gateway to **OpenRouter** (ADR-0025). Read "Vercel AI Gateway", `VercelGatewayClient` and `gateway/vercel.py` below as OpenRouter, `OpenRouterGatewayClient` and `gateway/openrouter.py`. E5 now means an OpenRouter non-production key with a hard credit limit.
 - **Constraints kept:** no new deployable (the 8 existing apps), no new vendor or dependency without a recorded reason, no model IDs or prices in code, the gateway key stays in ai-service, the LLM never authorises or executes side effects.
 
 ## 1. Goal and Gate 02

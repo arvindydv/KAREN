@@ -1,17 +1,21 @@
 from __future__ import annotations
 
+import asyncio
+import dataclasses
 from collections.abc import AsyncGenerator
 from pathlib import Path
 
+import anyio
 import pytest
 
 from karen_ai.api.app import build_completion_service
 from karen_ai.contracts import CompletionRequest, DeltaEvent, DoneEvent, ErrorEvent, StartEvent
 from karen_ai.core.errors import KarenAIError
-from karen_ai.gateway.mock import MockGatewayClient
+from karen_ai.gateway.base import GatewayRequest, GatewayResult
+from karen_ai.gateway.mock import MockGatewayClient, chat_responder
 from karen_ai.model_router.service import CompletionService
 from karen_ai.observability.invocations import InMemoryInvocationSink
-from karen_ai.policies.budget import InMemoryDailyBudgetTracker
+from karen_ai.policies.budget import InMemoryDailyBudgetTracker, Reservation
 from tests.conftest import SettingsFactory, completion_body, write_registry
 
 
@@ -70,6 +74,19 @@ async def test_mock_completion_and_invocation_record(make_settings: SettingsFact
     assert "yaad dilana" not in dumped  # no prompt content in records
 
 
+@pytest.mark.parametrize(
+    ("task_kind", "disabled"),
+    [("CHAT", True), ("EXTRACTION", True), ("COMPARISON", False), ("CODING", False)],
+)
+async def test_hidden_reasoning_is_off_on_fast_tiers_only(
+    make_settings: SettingsFactory, task_kind: str, disabled: bool
+) -> None:
+    gateway = MockGatewayClient()
+    service = _service(make_settings, gateway, InMemoryInvocationSink())
+    await service.complete(_request(task_kind=task_kind))
+    assert gateway.calls[0].disable_reasoning is disabled
+
+
 async def test_max_output_tokens_is_clamped(make_settings: SettingsFactory) -> None:
     gateway = MockGatewayClient()
     service = _service(make_settings, gateway, InMemoryInvocationSink(), karen_ai_max_output_tokens=300)
@@ -78,10 +95,11 @@ async def test_max_output_tokens_is_clamped(make_settings: SettingsFactory) -> N
 
 
 async def test_per_request_budget_rejection(make_settings: SettingsFactory, tmp_path: Path) -> None:
-    registry = write_registry(tmp_path / "priced.json", price=100.0)  # USD per 1M tokens, test-only
+    # USD per 1M tokens, test-only; the CHAT system prompt (~1.4k tokens, chat.v4) counts too.
+    registry = write_registry(tmp_path / "priced.json", price=40.0)
     gateway = MockGatewayClient()
     service = _service(make_settings, gateway, InMemoryInvocationSink(), karen_model_registry_path=registry)
-    # 1500 output tokens x $100/1M = $0.15 > $0.10 default per-request cap.
+    # 1500 output tokens x $40/1M = $0.06, plus the prompt, > $0.10 default per-request cap.
     with pytest.raises(KarenAIError) as exc:
         await service.complete(_request())
     assert exc.value.code == "BUDGET_EXCEEDED"
@@ -95,6 +113,7 @@ async def test_per_request_budget_rejection(make_settings: SettingsFactory, tmp_
 
 
 async def test_daily_budget_rejection(make_settings: SettingsFactory, tmp_path: Path) -> None:
+    # SUMMARY: same BALANCED tier without the CHAT system prompt, so token estimates stay tiny.
     registry = write_registry(tmp_path / "priced.json", price=100.0)
     tracker = InMemoryDailyBudgetTracker(0.05)
     gateway = MockGatewayClient()
@@ -104,11 +123,13 @@ async def test_daily_budget_rejection(make_settings: SettingsFactory, tmp_path: 
         sink=InMemoryInvocationSink(),
         budget=tracker,
     )
-    await service.complete(_request(max_output_tokens=200))  # worst case ~$0.02, settles at usage cost
+    await service.complete(
+        _request(task_kind="SUMMARY", max_output_tokens=200)
+    )  # worst case ~$0.02, settles at usage cost
     assert 0 < await tracker.spent_today() < 0.01
     await tracker.reserve(0.04)  # concurrent in-flight spend elsewhere in the process
     with pytest.raises(KarenAIError) as exc:
-        await service.complete(_request(max_output_tokens=200))
+        await service.complete(_request(task_kind="SUMMARY", max_output_tokens=200))
     assert exc.value.code == "BUDGET_EXCEEDED"
     assert len(gateway.calls) == 1
 
@@ -156,7 +177,7 @@ async def test_client_disconnect_mid_stream_settles_budget_and_records_cancel(
     to zero, since the provider may still bill), the invocation recorded as cancelled, and the
     gateway call never replayed.
     """
-    registry = write_registry(tmp_path / "priced.json", price=100.0)
+    registry = write_registry(tmp_path / "priced.json", price=40.0)
     tracker = InMemoryDailyBudgetTracker(1.0)
     gateway, sink = MockGatewayClient(), InMemoryInvocationSink()
     service = build_completion_service(
@@ -176,3 +197,85 @@ async def test_client_disconnect_mid_stream_settles_budget_and_records_cancel(
     assert record.status == "cancelled"
     assert record.first_token_at is not None
     assert len(gateway.calls) == 1
+
+
+class _CostReportingGateway(MockGatewayClient):
+    """Mock that also reports a gateway-side cost, as OpenRouter's ``usage.cost`` would."""
+
+    async def complete(self, request: GatewayRequest) -> GatewayResult:
+        result = await super().complete(request)
+        return dataclasses.replace(result, reported_cost_usd=0.123, served_provider="TestProvider")
+
+
+async def test_task_route_and_reported_cost_reach_the_invocation_record(
+    make_settings: SettingsFactory, tmp_path: Path
+) -> None:
+    registry = write_registry(
+        tmp_path / "r.json", price=1.0, changes={"mock/balanced": {"tiers": ["BALANCED", "REASONING"]}}
+    )
+    gateway, sink = _CostReportingGateway(), InMemoryInvocationSink()
+    service = _service(
+        make_settings, gateway, sink, karen_model_registry_path=registry, karen_model_coding="mock/balanced"
+    )
+    response = await service.complete(_request(task_kind="CODING"))
+    assert response.route_tier == "REASONING"
+    assert response.requested_model == "mock/balanced"
+    assert gateway.calls[0].fallback_models == ("mock/reasoning",)
+    [record] = sink.records
+    assert record.task_route == "CODING"
+    assert record.served_provider == "TestProvider"
+    assert record.gateway_reported_cost_usd == pytest.approx(0.123)
+    # Budgets and the contract cost stay on registry prices, never the gateway's own figure.
+    assert response.estimated_cost_usd != pytest.approx(0.123)
+    assert record.estimated_cost_usd == response.estimated_cost_usd
+
+
+async def test_chat_without_task_route_records_none(make_settings: SettingsFactory) -> None:
+    gateway, sink = MockGatewayClient(), InMemoryInvocationSink()
+    await _service(make_settings, gateway, sink).complete(_request())
+    assert sink.records[0].task_route is None
+    assert sink.records[0].gateway_reported_cost_usd is None
+
+
+class _YieldingTracker(InMemoryDailyBudgetTracker):
+    """Settles after a real suspension point, like the Redis tracker's network round trip."""
+
+    async def settle(self, reservation: Reservation, actual_usd: float) -> None:
+        await asyncio.sleep(0)
+        await super().settle(reservation, actual_usd)
+
+
+async def test_cancelled_stream_still_settles_budget_and_records(
+    make_settings: SettingsFactory, tmp_path: Path
+) -> None:
+    """Regression: Starlette (ASGI spec < 2.4, as uvicorn reports) cancels the response task's
+    anyio cancel scope on client disconnect. Cancellation is level-triggered there, so an
+    unshielded ``await`` in the stream's ``finally`` was cancelled too: the reservation leaked
+    as in-flight for the day and no invocation record was written."""
+    tracker = _YieldingTracker(1.0)
+    gateway = MockGatewayClient(responder=chat_responder, scenarios=True)
+    sink = InMemoryInvocationSink()
+    settings = make_settings(karen_model_registry_path=write_registry(tmp_path / "r.json", price=1.0))
+    service = build_completion_service(settings, gateway=gateway, sink=sink, budget=tracker)
+    prepared = await service.prepare(
+        _request(messages=[{"role": "user", "content": "[[mock:slow]] hello there"}]), stream=True
+    )
+    first_delta = anyio.Event()
+
+    async def consume() -> None:
+        async for event in service.stream_events(prepared):
+            if isinstance(event, DeltaEvent):
+                first_delta.set()
+
+    async with anyio.create_task_group() as task_group:
+        task_group.start_soon(consume)
+        await first_delta.wait()
+        task_group.cancel_scope.cancel()  # what StreamingResponse does on http.disconnect
+    for _ in range(5):  # let shielded clean-up finish
+        await asyncio.sleep(0)
+
+    assert prepared.estimated_cost_usd > 0
+    assert tracker._reserved == {}
+    assert await tracker.spent_today() == pytest.approx(prepared.estimated_cost_usd)
+    [record] = sink.records
+    assert record.status == "cancelled"

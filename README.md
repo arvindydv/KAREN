@@ -25,7 +25,7 @@ No paid credentials are required locally (mock AI gateway, local-dev token issue
 | Path                     | What                                                                                                          |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------- |
 | `apps/api`               | NestJS 12 + Fastify BFF, Prisma (PostgreSQL 17 + pgvector), OIDC guards, OpenAPI                              |
-| `apps/ai-service`        | Python FastAPI: ModelRouter → budget/policy → Vercel AI Gateway client (mock by default), LangGraph, evals    |
+| `apps/ai-service`        | Python FastAPI: ModelRouter → budget/policy → OpenRouter client (mock by default), LangGraph, evals           |
 | `apps/temporal-worker`   | Responsibility Engine workflows (approval-gated, idempotent, verified)                                        |
 | `apps/provider-worker`   | Provider adapter registry + signed webhook ingress (SANDBOX mock only)                                        |
 | `apps/voice-agent`       | LiveKit worker foundation (audio NOT verified)                                                                |
@@ -38,7 +38,7 @@ No paid credentials are required locally (mock AI gateway, local-dev token issue
 | Capability                                                                  | Status                                                        |
 | --------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | Local stack, migrations, auth guards, typed API client, workflows, webhooks | Working & tested locally                                      |
-| Vercel AI Gateway inference                                                 | Mock-tested only — **live NOT VERIFIED**                      |
+| OpenRouter inference (ADR-0025)                                             | Mock-tested only — **live NOT VERIFIED**                      |
 | Realtime voice (LiveKit + audio models)                                     | **NOT VERIFIED**                                              |
 | Real sign-in (IdP)                                                          | Not chosen yet (local-dev issuer only)                        |
 | Real providers / payments / bookings                                        | None (SANDBOX mock only)                                      |

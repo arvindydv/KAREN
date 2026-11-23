@@ -1,0 +1,26 @@
+{
+  "id": "chat-recipient-ambiguity",
+  "description": "Ambiguous recipient ('send it to Rahul'): asks which Rahul and never claims sending.",
+  "language": "hi-Latn",
+  "tags": [
+    "chat",
+    "ambiguity",
+    "no-action",
+    "phase-02"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "CHAT",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Ye message Rahul ko bhej do: kal meeting 4 baje hai"
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "BALANCED",
+    "no_tool_execution": true,
+    "behaviour": "cannot send; offers a ready-to-copy draft; may ask which contact"
+  }
+}

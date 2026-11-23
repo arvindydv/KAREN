@@ -119,7 +119,8 @@ async def test_stream_emits_valid_sse_events(app: FastAPI, client_for: ClientFor
     assert [e.index for e in events[1:-1] if e.event == "delta"] == list(range(len(events) - 2))
     assert events[-1].event == "done"
     text = "".join(e.text for e in events if e.event == "delta")
-    assert text.startswith("[mock]")
+    assert "[mock]" in text
+    assert events[-1].requested_model == "mock/balanced"
 
 
 async def test_stream_partial_failure_ends_with_single_error(

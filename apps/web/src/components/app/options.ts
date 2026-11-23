@@ -12,6 +12,14 @@ export const LANGUAGE_OPTIONS = [
   { value: 'hinglish', label: 'Hinglish' },
 ] as const;
 
+/** Chat reply language: automatic = the language the user writes in. */
+export const REPLY_LANGUAGE_OPTIONS = [
+  { value: 'auto', label: 'Automatic (match how I write)' },
+  { value: 'en', label: 'English' },
+  { value: 'hi', label: 'Hindi (हिन्दी)' },
+  { value: 'hi-Latn', label: 'Hinglish' },
+] as const;
+
 export const CURRENCY_OPTIONS = [
   { value: '', label: 'Not set' },
   { value: 'INR', label: 'Indian rupee (INR)' },

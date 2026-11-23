@@ -22,8 +22,8 @@ from karen_ai.core.replay_guard import (
 )
 from karen_ai.core.settings import Settings
 from karen_ai.gateway.base import GatewayClient
-from karen_ai.gateway.mock import MockGatewayClient
-from karen_ai.gateway.vercel import VercelGatewayClient
+from karen_ai.gateway.mock import MockGatewayClient, chat_responder
+from karen_ai.gateway.openrouter import OpenRouterGatewayClient, ProviderPreferences
 from karen_ai.model_router.router import ModelRouter
 from karen_ai.model_router.service import CompletionService, ServiceLimits
 from karen_ai.observability.invocations import InvocationSink, LoggingInvocationSink
@@ -39,15 +39,31 @@ _logger = logging.getLogger(__name__)
 
 def build_gateway(settings: Settings) -> GatewayClient:
     if settings.is_mock:
-        return MockGatewayClient()
-    if settings.ai_gateway_api_key is None:  # pragma: no cover - enforced by settings validation
-        raise RuntimeError("live gateway mode without AI_GATEWAY_API_KEY")
-    return VercelGatewayClient(
-        base_url=settings.ai_gateway_base_url,
-        api_key=settings.ai_gateway_api_key,
+        # Labelled chat replies + test scenario directives; mock mode is local/test/dev only.
+        return MockGatewayClient(responder=chat_responder, scenarios=True)
+    if settings.openrouter_api_key is None:  # pragma: no cover - enforced by settings validation
+        raise RuntimeError("live gateway mode without OPENROUTER_API_KEY")
+    return OpenRouterGatewayClient(
+        base_url=settings.openrouter_base_url,
+        api_key=settings.openrouter_api_key,
         timeout_seconds=settings.karen_ai_request_timeout_seconds,
         max_retries=settings.karen_ai_max_retries,
+        provider=provider_preferences(settings),
     )
+
+
+def provider_preferences(settings: Settings) -> ProviderPreferences:
+    return ProviderPreferences(
+        data_collection=settings.openrouter_data_collection, zdr=settings.openrouter_zdr
+    )
+
+
+def build_budget(settings: Settings, redis: Redis | None) -> DailyBudgetTracker:
+    if settings.budget_store == "redis":
+        if redis is None:  # pragma: no cover - create_app always passes it
+            raise RuntimeError("redis budget store requires a Redis connection")
+        return RedisDailyBudgetTracker(redis, settings.karen_ai_daily_budget_usd)
+    return InMemoryDailyBudgetTracker(settings.karen_ai_daily_budget_usd)
 
 
 def build_completion_service(
@@ -59,12 +75,7 @@ def build_completion_service(
     redis: Redis | None = None,
 ) -> CompletionService:
     if budget is None:
-        if settings.budget_store == "redis":
-            if redis is None:  # pragma: no cover - create_app always passes it
-                raise RuntimeError("redis budget store requires a Redis connection")
-            budget = RedisDailyBudgetTracker(redis, settings.karen_ai_daily_budget_usd)
-        else:
-            budget = InMemoryDailyBudgetTracker(settings.karen_ai_daily_budget_usd)
+        budget = build_budget(settings, redis)
     return CompletionService(
         router=ModelRouter.from_settings(settings),
         gateway=gateway or build_gateway(settings),
@@ -120,6 +131,9 @@ def create_app(
         extra=log_fields(
             app_env=settings.app_env,
             gateway_mode=settings.karen_ai_gateway_mode,
+            gateway="openrouter" if not settings.is_mock else "mock",
+            provider_data_collection=settings.openrouter_data_collection,
+            provider_zdr=settings.openrouter_zdr,
             budget_store=settings.budget_store,
             otel=telemetry.otel_enabled,
             sentry=telemetry.sentry_enabled,

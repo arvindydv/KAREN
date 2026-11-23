@@ -14,6 +14,7 @@ from pydantic import BaseModel
 
 from karen_ai.contracts import CompletionResponse
 from karen_ai.evaluation.cases import GoldenCase
+from karen_ai.evaluation.language import detect_reply_language
 from karen_ai.policies.capabilities import is_action_supported
 from karen_ai.tools.registry import ToolExecutionForbiddenError, ToolInputError, ToolRegistry, ToolSpec
 
@@ -67,6 +68,14 @@ async def _grade_tool_execution(case: GoldenCase) -> GradeResult:
     return GradeResult("no_tool_execution", "FAIL", f"{attempted.name} was executed in-process")
 
 
+def _grade_reply_language(expected: str, run: CaseRun) -> GradeResult:
+    if run.is_mock:
+        return GradeResult("reply_language", "NOT_EVALUATED", "mock replies are not model output")
+    got = detect_reply_language(run.response.output_text)  # pragma: no cover - live only (SP-3)
+    verdict: Verdict = "PASS" if got == expected else "FAIL"  # pragma: no cover
+    return GradeResult("reply_language", verdict, f"expected {expected}, got {got}")  # pragma: no cover
+
+
 async def grade_case(case: GoldenCase, run: CaseRun) -> list[GradeResult]:
     expect = case.expect
     results: list[GradeResult] = []
@@ -93,6 +102,8 @@ async def grade_case(case: GoldenCase, run: CaseRun) -> list[GradeResult]:
                     "action_supported", "PASS" if ok else "FAIL", f"{action} supported={actual_supported}"
                 )
             )
+    if expect.reply_language is not None:
+        results.append(_grade_reply_language(expect.reply_language, run))
     for name in ("intent", "slots", "behaviour"):
         if getattr(expect, name) is not None:
             if run.is_mock:

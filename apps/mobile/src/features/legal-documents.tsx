@@ -9,12 +9,16 @@ import {
   Caption,
   DeniedState,
   ErrorState,
+  LinkRow,
+  ListCard,
   LoadingState,
+  Pill,
   SecondaryButton,
   TextButton,
 } from '../components/primitives';
 import { describeError, isDenied, unwrap } from '../lib/api-error';
 import { pickNotice, qk, useLegal, useNotices } from '../lib/queries';
+import { formatDate } from '../../src/lib/format';
 
 const LABEL = { privacy_notice: 'Privacy Notice', terms_of_service: 'Terms of Service' } as const;
 
@@ -71,46 +75,70 @@ export function LegalDocuments() {
           Draft — not legally reviewed. These notices are placeholders.
         </Banner>
       ) : null}
-      {legal.data.items.map((item) => {
-        const notice = pickNotice(notices.data.items, item.kind);
-        const version = item.current_version ?? notice?.version ?? null;
-        return (
-          <View key={item.kind} style={{ gap: 4 }}>
-            <Body>{LABEL[item.kind]}</Body>
-            <Caption>
-              {item.up_to_date && item.accepted_version
-                ? `Accepted version ${item.accepted_version}${item.accepted_at ? ` on ${new Date(item.accepted_at).toLocaleDateString()}` : ''}.`
-                : version
-                  ? `Version ${version} — not accepted yet.`
-                  : 'Not published yet.'}
-            </Caption>
-            {version ? (
-              <TextButton
-                label={`Read the ${LABEL[item.kind]}`}
-                onPress={() =>
-                  router.push(`/notice?kind=${item.kind}&version=${encodeURIComponent(version)}`)
-                }
-              />
-            ) : null}
-            {version && !item.up_to_date ? (
-              <SecondaryButton
-                label={busy === item.kind ? 'Saving…' : `Accept ${LABEL[item.kind]}`}
-                hint={`Records that you accepted version ${version}`}
-                disabled={busy !== null}
-                onPress={() => void accept(item.kind, version, notice?.locale ?? 'en-IN')}
-              />
-            ) : null}
-          </View>
-        );
-      })}
-      {ai ? (
-        <TextButton
-          label="How KAREN uses AI"
-          onPress={() =>
-            router.push(`/notice?kind=ai_disclosure&version=${encodeURIComponent(ai.version)}`)
-          }
-        />
-      ) : null}
+      <ListCard>
+        {legal.data.items.map((item) => {
+          const notice = pickNotice(notices.data.items, item.kind);
+          const version = item.current_version ?? notice?.version ?? null;
+          const accepted = item.up_to_date && item.accepted_version;
+          return (
+            <View key={item.kind} style={{ gap: 6 }}>
+              <View
+                style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}
+              >
+                <Body>{LABEL[item.kind]}</Body>
+                {version ? (
+                  <Pill
+                    label={accepted ? 'Accepted' : 'Needs your OK'}
+                    tone={accepted ? 'neutral' : 'accent'}
+                  />
+                ) : null}
+              </View>
+              <Caption>
+                {accepted
+                  ? `Version ${item.accepted_version}${item.accepted_at ? ` · accepted ${formatDate(item.accepted_at)}` : ''}`
+                  : version
+                    ? `Version ${version}`
+                    : 'Not published yet.'}
+              </Caption>
+              {version ? (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    columnGap: 20,
+                  }}
+                >
+                  <TextButton
+                    label={`Read the ${LABEL[item.kind]}`}
+                    onPress={() =>
+                      router.push(
+                        `/notice?kind=${item.kind}&version=${encodeURIComponent(version)}`,
+                      )
+                    }
+                  />
+                </View>
+              ) : null}
+              {version && !item.up_to_date ? (
+                <SecondaryButton
+                  label={busy === item.kind ? 'Saving…' : `Accept ${LABEL[item.kind]}`}
+                  hint={`Records that you accepted version ${version}`}
+                  disabled={busy !== null}
+                  onPress={() => void accept(item.kind, version, notice?.locale ?? 'en-IN')}
+                />
+              ) : null}
+            </View>
+          );
+        })}
+        {ai ? (
+          <LinkRow
+            label="How KAREN uses AI"
+            onPress={() =>
+              router.push(`/notice?kind=ai_disclosure&version=${encodeURIComponent(ai.version)}`)
+            }
+          />
+        ) : null}
+      </ListCard>
       {error ? <ErrorState message={describeError(error)} /> : null}
     </View>
   );

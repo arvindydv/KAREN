@@ -1,6 +1,6 @@
-# Runbook: AI model / Vercel AI Gateway outage or cost spike
+# Runbook: AI model / OpenRouter outage or cost spike
 
-Scope: ai-service ↔ Vercel AI Gateway. The **action plane is independent**: Temporal workflows,
+Scope: ai-service ↔ OpenRouter (ADR-0025). The **action plane is independent**: Temporal workflows,
 approvals and provider operations keep working without inference.
 
 ## Signals
@@ -12,7 +12,7 @@ approvals and provider operations keep working without inference.
 
 ## Built-in behaviour (no action needed)
 
-- Retries: only timeout / 429 / 5xx, bounded and jittered inside `VercelGatewayClient`.
+- Retries: only timeout / 429 / 5xx, bounded and jittered inside `OpenRouterGatewayClient` (a `Retry-After` above 5 s is not waited out).
 - Model fallback: `KAREN_MODEL_BALANCED_FALLBACK` (catalog-verified slug) via the gateway.
 - Streams are never replayed after a delta; the client gets one `error` event and may retry
   with a new `request_id`.
@@ -20,13 +20,13 @@ approvals and provider operations keep working without inference.
 
 ## Actions
 
-| Situation                        | Action                                                                                                                                                                                                                                             |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Upstream provider/model degraded | Confirm on the Vercel status page and gateway dashboard. If one model is affected, point the tier at another **catalog-verified** slug in `KAREN_MODEL_<TIER>` (+ registry entry with `verified_at`) and redeploy ai-service. Never invent a slug. |
-| Whole gateway down               | Nothing to fail over to by design (direct providers need an approved ADR; `KAREN_AI_ALLOW_DIRECT_PROVIDER_FALLBACK=true` refuses to start). Users see typed "assistant temporarily unavailable" errors; communicate status.                        |
-| Rate limited (429)               | Lower concurrency/traffic; check gateway account limits; do not raise retries.                                                                                                                                                                     |
-| Cost spike / abuse               | Lower `KAREN_AI_DAILY_BUDGET_USD` and `KAREN_AI_MAX_REQUEST_COST_USD`, redeploy; gateway hard budget is the backstop; disable optional tiers (`KAREN_FEATURE_*_ENABLED=false`). Review per-`user_ref` spend in invocation records.                 |
-| Suspected key exposure           | Revoke the key in Vercel, create a new one, update Secrets Manager `ai-service/AI_GATEWAY_API_KEY`, redeploy ai-service only. The key never leaves ai-service, so no other service changes.                                                        |
+| Situation                        | Action                                                                                                                                                                                                                                                  |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Upstream provider/model degraded | Confirm on the OpenRouter status page and activity dashboard. If one model is affected, point the tier at another **catalog-verified** slug in `KAREN_MODEL_<TIER>` (+ registry entry with `verified_at`) and redeploy ai-service. Never invent a slug. |
+| Whole gateway down               | Nothing to fail over to by design (direct providers need an approved ADR; `KAREN_AI_ALLOW_DIRECT_PROVIDER_FALLBACK=true` refuses to start). Users see typed "assistant temporarily unavailable" errors; communicate status.                             |
+| Rate limited (429)               | Lower concurrency/traffic; check gateway account limits; do not raise retries.                                                                                                                                                                          |
+| Cost spike / abuse               | Lower `KAREN_AI_DAILY_BUDGET_USD` and `KAREN_AI_MAX_REQUEST_COST_USD`, redeploy; gateway hard budget is the backstop; disable optional tiers (`KAREN_FEATURE_*_ENABLED=false`). Review per-`user_ref` spend in invocation records.                      |
+| Suspected key exposure           | Revoke the key in OpenRouter, create a new one (with a credit limit), update Secrets Manager `ai-service/OPENROUTER_API_KEY`, redeploy ai-service only. The key never leaves ai-service, so no other service changes.                                   |
 
 ## After the incident
 

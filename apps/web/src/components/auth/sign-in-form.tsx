@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import { bff, hardNavigate } from '@/lib/api';
+import { holdSignIn } from '@/lib/pending-credential';
 import { errorMessage, type ApiErrorBody } from '@/lib/errors';
 import { safeNextPath } from '@/lib/safe-redirect';
 import { FormAlert, PasswordField, SubmitButton, TextField, formString } from '../forms';
@@ -12,6 +14,7 @@ type LoginResult =
   | { result: 'verification_required' };
 
 export function SignInForm({ next, notice }: { next: string | null; notice: string | null }) {
+  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<ApiErrorBody | null>(null);
 
@@ -20,9 +23,11 @@ export function SignInForm({ next, notice }: { next: string | null; notice: stri
     const form = new FormData(e.currentTarget);
     setPending(true);
     setError(null);
+    const email = formString(form, 'email', '');
+    const password = formString(form, 'password', '');
     const res = await bff<LoginResult>('/api/auth/login', {
       method: 'POST',
-      json: { email: formString(form, 'email', ''), password: formString(form, 'password', '') },
+      json: { email, password },
     });
     if (!res.ok) {
       setError(res.error);
@@ -30,7 +35,9 @@ export function SignInForm({ next, notice }: { next: string | null; notice: stri
       return;
     }
     if (res.data.result === 'verification_required') {
-      hardNavigate('/verify-email?from=sign-in');
+      // Memory-only: once the code is accepted the verify page signs straight in.
+      holdSignIn({ email, password, next: safeNextPath(next) });
+      router.push('/verify-email?from=sign-in');
       return;
     }
     // Full navigation so server components pick up the new HttpOnly session cookie.
@@ -39,7 +46,12 @@ export function SignInForm({ next, notice }: { next: string | null; notice: stri
 
   const resetSuggested = error?.next_options?.includes('RESET_PASSWORD');
   return (
-    <form method="post" onSubmit={(e) => void onSubmit(e)} className="space-y-4" noValidate>
+    <form
+      method="post"
+      onSubmit={(e) => void onSubmit(e)}
+      className="karen-stagger space-y-4"
+      noValidate
+    >
       {notice ? <FormAlert tone="success">{notice}</FormAlert> : null}
       {error ? (
         <FormAlert>

@@ -12,44 +12,44 @@
 }
 
 :root {
-  --lg-blue: #2563eb;
-  --lg-glow: rgb(37 99 235 / 0.35);
+  --lg-blue: #3a6fe0;
+  --lg-glow: rgb(58 111 224 / 0.35);
   --lg-glass: rgb(255 255 255 / 0.72);
   --lg-glass-border: rgb(15 23 42 / 0.08);
   --lg-glass-strong: rgb(255 255 255 / 0.9);
-  --lg-shadow: 0 1px 2px rgb(10 16 48 / 0.05), 0 20px 50px -24px rgb(29 78 216 / 0.3);
-  --lg-star: rgb(37 99 235 / 0.22);
+  --lg-shadow: 0 1px 2px rgb(14 20 48 / 0.05), 0 20px 50px -24px rgb(42 91 201 / 0.3);
+  --lg-star: rgb(58 111 224 / 0.22);
   --lg-ribbon-opacity: 0.55;
   --lg-hero-wash:
-    radial-gradient(70% 60% at 85% 10%, rgb(139 92 246 / 0.16), transparent 70%),
-    radial-gradient(60% 60% at 10% 0%, rgb(37 99 235 / 0.14), transparent 70%);
+    radial-gradient(70% 60% at 85% 10%, rgb(142 124 235 / 0.16), transparent 70%),
+    radial-gradient(60% 60% at 10% 0%, rgb(58 111 224 / 0.14), transparent 70%);
 }
 
 .dark {
-  --lg-glow: rgb(59 130 246 / 0.5);
+  --lg-glow: rgb(90 139 234 / 0.35);
   --lg-glass: rgb(255 255 255 / 0.05);
   --lg-glass-border: rgb(255 255 255 / 0.1);
-  --lg-glass-strong: rgb(15 23 56 / 0.88);
+  --lg-glass-strong: rgb(17 24 51 / 0.88);
   --lg-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 24px 60px -28px rgb(0 0 0 / 0.8);
   --lg-star: rgb(255 255 255 / 0.75);
   --lg-ribbon-opacity: 0.95;
   --lg-hero-wash:
-    radial-gradient(70% 60% at 85% 5%, rgb(139 92 246 / 0.25), transparent 70%),
-    radial-gradient(60% 60% at 5% 0%, rgb(37 99 235 / 0.28), transparent 70%);
+    radial-gradient(70% 60% at 85% 5%, rgb(142 124 235 / 0.25), transparent 70%),
+    radial-gradient(60% 60% at 5% 0%, rgb(58 111 224 / 0.28), transparent 70%);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --lg-glow: rgb(59 130 246 / 0.5);
+    --lg-glow: rgb(90 139 234 / 0.35);
     --lg-glass: rgb(255 255 255 / 0.05);
     --lg-glass-border: rgb(255 255 255 / 0.1);
-    --lg-glass-strong: rgb(15 23 56 / 0.88);
+    --lg-glass-strong: rgb(17 24 51 / 0.88);
     --lg-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 24px 60px -28px rgb(0 0 0 / 0.8);
     --lg-star: rgb(255 255 255 / 0.75);
     --lg-ribbon-opacity: 0.95;
     --lg-hero-wash:
-      radial-gradient(70% 60% at 85% 5%, rgb(139 92 246 / 0.25), transparent 70%),
-      radial-gradient(60% 60% at 5% 0%, rgb(37 99 235 / 0.28), transparent 70%);
+      radial-gradient(70% 60% at 85% 5%, rgb(142 124 235 / 0.25), transparent 70%),
+      radial-gradient(60% 60% at 5% 0%, rgb(58 111 224 / 0.28), transparent 70%);
   }
 }
 
@@ -58,7 +58,7 @@ html {
 }
 
 ::selection {
-  background: rgb(37 99 235 / 0.35);
+  background: rgb(58 111 224 / 0.35);
 }
 
 /* ------------------------------------------------------------- starfield */
@@ -95,7 +95,7 @@ html {
 
 /* Highlight words (e.g. "Taken care of."): bright blue on dark, deep blue→violet on light. */
 .landing-gradient-text {
-  background-image: linear-gradient(100deg, #1d4ed8, #2563eb, #7c3aed, #1d4ed8);
+  background-image: linear-gradient(100deg, #2a5bc9, #3a6fe0, #7d6ae0, #2a5bc9);
   background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -104,17 +104,17 @@ html {
 }
 
 .dark .landing-gradient-text {
-  background-image: linear-gradient(100deg, #60a5fa, #93c5fd, #60a5fa);
+  background-image: linear-gradient(100deg, #7faef2, #a9c8f5, #7faef2);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light) .landing-gradient-text {
-    background-image: linear-gradient(100deg, #60a5fa, #93c5fd, #60a5fa);
+    background-image: linear-gradient(100deg, #7faef2, #a9c8f5, #7faef2);
   }
 }
 
 .landing-gradient-bg {
-  background: linear-gradient(135deg, #60a5fa, #2563eb 60%, #1d4ed8);
+  background: linear-gradient(135deg, #5a8bea, #3a6fe0 55%, #2a5bc9);
 }
 
 .landing-eyebrow {
@@ -201,10 +201,10 @@ html {
   height: 620px;
   border-radius: 46px;
   padding: 10px;
-  background: linear-gradient(160deg, #2a3566, #0b1230 40%, #18234f);
+  background: linear-gradient(160deg, #2e3862, #111833 40%, #1e284d);
   box-shadow:
     inset 0 0 0 1px rgb(255 255 255 / 0.12),
-    0 50px 100px -30px rgb(6 10 28 / 0.9),
+    0 50px 100px -30px rgb(10 15 36 / 0.9),
     0 0 80px -20px var(--lg-glow);
 }
 
@@ -213,11 +213,11 @@ html {
   height: 100%;
   overflow: hidden;
   border-radius: 37px;
-  color: #f4f6ff;
+  color: #eef1fb;
   background:
-    radial-gradient(90% 50% at 50% 35%, rgb(37 99 235 / 0.35), transparent 70%),
-    radial-gradient(60% 40% at 100% 100%, rgb(139 92 246 / 0.35), transparent 70%),
-    linear-gradient(180deg, #0e1a4a 0%, #070c24 100%);
+    radial-gradient(90% 50% at 50% 35%, rgb(58 111 224 / 0.35), transparent 70%),
+    radial-gradient(60% 40% at 100% 100%, rgb(142 124 235 / 0.35), transparent 70%),
+    linear-gradient(180deg, #141e45 0%, #0a0f24 100%);
 }
 
 .landing-phone-screen::before {
@@ -265,8 +265,8 @@ html {
   inset: -22% !important;
   background: radial-gradient(
     circle closest-side,
-    rgb(34 211 238 / 0.5) 0%,
-    rgb(14 165 233 / 0.3) 45%,
+    rgb(92 200 230 / 0.35) 0%,
+    rgb(59 154 217 / 0.3) 45%,
     transparent 72%
   );
   filter: blur(10px);
@@ -277,9 +277,9 @@ html {
 .karen-orb-body {
   overflow: hidden;
   box-shadow:
-    0 0 18px 4px rgb(56 214 255 / 0.85),
-    0 0 50px 14px rgb(14 165 233 / 0.55),
-    0 0 110px 30px rgb(37 99 235 / 0.35);
+    0 0 18px 4px rgb(111 208 240 / 0.55),
+    0 0 50px 14px rgb(59 154 217 / 0.35),
+    0 0 110px 30px rgb(58 111 224 / 0.35);
   animation: karen-orb-breathe 4s ease-in-out infinite;
 }
 
@@ -293,13 +293,13 @@ html {
 .karen-orb-core {
   background: radial-gradient(
     circle closest-side at 50% 50%,
-    #03103a 0%,
-    #052a87 30%,
-    #0957de 54%,
-    #0d8cfb 72%,
-    #19bdff 85%,
-    #6ce9ff 95%,
-    #bdf6ff 100%
+    #081436 0%,
+    #14307a 30%,
+    #2a5cc8 54%,
+    #3b8be6 72%,
+    #5ab8ee 85%,
+    #9adff5 95%,
+    #cdeefa 100%
   );
 }
 
@@ -315,7 +315,7 @@ html {
     circle closest-side at 50% 50%,
     transparent 0%,
     transparent 7%,
-    rgb(3 22 84 / 0.6) 10%,
+    rgb(10 26 78 / 0.6) 10%,
     transparent 14%
   );
   mask: radial-gradient(circle closest-side, #000 55%, rgb(0 0 0 / 0.5) 82%, transparent 92%);
@@ -327,7 +327,7 @@ html {
     circle closest-side at 52% 48%,
     transparent 0%,
     transparent 9%,
-    rgb(160 236 255 / 0.45) 11%,
+    rgb(172 226 246 / 0.45) 11%,
     transparent 13%
   );
   mix-blend-mode: screen;
@@ -342,10 +342,10 @@ html {
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    rgb(125 233 255 / 0.55) 40deg,
+    rgb(140 216 242 / 0.55) 40deg,
     transparent 110deg,
     transparent 200deg,
-    rgb(56 189 248 / 0.4) 250deg,
+    rgb(100 180 236 / 0.4) 250deg,
     transparent 320deg
   );
   mix-blend-mode: screen;
@@ -358,9 +358,9 @@ html {
   background: radial-gradient(
     circle closest-side,
     transparent 76%,
-    rgb(40 200 255 / 0.3) 87%,
-    rgb(110 230 255 / 0.75) 95%,
-    rgb(170 245 255 / 0.85) 100%
+    rgb(95 190 238 / 0.3) 87%,
+    rgb(128 210 240 / 0.75) 95%,
+    rgb(180 232 248 / 0.85) 100%
   );
   mix-blend-mode: screen;
 }
@@ -382,7 +382,7 @@ html {
   width: 34%;
   height: 34%;
   transform: translate(-50%, -50%);
-  filter: drop-shadow(0 0 6px rgb(186 230 253 / 0.9));
+  filter: drop-shadow(0 0 6px rgb(196 226 248 / 0.9));
   animation: karen-orb-icon 4s ease-in-out infinite;
 }
 
@@ -471,8 +471,8 @@ html {
   background: conic-gradient(
     from var(--landing-angle),
     transparent 0deg,
-    #60a5fa 50deg,
-    #8b5cf6 100deg,
+    #7faef2 50deg,
+    #8e7ceb 100deg,
     transparent 150deg,
     transparent 360deg
   );
@@ -541,18 +541,18 @@ html {
 }
 
 .landing-band {
-  background: radial-gradient(60% 80% at 50% 0%, rgb(37 99 235 / 0.12), transparent);
+  background: radial-gradient(60% 80% at 50% 0%, rgb(58 111 224 / 0.12), transparent);
 }
 
 .landing-trust {
   isolation: isolate;
   background:
-    radial-gradient(60% 80% at 100% 0%, rgb(139 92 246 / 0.45), transparent 70%),
-    radial-gradient(50% 70% at 0% 100%, rgb(37 99 235 / 0.55), transparent 70%),
-    linear-gradient(135deg, #0b1230, #070c24);
+    radial-gradient(60% 80% at 100% 0%, rgb(142 124 235 / 0.45), transparent 70%),
+    radial-gradient(50% 70% at 0% 100%, rgb(58 111 224 / 0.4), transparent 70%),
+    linear-gradient(135deg, #111833, #0a0f24);
   box-shadow:
     inset 0 0 0 1px rgb(255 255 255 / 0.1),
-    0 40px 100px -40px rgb(37 99 235 / 0.55);
+    0 40px 100px -40px rgb(58 111 224 / 0.4);
 }
 
 .landing-header {
@@ -630,7 +630,7 @@ html {
 
 .landing-btn-primary {
   color: #fff;
-  background: linear-gradient(180deg, #3b82f6, #2563eb);
+  background: linear-gradient(180deg, #5a8bea, #3a6fe0);
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.3),
     0 12px 32px -10px var(--lg-glow);
@@ -729,7 +729,7 @@ html {
     position: absolute;
     inset: 0;
     width: 25%;
-    background: linear-gradient(90deg, transparent, #60a5fa, #fff, #60a5fa, transparent);
+    background: linear-gradient(90deg, transparent, #7faef2, #fff, #7faef2, transparent);
     animation: landing-flow 3.2s cubic-bezier(0.6, 0, 0.4, 1) infinite;
   }
 }
@@ -738,7 +738,7 @@ html {
 
 .landing-demo-dot {
   color: #fff;
-  background: linear-gradient(180deg, #3b82f6, #2563eb);
+  background: linear-gradient(180deg, #5a8bea, #3a6fe0);
   box-shadow: 0 4px 14px -4px var(--lg-glow);
 }
 
@@ -983,7 +983,7 @@ html {
 @keyframes landing-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgb(96 165 250 / 0.6);
+    box-shadow: 0 0 0 0 rgb(127 174 242 / 0.6);
   }
   50% {
     box-shadow: 0 0 0 6px transparent;

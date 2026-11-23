@@ -211,7 +211,7 @@ export function Trust() {
         </div>
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:items-center">
           <div className="landing-reveal">
-            <p className="text-xs font-semibold tracking-[0.14em] text-[#93c5fd] uppercase">
+            <p className="text-xs font-semibold tracking-[0.14em] text-[#a9c8f5] uppercase">
               Trust by design
             </p>
             <h2

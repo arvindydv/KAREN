@@ -43,6 +43,8 @@ class Expectations(_Closed):
     intent: str | None = None
     slots: dict[str, Any] | None = None
     behaviour: str | None = None
+    # Phase 02: language/script of the reply (graded by karen_ai.evaluation.language when live).
+    reply_language: Literal["en", "hi", "hi-Latn"] | None = None
 
 
 class GoldenCase(_Closed):

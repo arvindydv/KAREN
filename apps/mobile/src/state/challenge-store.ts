@@ -20,19 +20,24 @@ interface ChallengeState {
   signInEmail: string | null;
   /** One-shot message for the next screen (e.g. "E-mail verified — sign in"). */
   flash: string | null;
+  /** Where the signed-out area should send the user once a sign-in lands (e.g. onboarding). */
+  afterSignIn: '/onboarding' | null;
   setPending: (c: PendingChallenge | null) => void;
   updateHandle: (handle: string, expiresAt: string) => void;
   finish: (flash: string) => void;
   setFlash: (flash: string | null) => void;
+  setAfterSignIn: (route: '/onboarding' | null) => void;
 }
 
 export const useChallengeStore = create<ChallengeState>((set) => ({
   pending: null,
   signInEmail: null,
   flash: null,
+  afterSignIn: null,
   setPending: (pending) => set({ pending }),
   updateHandle: (handle, expiresAt) =>
     set((s) => (s.pending ? { pending: { ...s.pending, handle, expiresAt } } : s)),
   finish: (flash) => set((s) => ({ pending: null, signInEmail: s.pending?.email ?? null, flash })),
   setFlash: (flash) => set({ flash }),
+  setAfterSignIn: (afterSignIn) => set({ afterSignIn }),
 }));

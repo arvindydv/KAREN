@@ -1,14 +1,24 @@
 {
-  "contract_version": "2026-11-19.v1",
+  "contract_version": "2026-11-23.v4",
   "request_id": "req_01JD3Q8Z6M4T1",
   "task_kind": "CHAT",
   "messages": [
-    { "role": "system", "content": "You are KAREN, a careful personal assistant." },
-    { "role": "user", "content": "Kal shaam 5 baje mujhe refund check karne ki yaad dilana." }
+    {
+      "role": "system",
+      "content": "You are KAREN, a careful personal assistant."
+    },
+    {
+      "role": "user",
+      "content": "Kal shaam 5 baje mujhe refund check karne ki yaad dilana."
+    }
   ],
   "max_output_tokens": 400,
   "user_ref": "usr_hmac_4f1c2a9b7d",
   "task_id": "task_123",
   "max_cost_usd": 0.02,
-  "prompt_version": "chat.v0"
+  "prompt_version": "chat.v0",
+  "locale": "hi-IN",
+  "timezone": "Asia/Kolkata",
+  "reply_language": "hi-Latn",
+  "user_name": "Priya"
 }
