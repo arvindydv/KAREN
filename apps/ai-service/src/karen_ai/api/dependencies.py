@@ -20,6 +20,8 @@ from karen_ai.core.logging_setup import log_fields
 from karen_ai.core.replay_guard import SignatureReplayGuard
 from karen_ai.core.settings import Settings
 from karen_ai.model_router.service import CompletionService
+from karen_ai.speech.live import LiveSessionService
+from karen_ai.speech.service import SpeechService
 
 _logger = logging.getLogger(__name__)
 
@@ -32,6 +34,21 @@ class ServiceContainer:
     settings: Settings
     completions: CompletionService
     replay_guard: SignatureReplayGuard
+    # None when KAREN_FEATURE_VOICE_ENABLED=false.
+    speech: SpeechService | None = None
+    # None unless KAREN_FEATURE_VOICE_LIVE_ENABLED=true and a live model is usable (ADR-0027).
+    live: LiveSessionService | None = None
+
+    def require_speech(self) -> SpeechService:
+        if self.speech is None:
+            raise KarenAIError("TIER_DISABLED", "Voice is disabled by feature flag.")
+        return self.speech
+
+    def require_live(self) -> LiveSessionService:
+        self.require_speech()
+        if self.live is None:
+            raise KarenAIError("TIER_DISABLED", "Live voice conversations are disabled.")
+        return self.live
 
 
 def get_container(request: Request) -> ServiceContainer:

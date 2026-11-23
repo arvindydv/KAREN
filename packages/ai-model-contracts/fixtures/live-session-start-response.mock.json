@@ -1,0 +1,9 @@
+{
+  "contract_version": "2026-11-22.v3",
+  "session_id": "lv_0123456789abcdef0123456789abcdef01234567",
+  "served_model": "mock/stt",
+  "is_mock": true,
+  "max_seconds": 300,
+  "idle_seconds": 20,
+  "reserved_cost_usd": 0.05
+}

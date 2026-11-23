@@ -5,7 +5,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const SECRET =
-  /(SECRET|PASSWORD|PRIVATE|API_KEY|APIKEY|TOKEN|CREDENTIAL|DATABASE_URL|REDIS_URL|AI_GATEWAY)/i;
+  /(SECRET|PASSWORD|PRIVATE|API_KEY|APIKEY|TOKEN|CREDENTIAL|DATABASE_URL|REDIS_URL|AI_GATEWAY|OPENROUTER)/i;
 const PUBLIC = /\b((?:NEXT|EXPO)_PUBLIC_[A-Z0-9_]+)/g;
 const SKIP = new Set([
   'node_modules',

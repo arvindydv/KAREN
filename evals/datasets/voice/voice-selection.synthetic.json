@@ -1,0 +1,95 @@
+{
+  "dataset": "voice-selection",
+  "synthetic": true,
+  "description": "Language detection + voice selection expectations for English, Hindi and Hinglish with each accent preference (ADR-0026). Graded offline against the mock and live catalogs; says nothing about audio quality.",
+  "cases": [
+    {
+      "id": "en-indian",
+      "text": "Your electricity bill is due on Friday.",
+      "accent": "indian",
+      "gender": "any",
+      "expect": {
+        "language": "en",
+        "voice_language": "en",
+        "accent": "indian"
+      }
+    },
+    {
+      "id": "en-american",
+      "text": "Your electricity bill is due on Friday.",
+      "accent": "american",
+      "gender": "any",
+      "expect": {
+        "language": "en",
+        "voice_language": "en",
+        "accent": "american"
+      }
+    },
+    {
+      "id": "en-british",
+      "text": "Your electricity bill is due on Friday.",
+      "accent": "british",
+      "gender": "any",
+      "expect": {
+        "language": "en",
+        "voice_language": "en",
+        "accent": "british"
+      }
+    },
+    {
+      "id": "hi-devanagari-american-pref",
+      "text": "आपका बिजली का बिल शुक्रवार को देना है।",
+      "accent": "american",
+      "gender": "any",
+      "expect": {
+        "language": "hi",
+        "voice_language": "hi",
+        "accent": "indian"
+      }
+    },
+    {
+      "id": "hinglish-british-pref",
+      "text": "Aapka bijli ka bill Friday ko due hai, yaad rakhna.",
+      "accent": "british",
+      "gender": "any",
+      "expect": {
+        "language": "hi-Latn",
+        "voice_language": "en",
+        "accent": "indian"
+      }
+    },
+    {
+      "id": "hinglish-indian-male",
+      "text": "Kal subah 7 baje meeting hai, time pe pahunch jana.",
+      "accent": "indian",
+      "gender": "male",
+      "expect": {
+        "language": "hi-Latn",
+        "voice_language": "en",
+        "accent": "indian"
+      }
+    },
+    {
+      "id": "english-with-shared-words",
+      "text": "Remind me to check the main gate at 9.",
+      "accent": "american",
+      "gender": "any",
+      "expect": {
+        "language": "en",
+        "voice_language": "en",
+        "accent": "american"
+      }
+    },
+    {
+      "id": "hi-female",
+      "text": "कल सुबह सात बजे याद दिलाना।",
+      "accent": "indian",
+      "gender": "female",
+      "expect": {
+        "language": "hi",
+        "voice_language": "hi",
+        "accent": "indian"
+      }
+    }
+  ]
+}

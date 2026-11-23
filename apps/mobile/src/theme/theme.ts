@@ -32,12 +32,12 @@ export const buildTheme = (scheme: 'light' | 'dark'): NativeTheme => ({
   minTouchTarget: MIN_TOUCH_TARGET,
   glass:
     scheme === 'dark'
-      ? { fill: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.12)' }
-      : { fill: 'rgba(255,255,255,0.75)', border: 'rgba(10,16,48,0.08)' },
+      ? { fill: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.10)' }
+      : { fill: 'rgba(255,255,255,0.78)', border: 'rgba(14,20,48,0.08)' },
 });
 
 /**
- * KAREN's signature look is the dark "deep space" theme (app.config sets
+ * KAREN's signature look is the dark "deep space" (softened) theme (app.config sets
  * userInterfaceStyle: 'dark'); the light scheme stays available for when the user chooses it.
  */
 export function useTheme(): NativeTheme {

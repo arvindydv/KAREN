@@ -1,0 +1,27 @@
+{
+  "contract_version": "2026-11-22.v3",
+  "catalog_version": "2026-11-22.mock",
+  "tts_provider": "mock",
+  "stt_provider": "mock",
+  "live_available": true,
+  "speed_min": 0.7,
+  "speed_max": 1.5,
+  "voices": [
+    {
+      "voice_id": "mock-en-IN-female",
+      "language": "en",
+      "accent": "indian",
+      "gender": "female",
+      "display_name": "Mock Indian English (female)",
+      "supports_speed": true
+    },
+    {
+      "voice_id": "mock-hi-IN-male",
+      "language": "hi",
+      "accent": "indian",
+      "gender": "male",
+      "display_name": null,
+      "supports_speed": false
+    }
+  ]
+}

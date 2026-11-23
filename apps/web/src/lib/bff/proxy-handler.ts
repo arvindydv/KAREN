@@ -9,7 +9,7 @@
  */
 import { bffError } from '../errors';
 import { getServerEnv, type ServerEnv } from '../env';
-import { resolveAllowedPath, SIGN_OUT_PATHS } from './allowlist';
+import { maxBodyBytesFor, resolveAllowedPath, SIGN_OUT_PATHS } from './allowlist';
 import { clearCookie, cookieModeFor, parseCookieHeader, readCookie } from './cookies';
 import { checkFetchSite, checkStateChangingRequest, STATE_CHANGING_METHODS } from './csrf';
 import { bffLog } from './log';
@@ -95,7 +95,7 @@ export async function handleProxy(
     }
     let body: string | undefined;
     if (stateChanging) {
-      const raw = await readBoundedBody(request);
+      const raw = await readBoundedBody(request, maxBodyBytesFor(method, path, MAX_BODY_BYTES));
       if (raw === null) {
         return Response.json(bffError('PAYLOAD_TOO_LARGE', 'That request is too large.'), {
           status: 413,

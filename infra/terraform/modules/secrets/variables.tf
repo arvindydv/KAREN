@@ -9,7 +9,7 @@ variable "kms_key_arn" {
 }
 
 variable "secrets" {
-  description = "Secret containers to create, keyed by id (e.g. shared/INTERNAL_SERVICE_HMAC_SECRET, ai-service/AI_GATEWAY_API_KEY). Values are NEVER set by Terraform."
+  description = "Secret containers to create, keyed by id (e.g. shared/INTERNAL_SERVICE_HMAC_SECRET, ai-service/OPENROUTER_API_KEY). Values are NEVER set by Terraform."
   type = map(object({
     description = string
   }))

@@ -23,6 +23,6 @@ export function parseMobileEnv(source: Record<string, string | undefined>): Mobi
 }
 
 export const mobileEnv = parseMobileEnv({
-  EXPO_PUBLIC_APP_ENV: process.env.EXPO_PUBLIC_APP_ENV as string | undefined,
-  EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL as string | undefined,
+  EXPO_PUBLIC_APP_ENV: process.env.EXPO_PUBLIC_APP_ENV,
+  EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
 });

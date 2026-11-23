@@ -55,7 +55,7 @@ locals {
     "shared/TEMPORAL_API_KEY"             = { description = "Temporal Cloud API key" }
     "shared/LIVEKIT_API_KEY"              = { description = "LiveKit Cloud API key" }
     "shared/LIVEKIT_API_SECRET"           = { description = "LiveKit Cloud API secret" }
-    "ai-service/AI_GATEWAY_API_KEY"       = { description = "Vercel AI Gateway key - ai-service ONLY, never in clients" }
+    "ai-service/OPENROUTER_API_KEY"       = { description = "OpenRouter API key - ai-service ONLY, never in clients" }
     "ai-service/LANGFUSE_PUBLIC_KEY"      = { description = "Langfuse public key" }
     "ai-service/LANGFUSE_SECRET_KEY"      = { description = "Langfuse secret key" }
     "provider-worker/PROVIDER_WEBHOOK_SECRETS" = {
@@ -105,7 +105,7 @@ locals {
       STAFF_DATABASE_URL        = local.s["api/STAFF_DATABASE_URL"]
     })
     "ai-service" = merge(local.common_secrets, local.redis_secret, {
-      AI_GATEWAY_API_KEY  = local.s["ai-service/AI_GATEWAY_API_KEY"]
+      OPENROUTER_API_KEY  = local.s["ai-service/OPENROUTER_API_KEY"]
       LANGFUSE_PUBLIC_KEY = local.s["ai-service/LANGFUSE_PUBLIC_KEY"]
       LANGFUSE_SECRET_KEY = local.s["ai-service/LANGFUSE_SECRET_KEY"]
     })

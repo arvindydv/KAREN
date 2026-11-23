@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from karen_ai.core.settings import MOCK_REGISTRY_PATH, Settings
+from karen_ai.core.settings import MOCK_REGISTRY_PATH, SERVICE_ROOT, Settings
 from tests.conftest import (
     TEST_GATEWAY_KEY,
     TEST_HMAC_SECRET,
@@ -18,7 +19,7 @@ from tests.conftest import (
 def _live(make_settings: SettingsFactory, registry: Path, **overrides: object) -> Settings:
     values: dict[str, object] = {
         "karen_ai_gateway_mode": "live",
-        "ai_gateway_api_key": TEST_GATEWAY_KEY,
+        "openrouter_api_key": TEST_GATEWAY_KEY,
         "karen_model_registry_path": registry,
         "karen_model_economy": "mock/economy",
         "karen_model_balanced": "mock/balanced",
@@ -33,10 +34,8 @@ def test_defaults_are_mock_with_mock_tier_models(make_settings: SettingsFactory)
     assert settings.karen_ai_gateway_mode == "mock"
     assert settings.ai_service_port == 8100
     assert settings.karen_ai_max_output_tokens == 1500
-    assert settings.tier_models["ECONOMY"] == "mock/economy"
-    assert settings.tier_models["BALANCED"] == "mock/balanced"
-    assert settings.tier_models["REASONING"] == "mock/reasoning"
-    assert settings.tier_models["VISION"] is None
+    # No pins by default: the router picks the least expensive qualified registry model.
+    assert all(pin is None for pin in settings.tier_models.values())
     assert settings.enabled_tiers == {"NO_MODEL", "ECONOMY", "BALANCED", "REASONING"}
     assert not settings.signature_required
 
@@ -44,10 +43,27 @@ def test_defaults_are_mock_with_mock_tier_models(make_settings: SettingsFactory)
 def test_env_vars_are_read(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("APP_ENV", "local")
     monkeypatch.setenv("KAREN_AI_MAX_RETRIES", "1")
-    monkeypatch.setenv("AI_GATEWAY_API_KEY", "")  # empty means unset
+    monkeypatch.setenv("OPENROUTER_API_KEY", "")  # empty means unset
     settings = Settings(_env_file=None)
     assert settings.karen_ai_max_retries == 1
-    assert settings.ai_gateway_api_key is None
+    assert settings.openrouter_api_key is None
+
+
+def test_openrouter_defaults(make_settings: SettingsFactory) -> None:
+    settings = make_settings()
+    assert settings.openrouter_base_url == "https://openrouter.ai/api/v1"
+    assert settings.openrouter_data_collection == "deny"
+    assert settings.openrouter_zdr is True
+    assert settings.tier_fallbacks == {}
+    assert settings.task_route_models == {}
+
+
+def test_legacy_vercel_variables_are_not_read(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AI_GATEWAY_API_KEY", "legacy-vercel-key-not-real")
+    monkeypatch.setenv("AI_GATEWAY_BASE_URL", "https://legacy.example.invalid/v1")
+    settings = Settings(_env_file=None)
+    assert settings.openrouter_api_key is None
+    assert settings.openrouter_base_url == "https://openrouter.ai/api/v1"
 
 
 def test_bad_app_env_fails(make_settings: SettingsFactory) -> None:
@@ -84,8 +100,8 @@ def test_production_refuses_mock_gateway(make_settings: SettingsFactory) -> None
 
 def test_live_mode_requires_api_key(make_settings: SettingsFactory, tmp_path: Path) -> None:
     registry = write_registry(tmp_path / "r.json", verified=True)
-    with pytest.raises(ValidationError, match="AI_GATEWAY_API_KEY is required"):
-        _live(make_settings, registry, ai_gateway_api_key=None)
+    with pytest.raises(ValidationError, match="OPENROUTER_API_KEY is required"):
+        _live(make_settings, registry, openrouter_api_key=None)
 
 
 def test_live_mode_refuses_mock_registry(make_settings: SettingsFactory) -> None:
@@ -104,16 +120,50 @@ def test_live_mode_requires_verified_models(make_settings: SettingsFactory, tmp_
         _live(make_settings, registry)
 
 
-def test_live_mode_requires_explicit_tier_models(make_settings: SettingsFactory, tmp_path: Path) -> None:
-    registry = write_registry(tmp_path / "r.json", verified=True)
-    with pytest.raises(ValidationError, match="KAREN_MODEL_REASONING must be set"):
+def test_live_mode_needs_a_pin_or_verified_candidate_per_tier(
+    make_settings: SettingsFactory, tmp_path: Path
+) -> None:
+    registry = write_registry(
+        tmp_path / "r.json", verified=True, changes={"mock/reasoning": {"verified_at": None}}
+    )
+    with pytest.raises(ValidationError, match="no verified registry model serves tier REASONING"):
         _live(make_settings, registry, karen_model_reasoning=None)
+
+
+def test_live_mode_without_pins_routes_automatically(make_settings: SettingsFactory, tmp_path: Path) -> None:
+    registry = write_registry(tmp_path / "r.json", verified=True)
+    settings = _live(
+        make_settings,
+        registry,
+        karen_model_economy=None,
+        karen_model_balanced=None,
+        karen_model_reasoning=None,
+    )
+    assert all(pin is None for pin in settings.tier_models.values())
+
+
+def test_pin_must_list_its_tier(make_settings: SettingsFactory, tmp_path: Path) -> None:
+    registry = write_registry(tmp_path / "r.json", verified=True)
+    with pytest.raises(ValidationError, match="KAREN_MODEL_BALANCED=mock/economy must list tier BALANCED"):
+        _live(make_settings, registry, karen_model_balanced="mock/economy")
 
 
 def test_live_mode_enabled_feature_tier_needs_model(make_settings: SettingsFactory, tmp_path: Path) -> None:
     registry = write_registry(tmp_path / "r.json", verified=True)
-    with pytest.raises(ValidationError, match="KAREN_MODEL_VISION must be set"):
+    with pytest.raises(ValidationError, match="KAREN_MODEL_EMBEDDING must be set"):
+        _live(make_settings, registry, karen_feature_embedding_enabled=True)
+
+
+def test_live_vision_needs_a_verified_vision_candidate(
+    make_settings: SettingsFactory, tmp_path: Path
+) -> None:
+    registry = write_registry(
+        tmp_path / "r.json", verified=True, changes={"mock/vision": {"verified_at": None}}
+    )
+    with pytest.raises(ValidationError, match="no verified registry model serves tier VISION"):
         _live(make_settings, registry, karen_feature_vision_enabled=True)
+    ok = write_registry(tmp_path / "ok.json", verified=True)
+    assert "VISION" in _live(make_settings, ok, karen_feature_vision_enabled=True).enabled_tiers
 
 
 def test_live_mode_valid_configuration(make_settings: SettingsFactory, tmp_path: Path) -> None:
@@ -125,12 +175,104 @@ def test_live_mode_valid_configuration(make_settings: SettingsFactory, tmp_path:
 def test_live_mode_requires_https(make_settings: SettingsFactory, tmp_path: Path) -> None:
     registry = write_registry(tmp_path / "r.json", verified=True)
     with pytest.raises(ValidationError, match="https"):
-        _live(make_settings, registry, ai_gateway_base_url="http://ai-gateway.example.invalid/v1")
+        _live(make_settings, registry, openrouter_base_url="http://openrouter.example.invalid/api/v1")
+
+
+def test_production_live_refuses_provider_data_collection(
+    make_settings: SettingsFactory, tmp_path: Path
+) -> None:
+    registry = write_registry(tmp_path / "r.json", verified=True)
+    with pytest.raises(ValidationError, match="OPENROUTER_DATA_COLLECTION=allow is not allowed"):
+        _live(
+            make_settings,
+            registry,
+            app_env="production",
+            internal_service_hmac_secret=TEST_HMAC_SECRET,
+            redis_url=UNUSED_REDIS_URL,
+            openrouter_data_collection="allow",
+        )
+    # Outside production it is an explicit operator choice, not a startup failure.
+    assert (
+        _live(make_settings, registry, openrouter_data_collection="allow").openrouter_data_collection
+        == "allow"
+    )
+
+
+def test_bad_data_collection_value_fails(make_settings: SettingsFactory) -> None:
+    with pytest.raises(ValidationError, match="openrouter_data_collection"):
+        make_settings(openrouter_data_collection="maybe")
+
+
+@pytest.mark.parametrize("name", ["economy", "balanced", "reasoning"])
+def test_tier_fallback_must_exist_and_list_its_tier(make_settings: SettingsFactory, name: str) -> None:
+    with pytest.raises(ValidationError, match="not present in the model registry"):
+        make_settings(**{f"karen_model_{name}_fallback": "mock/not-registered"})
+    other = "mock/reasoning" if name != "reasoning" else "mock/economy"
+    with pytest.raises(ValidationError, match=f"must list tier {name.upper()}"):
+        make_settings(**{f"karen_model_{name}_fallback": other})
+
+
+def test_tier_fallbacks_are_exposed(make_settings: SettingsFactory, tmp_path: Path) -> None:
+    registry = write_registry(
+        tmp_path / "r.json", changes={"mock/reasoning": {"tiers": ["REASONING", "BALANCED"]}}
+    )
+    settings = make_settings(
+        karen_model_registry_path=registry, karen_model_balanced_fallback="mock/reasoning"
+    )
+    assert settings.tier_fallbacks == {"BALANCED": "mock/reasoning"}
+
+
+@pytest.mark.parametrize(
+    ("setting", "tier"),
+    [
+        ("karen_model_coding", "REASONING"),
+        ("karen_model_document_analysis", "BALANCED"),
+        ("karen_model_voice", "BALANCED"),
+    ],
+)
+def test_task_route_model_must_list_its_tier(make_settings: SettingsFactory, setting: str, tier: str) -> None:
+    wrong = "mock/economy"
+    with pytest.raises(ValidationError, match=f"must list tier {tier}"):
+        make_settings(**{setting: wrong})
+    with pytest.raises(ValidationError, match="not present in the model registry"):
+        make_settings(**{setting: "mock/not-registered"})
+    right = f"mock/{tier.lower()}"
+    route = setting.removeprefix("karen_model_").upper()
+    assert make_settings(**{setting: right}).task_route_models == {route: right}
+
+
+def test_live_task_route_model_must_be_verified(make_settings: SettingsFactory, tmp_path: Path) -> None:
+    path = write_registry(tmp_path / "r.json", verified=True)
+    data = json.loads(path.read_text())
+    specialist = {**data["models"][2], "model_id": "test-creator/coding-specialist", "verified_at": None}
+    data["models"].append(specialist)
+    path.write_text(json.dumps(data))
+    with pytest.raises(
+        ValidationError, match="KAREN_MODEL_CODING=test-creator/coding-specialist has verified_at=null"
+    ):
+        _live(make_settings, path, karen_model_coding="test-creator/coding-specialist")
+
+
+def test_enabled_vision_model_must_support_images(make_settings: SettingsFactory, tmp_path: Path) -> None:
+    registry = write_registry(
+        tmp_path / "r.json", verified=True, changes={"mock/balanced": {"tiers": ["BALANCED", "VISION"]}}
+    )
+    with pytest.raises(ValidationError, match="does not support image input"):
+        _live(make_settings, registry, karen_feature_vision_enabled=True, karen_model_vision="mock/balanced")
+    vision_ok = write_registry(
+        tmp_path / "v.json",
+        verified=True,
+        changes={"mock/balanced": {"tiers": ["BALANCED", "VISION"], "supports_vision": True}},
+    )
+    settings = _live(
+        make_settings, vision_ok, karen_feature_vision_enabled=True, karen_model_vision="mock/balanced"
+    )
+    assert "VISION" in settings.enabled_tiers
 
 
 def test_model_must_exist_in_registry(make_settings: SettingsFactory) -> None:
     with pytest.raises(ValidationError, match="not present in the model registry"):
-        make_settings(karen_model_balanced_fallback="mock/not-registered")
+        make_settings(karen_model_balanced="mock/not-registered")
 
 
 def test_model_id_must_be_a_slug(make_settings: SettingsFactory) -> None:
@@ -146,8 +288,12 @@ def test_missing_observability_never_fails(make_settings: SettingsFactory) -> No
 
 
 def test_secrets_are_not_rendered(make_settings: SettingsFactory) -> None:
-    settings = make_settings(internal_service_hmac_secret=TEST_HMAC_SECRET)
+    settings = make_settings(
+        internal_service_hmac_secret=TEST_HMAC_SECRET, openrouter_api_key=TEST_GATEWAY_KEY
+    )
     assert TEST_HMAC_SECRET not in repr(settings)
+    assert TEST_GATEWAY_KEY not in repr(settings)
+    assert TEST_GATEWAY_KEY not in settings.model_dump_json()
 
 
 @pytest.mark.parametrize("app_env", ["dev", "staging", "production"])
@@ -194,3 +340,45 @@ def test_previous_hmac_secret_needs_current_and_length(make_settings: SettingsFa
         make_settings(
             internal_service_hmac_secret=TEST_HMAC_SECRET, internal_service_hmac_secret_previous="short"
         )
+
+
+# ------------------------------------------------------------------------------------- voice
+
+
+def test_voice_is_off_by_default_and_mock_catalog_loads(make_settings: SettingsFactory) -> None:
+    settings = make_settings()
+    assert not settings.karen_feature_voice_enabled
+    assert settings.voice_catalog.catalog_version.endswith(".mock")
+
+
+def test_live_voice_refuses_the_mock_catalog(make_settings: SettingsFactory, tmp_path: Path) -> None:
+    registry = write_registry(tmp_path / "r.json", verified=True)
+    with pytest.raises(ValidationError, match="points at the mock catalog"):
+        _live(make_settings, registry, karen_feature_voice_enabled=True)
+
+
+def test_live_voice_refuses_an_unverified_catalog(make_settings: SettingsFactory, tmp_path: Path) -> None:
+    registry = write_registry(tmp_path / "r.json", verified=True)
+    live_catalog = SERVICE_ROOT / "config" / "voice-catalog.live.json"
+    with pytest.raises(ValidationError, match="speech-to-text model with verified_at"):
+        _live(
+            make_settings, registry, karen_feature_voice_enabled=True, karen_voice_catalog_path=live_catalog
+        )
+
+
+def test_live_voice_with_a_verified_catalog_starts(make_settings: SettingsFactory, tmp_path: Path) -> None:
+    data = json.loads((SERVICE_ROOT / "config" / "voice-catalog.live.json").read_text())
+    for model in [*data["stt_models"], *data["tts_models"], *data["voices"]]:
+        model["verified_at"] = "2026-11-21"
+    catalog = tmp_path / "voices.json"
+    catalog.write_text(json.dumps(data))
+    registry = write_registry(tmp_path / "r.json", verified=True)
+    settings = _live(
+        make_settings, registry, karen_feature_voice_enabled=True, karen_voice_catalog_path=catalog
+    )
+    assert settings.karen_feature_voice_enabled
+
+
+def test_voice_catalog_path_must_exist(make_settings: SettingsFactory, tmp_path: Path) -> None:
+    with pytest.raises(ValidationError, match="KAREN_VOICE_CATALOG_PATH"):
+        make_settings(karen_voice_catalog_path=tmp_path / "missing.json")

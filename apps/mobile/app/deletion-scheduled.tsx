@@ -15,6 +15,7 @@ import { describeError, unwrap } from '../src/lib/api-error';
 import { qk, useDataRights, useInvalidate } from '../src/lib/queries';
 import { useSubmit } from '../src/lib/use-submit';
 import { useSessionStore } from '../src/state/session-store';
+import { formatDateTime } from '../src/lib/format';
 
 /**
  * Restricted session for an account in DELETION_REQUESTED: the server allows only viewing /
@@ -24,7 +25,8 @@ export default function DeletionScheduledScreen() {
   const status = useSessionStore((s) => s.status);
   const account = useSessionStore((s) => s.accountStatus);
   if (status === 'signed_out') return <Redirect href="/" />;
-  if (status === 'signed_in' && account !== 'DELETION_REQUESTED') return <Redirect href="/home" />;
+  if (status === 'signed_in' && account !== 'DELETION_REQUESTED')
+    return <Redirect href="/chat/new" />;
   return <DeletionScheduledView />;
 }
 
@@ -57,10 +59,8 @@ export function DeletionScheduledView() {
             <>
               <Body>
                 Your account and data are scheduled to be deleted
-                {pending.scheduled_for
-                  ? ` on ${new Date(pending.scheduled_for).toLocaleString()}`
-                  : ''}
-                . Until then you can cancel and keep your account.
+                {pending.scheduled_for ? ` on ${formatDateTime(pending.scheduled_for)}` : ''}. Until
+                then you can cancel and keep your account.
               </Body>
               {pending.retention_exceptions.length > 0 ? (
                 <Banner>

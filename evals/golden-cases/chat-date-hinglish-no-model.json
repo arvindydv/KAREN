@@ -1,0 +1,25 @@
+{
+  "id": "chat-date-hinglish-no-model",
+  "description": "Hinglish date question in CHAT takes the deterministic fast path.",
+  "language": "hi-Latn",
+  "tags": [
+    "chat",
+    "routing",
+    "no-model",
+    "phase-02"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "CHAT",
+    "messages": [
+      {
+        "role": "user",
+        "content": "aaj ki date kya hai?"
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "NO_MODEL",
+    "no_model_call": true
+  }
+}

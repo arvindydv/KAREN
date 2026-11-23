@@ -1,21 +1,36 @@
 # apps/ai-service — rules for agents
 
-Python 3.12 FastAPI service: KAREN ModelRouter, Vercel AI Gateway client, LangGraph agents, evals.
+Python 3.12 FastAPI service: KAREN ModelRouter (least-cost task routing, ADR-0026), OpenRouter text +
+speech clients (ADR-0025/0026), LangGraph agents, evals.
 Architecture source of truth: `/karen_architecture.md` §2 (gateway, router, spend), §10, §11.
 
 ## Hard rules
 - **Never hardcode a model ID** in code, tests or docs. Tiers map to IDs only via `KAREN_MODEL_*`
   env + the capability registry. Tests use `mock/*` or obviously fake `test-creator/*` slugs.
-- **Never expose `AI_GATEWAY_API_KEY`**: no logging, no error messages, no responses, no client bundles.
+- **Never expose `OPENROUTER_API_KEY`**: no logging, no error messages, no responses, no client bundles.
   It is a `SecretStr`; keep it that way.
 - **Never replay a stream** after any delta was delivered. A mid-stream failure ends with one `error`
   event; the caller starts a new `request_id`.
-- Retries: only timeout / 429 / 5xx, bounded, jittered, inside `VercelGatewayClient` (SDK `max_retries=0`).
+- Retries: only timeout / 429 / 5xx, bounded, jittered, inside `OpenRouterGatewayClient` (SDK `max_retries=0`).
 - Every refusal (tier, capability, per-request budget, daily budget) happens **before** the gateway call.
 - No prompt/response content in logs, invocation records or error messages. Redaction is a backstop.
 - The LLM never executes side effects. Side-effecting tools are proposal-only (`tools/registry.py`).
 - `KAREN_AI_ALLOW_DIRECT_PROVIDER_FALLBACK=true` must keep failing startup until a direct path is approved.
-- Live gateway behaviour is **NOT VERIFIED** (no credentials). Do not claim otherwise.
+- Live gateway: the SP-1 probe passed on 2026-11-22 for every model in `config/model-registry.live.json`
+  (ADR-0028). Model IDs live only in that file ("Suggested env" notes say which `KAREN_MODEL_*` each
+  serves); tests read slugs from it, never hardcode them. ECONOMY/BALANCED/VISION send
+  `reasoning: {"enabled": false}`; never put a `reasoning=mandatory` model on those tiers.
+- Every request sends the provider data policy (`data_collection`, `zdr`); never drop it.
+  Production must keep `OPENROUTER_DATA_COLLECTION=deny`.
+- Paid calls and credit purchases need the owner's explicit approval.
+- Speech (ADR-0026/0027): providers only behind `SpeechToTextProvider`/`TextToSpeechProvider`/
+  `LiveTranscriber` (mock, OpenRouter, Deepgram; STT and TTS chosen independently).
+  `DEEPGRAM_API_KEY` follows the same rules as the OpenRouter key; never mint Deepgram tokens for
+  clients. The Deepgram probe passed on 2026-11-22 (ADR-0028); re-run
+  `karen-ai-speech-probe --confirm-paid-calls` (paid; owner approval) when the catalog changes. Never log or record
+  audio or transcript text; never restart a synthesis after bytes were delivered; voice IDs live only
+  in `config/voice-catalog.*.json` and a voice's gender is never guessed from its name.
+- Automated tests must never make paid calls; `tests/conftest.py` blocks non-loopback DNS.
 
 ## Contract sync (`packages/ai-model-contracts`)
 `src/karen_ai/contracts.py` mirrors `packages/ai-model-contracts/src/index.ts`. On any wire change:

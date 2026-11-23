@@ -18,6 +18,8 @@ HTTP_STATUS_BY_CODE: Final[dict[AiErrorCode, int]] = {
     "GATEWAY_INVALID_RESPONSE": 502,
     "FALLBACK_EXHAUSTED": 502,
     "INTERNAL_ERROR": 500,
+    # v3 (ADR-0027): unknown session, or one owned by another user (indistinguishable on purpose).
+    "NOT_FOUND": 404,
 }
 
 

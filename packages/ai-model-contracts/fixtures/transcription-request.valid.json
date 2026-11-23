@@ -1,0 +1,10 @@
+{
+  "contract_version": "2026-11-22.v3",
+  "request_id": "req_voice_0001",
+  "user_ref": "usr_hmac_test01",
+  "audio_base64": "TU9DSzpLYWwgc3ViYWggNyBiYWplIHlhYWQgZGlsYW5h",
+  "audio_format": "webm",
+  "duration_ms": 2400,
+  "language_hint": "hi-Latn",
+  "max_cost_usd": 0.05
+}

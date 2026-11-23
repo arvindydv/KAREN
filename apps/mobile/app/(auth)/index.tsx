@@ -1,128 +1,118 @@
 import { useRouter } from 'expo-router';
-import { Text, View } from 'react-native';
+import { useState } from 'react';
+import { Animated, Text, View, useWindowDimensions } from 'react-native';
 import {
-  Badge,
   Body,
+  Monogram,
   PrimaryButton,
   Screen,
   SecondaryButton,
 } from '../../src/components/primitives';
+import { Reveal, usePulse } from '../../src/components/motion';
+import { NeuralCosmos } from '../../src/components/neural-cosmos';
 import { mobileEnv } from '../../src/lib/env';
 import { useTheme } from '../../src/theme/theme';
 
-/** Decorative light ribbons (blue→violet and lime→green), blurred bands like the web hero. */
-function Ribbons() {
-  const t = useTheme();
-  const [coolFrom, coolTo] = t.brand.ribbonCool;
-  const [warmFrom, warmTo] = t.brand.ribbonWarm;
-  const band = (style: object, gradient: string) => (
-    <View
-      style={[
-        {
-          position: 'absolute',
-          borderRadius: 400,
-          experimental_backgroundImage: gradient,
-          filter: 'blur(14px)',
-        },
-        style,
-      ]}
-    />
-  );
-  return (
-    <View
-      pointerEvents="none"
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '62%', overflow: 'hidden' }}
-    >
-      {band(
-        { width: 620, height: 260, top: 40, left: -260, transform: [{ rotate: '-38deg' }] },
-        `linear-gradient(90deg, transparent, ${coolFrom} 40%, ${coolTo})`,
-      )}
-      {band(
-        { width: 520, height: 120, top: 10, right: -200, transform: [{ rotate: '52deg' }] },
-        `linear-gradient(90deg, transparent, ${warmTo} 35%, ${warmFrom})`,
-      )}
-      {band(
-        { width: 560, height: 200, top: 260, right: -320, transform: [{ rotate: '-30deg' }] },
-        `linear-gradient(90deg, ${coolTo}, ${coolFrom} 60%, transparent)`,
-      )}
-    </View>
-  );
-}
-
-/** Launch / welcome screen: entry to sign-up and sign-in. */
+/** Launch / welcome screen: entry to sign-up and sign-in. Quiet, typographic, no decoration. */
 export default function WelcomeScreen() {
   const t = useTheme();
   const router = useRouter();
+  const pulse = usePulse();
+  const { width } = useWindowDimensions();
+  const [cosmosHeight, setCosmosHeight] = useState(0);
+  // Scale the headline on narrow phones so "Understood." never wraps or clips.
+  const headline = Math.max(32, Math.min(44, Math.round(width * 0.11)));
   return (
     <Screen padded={false}>
-      <Ribbons />
       <View style={{ flex: 1, paddingHorizontal: t.spacing.xl, paddingBottom: t.spacing.xl }}>
         <View
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: t.spacing.lg }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: t.spacing.lg }}
         >
-          <View
+          <Monogram size={36} />
+          <Text
             style={{
-              width: 34,
-              height: 34,
-              borderRadius: 10,
-              alignItems: 'center',
-              justifyContent: 'center',
-              experimental_backgroundImage:
-                'linear-gradient(135deg, #60A5FA, #2563EB 60%, #1D4ED8)',
-              backgroundColor: t.colors.accent,
+              color: t.colors.textPrimary,
+              fontSize: 17,
+              fontWeight: '600',
+              letterSpacing: 3,
             }}
           >
-            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>K</Text>
-          </View>
-          <Text style={{ color: t.colors.textPrimary, fontSize: 20, fontWeight: '600' }}>
             KAREN
           </Text>
         </View>
 
-        <View style={{ flex: 1, justifyContent: 'flex-end', gap: t.spacing.lg }}>
-          <Badge label="Personal AI life agent" />
-          <Text
-            accessibilityRole="header"
-            style={{
-              color: t.colors.textPrimary,
-              fontSize: 40,
-              lineHeight: 46,
-              fontWeight: '600',
-              letterSpacing: -1,
-            }}
-          >
-            <Text style={{ color: t.colors.highlight }}>Your life.</Text>
-            {'\n'}Understood.{'\n'}Taken care of.
-          </Text>
-          <Body muted>
-            Tell KAREN what matters. It remembers, prepares, acts with your permission and follows
-            through.
-          </Body>
-          <View
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-            style={{ flexDirection: 'row', gap: 6, marginTop: t.spacing.xs }}
-          >
-            <View
+        {/* The brain fills whatever space sits above the text, so they never overlap. */}
+        <View
+          style={{ flex: 1, minHeight: 120, marginHorizontal: -t.spacing.xl }}
+          onLayout={(e) => setCosmosHeight(Math.round(e.nativeEvent.layout.height))}
+        >
+          {cosmosHeight > 0 ? <NeuralCosmos height={cosmosHeight} /> : null}
+        </View>
+        <View style={{ gap: t.spacing.lg }}>
+          <Reveal index={0}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              {/* KAREN's ember core: a slow "alive" pulse. Decorative. */}
+              <View
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+                style={{ width: 14, height: 14, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Animated.View
+                  style={{
+                    position: 'absolute',
+                    width: 14,
+                    height: 14,
+                    borderRadius: 7,
+                    backgroundColor: t.colors.accent,
+                    opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.15, 0.4] }),
+                    transform: [
+                      {
+                        scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1.35] }),
+                      },
+                    ],
+                  }}
+                />
+                <View
+                  style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.colors.accent }}
+                />
+              </View>
+              <Text
+                style={{
+                  color: t.colors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: '600',
+                  letterSpacing: 2,
+                  textTransform: 'uppercase',
+                }}
+              >
+                Personal AI life agent
+              </Text>
+            </View>
+          </Reveal>
+          <Reveal index={1}>
+            <Text
+              accessibilityRole="header"
               style={{
-                width: 22,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: t.colors.textPrimary,
+                color: t.colors.textPrimary,
+                fontSize: headline,
+                lineHeight: Math.round(headline * 1.1),
+                fontWeight: '700',
+                letterSpacing: -1.6,
               }}
-            />
-            <View
-              style={{ width: 8, height: 4, borderRadius: 2, backgroundColor: t.colors.border }}
-            />
-            <View
-              style={{ width: 8, height: 4, borderRadius: 2, backgroundColor: t.colors.border }}
-            />
-          </View>
+            >
+              Your life.{'\n'}Understood.{'\n'}
+              <Text style={{ color: t.colors.highlight }}>Taken care of.</Text>
+            </Text>
+          </Reveal>
+          <Reveal index={2}>
+            <Body muted>
+              Tell KAREN what matters. It remembers, prepares, acts with your permission and follows
+              through.
+            </Body>
+          </Reveal>
         </View>
 
-        <View style={{ gap: t.spacing.md, marginTop: t.spacing.xxl }}>
+        <Reveal index={3} style={{ gap: t.spacing.md, marginTop: t.spacing.xxl }}>
           <PrimaryButton
             label="Create account"
             hint="Sign up with your e-mail address"
@@ -133,10 +123,17 @@ export default function WelcomeScreen() {
             hint="Sign in to an existing account"
             onPress={() => router.push('/sign-in')}
           />
-          <Text style={{ color: t.colors.textSecondary, fontSize: 12, textAlign: 'center' }}>
+          <Text
+            style={{
+              color: t.colors.textSecondary,
+              fontSize: 11,
+              textAlign: 'center',
+              marginTop: t.spacing.xs,
+            }}
+          >
             Pre-release build · {mobileEnv.EXPO_PUBLIC_APP_ENV}
           </Text>
-        </View>
+        </Reveal>
       </View>
     </Screen>
   );

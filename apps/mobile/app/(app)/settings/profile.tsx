@@ -1,12 +1,15 @@
 import type { Profile } from '@karen/api-contracts';
 import { useCallback, useState } from 'react';
+import { View } from 'react-native';
 import {
   Banner,
   Caption,
   ChoiceGroup,
   ErrorState,
   FormScreen,
+  GlassCard,
   PrimaryButton,
+  SectionTitle,
   TextField,
 } from '../../../src/components/primitives';
 import { QueryView } from '../../../src/components/query-view';
@@ -72,47 +75,61 @@ function ProfileForm({
     country !== '' && !/^[A-Za-z]{2}$/.test(country) ? 'Use a 2-letter code, e.g. IN.' : null;
   return (
     <>
-      <Caption>E-mail: {profile.email} (change it in Security)</Caption>
-      <TextField
-        label="What KAREN calls you"
-        value={preferredName}
-        onChangeText={setPreferredName}
-        maxLength={60}
-      />
-      <TextField
-        label="Full name"
-        value={displayName}
-        onChangeText={setDisplayName}
-        maxLength={120}
-      />
-      <ChoiceGroup
-        label="Language & region"
-        options={LOCALE_OPTIONS}
-        value={locale}
-        onChange={setLocale}
-      />
-      <TextField
-        label="Time zone"
-        value={timezone}
-        onChangeText={setTimezone}
-        autoCapitalize="none"
-        hint="e.g. Asia/Kolkata"
-      />
-      <TextField
-        label="Country"
-        value={country}
-        onChangeText={setCountry}
-        autoCapitalize="characters"
-        maxLength={2}
-        hint="2-letter code, e.g. IN"
-        error={countryError}
-      />
-      <ChoiceGroup
-        label="Currency"
-        options={CURRENCY_OPTIONS}
-        value={(currency || null) as 'INR' | null}
-        onChange={setCurrency}
-      />
+      <SectionTitle>About you</SectionTitle>
+      <GlassCard style={{ gap: 16 }}>
+        <TextField
+          label="What KAREN calls you"
+          value={preferredName}
+          onChangeText={setPreferredName}
+          maxLength={60}
+          placeholder="e.g. Asha"
+        />
+        <TextField
+          label="Full name"
+          value={displayName}
+          onChangeText={setDisplayName}
+          maxLength={120}
+        />
+        <Caption>E-mail: {profile.email} · change it in Security</Caption>
+      </GlassCard>
+
+      <SectionTitle>Region</SectionTitle>
+      <GlassCard style={{ gap: 18 }}>
+        <ChoiceGroup
+          label="Language & region"
+          options={LOCALE_OPTIONS}
+          value={locale}
+          onChange={setLocale}
+        />
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={{ flex: 2 }}>
+            <TextField
+              label="Time zone"
+              value={timezone}
+              onChangeText={setTimezone}
+              autoCapitalize="none"
+              placeholder="Asia/Kolkata"
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <TextField
+              label="Country"
+              value={country}
+              onChangeText={setCountry}
+              autoCapitalize="characters"
+              maxLength={2}
+              placeholder="IN"
+            />
+          </View>
+        </View>
+        {countryError ? <Caption>{countryError}</Caption> : null}
+        <ChoiceGroup
+          label="Currency"
+          options={CURRENCY_OPTIONS}
+          value={(currency || null) as 'INR' | null}
+          onChange={setCurrency}
+        />
+      </GlassCard>
       <PrimaryButton
         label={save.busy ? 'Saving…' : 'Save'}
         disabled={save.busy || countryError !== null || timezone.trim() === ''}

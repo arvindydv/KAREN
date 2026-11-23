@@ -63,3 +63,9 @@ class EchoConversationBridge:
     async def reply(self, transcript: Transcript, *, session_id: str, user_ref: str) -> str:
         del session_id, user_ref
         return f"[mock] heard {len(transcript.text.split())} word(s)"
+
+    async def reply_stream(
+        self, transcript: Transcript, *, session_id: str, user_ref: str
+    ) -> AsyncIterator[str]:
+        for word in (await self.reply(transcript, session_id=session_id, user_ref=user_ref)).split(" "):
+            yield word + " "

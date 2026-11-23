@@ -1,0 +1,38 @@
+[
+  {
+    "type": "ready"
+  },
+  {
+    "type": "speech_started",
+    "turn_index": 0
+  },
+  {
+    "type": "partial",
+    "turn_index": 0,
+    "text": "mujhe kal ke"
+  },
+  {
+    "type": "end_of_turn",
+    "turn_index": 0,
+    "text": "mujhe kal ke meetings ka summary batao",
+    "language": "hi-Latn"
+  },
+  {
+    "type": "error",
+    "code": "PROVIDER_ERROR",
+    "retryable": true
+  },
+  {
+    "type": "closed",
+    "usage": {
+      "session_id": "lv_0123456789abcdef0123456789abcdef01234567",
+      "status": "succeeded",
+      "reason": "client_closed",
+      "audio_seconds": 4.25,
+      "estimated_cost_usd": 0.0,
+      "served_model": "mock/stt",
+      "provider_request_id": null,
+      "is_mock": true
+    }
+  }
+]

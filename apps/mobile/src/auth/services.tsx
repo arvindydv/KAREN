@@ -1,3 +1,4 @@
+import { fetch as expoFetch } from 'expo/fetch';
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { AppState, Platform } from 'react-native';
 import {
@@ -6,6 +7,7 @@ import {
   createMobileApiClient,
   type KarenApiClient,
 } from '../lib/api';
+import { mobileEnv } from '../lib/env';
 import { reportError } from '../lib/error-reporting';
 import { expoSecureCredentialStore, type SecureCredentialStore } from '../lib/secure-storage';
 import { newUuid } from '../lib/uuid';
@@ -16,12 +18,17 @@ export interface AppServices {
   session: SessionManager;
   api: KarenApiClient;
   store: SecureCredentialStore;
+  /** API origin (for the chat SSE client, which cannot use the typed JSON client). */
+  baseUrl: string;
+  /** Streaming-capable fetch for SSE (`expo/fetch`; React Native's global fetch buffers). */
+  streamFetch: typeof globalThis.fetch;
 }
 
 /** Wire the session manager into the typed API client (getAccessToken + 401 retry). */
 export function createAppServices(options: {
   store: SecureCredentialStore;
   fetch?: typeof globalThis.fetch;
+  streamFetch?: typeof globalThis.fetch;
   baseUrl?: string;
   platform?: 'ios' | 'android';
 }): AppServices {
@@ -43,7 +50,13 @@ export function createAppServices(options: {
     fetch: createAuthedFetch(session, options.fetch),
     ...(options.baseUrl ? { baseUrl: options.baseUrl } : {}),
   });
-  return { session, api, store: options.store };
+  return {
+    session,
+    api,
+    store: options.store,
+    baseUrl: options.baseUrl ?? mobileEnv.EXPO_PUBLIC_API_BASE_URL,
+    streamFetch: options.streamFetch ?? options.fetch ?? expoFetch,
+  };
 }
 
 let defaultServices: AppServices | undefined;

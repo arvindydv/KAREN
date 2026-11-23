@@ -50,3 +50,7 @@ class ConversationBridge(Protocol):
     """Hands a final user transcript to the AI service text path and returns the reply text."""
 
     async def reply(self, transcript: Transcript, *, session_id: str, user_ref: str) -> str: ...
+
+    def reply_stream(self, transcript: Transcript, *, session_id: str, user_ref: str) -> AsyncIterator[str]:
+        """Reply text deltas; closing the iterator early (barge-in) cancels the generation."""
+        ...

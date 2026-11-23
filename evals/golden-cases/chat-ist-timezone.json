@@ -1,0 +1,25 @@
+{
+  "id": "chat-ist-timezone",
+  "description": "Time-zone conversion defaults to IST and states assumptions.",
+  "language": "en",
+  "tags": [
+    "chat",
+    "timezone",
+    "phase-02"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "CHAT",
+    "messages": [
+      {
+        "role": "user",
+        "content": "If my call is at 9 pm in New York, what time is that for me?"
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "BALANCED",
+    "reply_language": "en",
+    "behaviour": "converts to IST (assumes user's zone) and mentions daylight-saving caveat"
+  }
+}

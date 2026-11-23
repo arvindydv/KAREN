@@ -77,8 +77,8 @@ describe('mobile foundation', () => {
   it('builds light and dark themes from shared tokens with accessible touch targets', () => {
     expect(buildTheme('dark').colors.background).not.toBe(buildTheme('light').colors.background);
     expect(buildTheme('light').minTouchTarget).toBeGreaterThanOrEqual(44);
-    // Signature theme: deep-space navy background with the bright blue action colour.
-    expect(buildTheme('dark').colors.background).toBe('#060A1C');
-    expect(buildTheme('dark').colors.accent).toBe('#2563EB');
+    // Signature theme: softened deep-space navy with the blue action colour.
+    expect(buildTheme('dark').colors.background).toBe('#0A0F24');
+    expect(buildTheme('dark').colors.accent).toBe('#3A6FE0');
   });
 });

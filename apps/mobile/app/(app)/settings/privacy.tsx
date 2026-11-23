@@ -4,22 +4,24 @@ import { useCallback } from 'react';
 import { View } from 'react-native';
 import { useApi } from '../../../src/auth/services';
 import {
-  Banner,
-  Body,
   Caption,
-  EmptyState,
+  CardTitle,
   ErrorState,
   FormScreen,
   GlassCard,
-  Heading,
   LinkRow,
+  ListCard,
+  Pill,
   SecondaryButton,
+  SectionTitle,
+  TextButton,
 } from '../../../src/components/primitives';
 import { QueryView } from '../../../src/components/query-view';
 import { ScreenHeader } from '../../../src/components/screen-header';
 import { ConsentToggles } from '../../../src/features/consent-toggles';
 import { LegalDocuments } from '../../../src/features/legal-documents';
 import { describeError, unwrap } from '../../../src/lib/api-error';
+import { formatDate, formatDateTime } from '../../../src/lib/format';
 import { qk, useDataRights } from '../../../src/lib/queries';
 import { useSubmit } from '../../../src/lib/use-submit';
 
@@ -39,31 +41,31 @@ export default function PrivacyScreen() {
   return (
     <FormScreen>
       <ScreenHeader title="Privacy" />
-      <Heading>Your choices</Heading>
+      <SectionTitle>Your choices</SectionTitle>
       <Caption>
         Optional uses of your data. Off unless you turn them on; you can change them any time.
       </Caption>
       <ConsentToggles source="settings" />
-      <GlassCard>
+      <ListCard>
         <LinkRow
           label="Consent history"
           description="Every decision, with tamper-evident receipts"
           onPress={() => router.push('/settings/consent-history')}
         />
-      </GlassCard>
+      </ListCard>
 
-      <Heading>Legal documents</Heading>
+      <SectionTitle>Legal documents</SectionTitle>
       <LegalDocuments />
 
-      <Heading>Your data</Heading>
+      <SectionTitle>Your data</SectionTitle>
       <DataExport />
-      <GlassCard>
+      <ListCard>
         <LinkRow
           label="Delete account"
           description="Schedule deletion of your account and data"
           onPress={() => router.push('/settings/delete-account')}
         />
-      </GlassCard>
+      </ListCard>
     </FormScreen>
   );
 }
@@ -86,35 +88,57 @@ function DataExport() {
           ['requested', 'scheduled', 'processing'].includes(r.status),
         );
         return (
-          <View style={{ gap: 8 }}>
-            <Body>Export a copy of your data</Body>
+          <GlassCard style={{ gap: 10 }}>
+            <CardTitle>Export a copy of your data</CardTitle>
             {exports.length === 0 ? (
-              <EmptyState title="No exports requested yet." />
+              <Caption>No exports requested yet.</Caption>
             ) : (
               exports.map((r) => (
-                <Caption key={r.id}>
-                  Requested {new Date(r.requested_at).toLocaleString()} ·{' '}
-                  {STATUS_TEXT[r.status] ?? r.status}
-                  {r.expires_at && r.status === 'ready'
-                    ? ` · available until ${new Date(r.expires_at).toLocaleString()}`
-                    : ''}
-                </Caption>
+                <View key={r.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ flex: 1 }}>
+                    <Caption>
+                      Requested {formatDateTime(r.requested_at)}
+                      {r.expires_at && r.status === 'ready'
+                        ? ` · available until ${formatDate(r.expires_at)}`
+                        : ''}
+                    </Caption>
+                  </View>
+                  <Pill
+                    label={STATUS_TEXT[r.status] ?? r.status}
+                    tone={r.status === 'ready' ? 'accent' : 'neutral'}
+                  />
+                </View>
               ))
             )}
             {exports.some((r) => r.download_available) ? (
-              <Banner>
-                Your export is ready. Downloading it in the mobile app isn’t supported in this build
-                yet.
-              </Banner>
+              <Caption>
+                Downloading your export in the mobile app isn’t supported in this build yet.
+              </Caption>
             ) : null}
             {request.error ? <ErrorState message={describeError(request.error)} /> : null}
-            <SecondaryButton
-              label={request.busy ? 'Requesting…' : open ? 'Export in progress' : 'Request export'}
-              disabled={request.busy || open}
-              onPress={() => request.run()}
-            />
-            <SecondaryButton label="Refresh status" onPress={() => void rights.refetch()} />
-          </View>
+            {exports.length === 0 ? (
+              <SecondaryButton
+                label={request.busy ? 'Requesting…' : 'Request export'}
+                disabled={request.busy}
+                onPress={() => request.run()}
+              />
+            ) : (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 20 }}>
+                <TextButton
+                  label={
+                    request.busy
+                      ? 'Requesting…'
+                      : open
+                        ? 'Export in progress'
+                        : 'Request a new export'
+                  }
+                  disabled={request.busy || open}
+                  onPress={() => request.run()}
+                />
+                <TextButton label="Refresh status" onPress={() => void rights.refetch()} />
+              </View>
+            )}
+          </GlassCard>
         );
       }}
     </QueryView>

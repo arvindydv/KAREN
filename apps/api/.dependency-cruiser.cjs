@@ -14,7 +14,7 @@ module.exports = {
       severity: 'error',
       from: { path: '^src/infrastructure' },
       to: {
-        path: '^src/(identity|consent|audit|policy|admin|health|auth|security|onboarding|data-rights)/',
+        path: '^src/(identity|consent|audit|policy|admin|health|auth|security|onboarding|data-rights|conversation)/',
       },
     },
     {
@@ -24,7 +24,7 @@ module.exports = {
       severity: 'error',
       from: { path: '^src/security/', pathNot: '\\.module\\.ts$' },
       to: {
-        path: '^src/(identity|consent|audit|policy|admin|health|auth|infrastructure|generated|onboarding|data-rights)/',
+        path: '^src/(identity|consent|audit|policy|admin|health|auth|infrastructure|generated|onboarding|data-rights|conversation)/',
       },
     },
     {

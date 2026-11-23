@@ -8,7 +8,8 @@ const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'X-Frame-Options', value: 'DENY' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  // Microphone: own origin only, for voice messages (ADR-0026); never third-party frames.
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
   // Ignored by browsers over plain http (local dev); enforced once served over TLS.
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
 ];
@@ -27,6 +28,11 @@ const config: NextConfig = {
           { key: 'Content-Security-Policy', value: API_CSP },
           { key: 'Cache-Control', value: 'no-store' },
         ],
+      },
+      // On-device wake-word model (ADR-0031): versioned file name, so cache it for a year.
+      {
+        source: '/models/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
     ];
   },

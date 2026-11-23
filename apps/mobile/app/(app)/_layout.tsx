@@ -1,7 +1,10 @@
 import { Redirect, Stack } from 'expo-router';
+import { useEffect } from 'react';
 import { View } from 'react-native';
+import { clearCredential } from '../../src/auth/pending-credential';
 import { useServices } from '../../src/auth/services';
 import { Banner, LoadingState, Screen, TextButton } from '../../src/components/primitives';
+import { useChallengeStore } from '../../src/state/challenge-store';
 import { useSessionStore } from '../../src/state/session-store';
 import { useTheme } from '../../src/theme/theme';
 
@@ -12,6 +15,12 @@ export default function AppLayout() {
   const status = useSessionStore((s) => s.status);
   const account = useSessionStore((s) => s.accountStatus);
   const refreshProblem = useSessionStore((s) => s.refreshProblem);
+  useEffect(() => {
+    // Signed in: any sign-up/verify hand-off state is finished with.
+    if (status !== 'signed_in') return;
+    clearCredential();
+    useChallengeStore.setState({ pending: null, afterSignIn: null });
+  }, [status]);
   if (status === 'unknown') {
     return (
       <Screen>
@@ -34,6 +43,8 @@ export default function AppLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
+          animation: 'slide_from_right',
+          gestureEnabled: true,
           contentStyle: { backgroundColor: t.colors.background },
         }}
       />

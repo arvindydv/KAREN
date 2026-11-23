@@ -12,6 +12,35 @@ export const LANGUAGE_OPTIONS = [
   { value: 'hinglish', label: 'Hinglish' },
 ] as const;
 
+/** Spoken-voice options (ADR-0026). Hindi and Hinglish replies always use Indian voices. */
+export const VOICE_ACCENT_OPTIONS = [
+  { value: 'indian', label: 'Indian English' },
+  { value: 'american', label: 'American English' },
+  { value: 'british', label: 'British English' },
+] as const;
+
+export const VOICE_GENDER_OPTIONS = [
+  { value: 'any', label: 'No preference' },
+  { value: 'female', label: 'Female voice' },
+  { value: 'male', label: 'Male voice' },
+] as const;
+
+/** Speaking-speed presets (VOICE_SPEED_PRESETS); any value 70–150 % is allowed as custom. */
+export const VOICE_SPEED_OPTIONS = [
+  { value: '85', label: 'Slow' },
+  { value: '100', label: 'Normal' },
+  { value: '120', label: 'Fast' },
+  { value: 'custom', label: 'Custom' },
+] as const;
+
+/** Reply language (ADR-0027): automatic = the language you speak or type. */
+export const REPLY_LANGUAGE_OPTIONS = [
+  { value: 'auto', label: 'Automatic (match how I speak)' },
+  { value: 'en', label: 'English' },
+  { value: 'hi', label: 'Hindi (हिन्दी)' },
+  { value: 'hi-Latn', label: 'Hinglish' },
+] as const;
+
 export const CURRENCY_OPTIONS = [
   { value: '', label: 'Not set' },
   { value: 'INR', label: 'Indian rupee (INR)' },

@@ -1,18 +1,19 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
+import { View, type TextInput } from 'react-native';
 import { useServices } from '../../src/auth/services';
+import { AuthScreen, AuthSwitch } from '../../src/components/auth-screen';
 import {
   Banner,
-  Caption,
   ErrorState,
-  FormScreen,
   PrimaryButton,
+  SecondaryButton,
   TextButton,
   TextField,
 } from '../../src/components/primitives';
-import { ScreenHeader } from '../../src/components/screen-header';
 import { ApiRequestError, describeError } from '../../src/lib/api-error';
 import { useSubmit } from '../../src/lib/use-submit';
+import { holdCredential } from '../../src/auth/pending-credential';
 import { useChallengeStore } from '../../src/state/challenge-store';
 
 export default function SignInScreen() {
@@ -22,6 +23,7 @@ export default function SignInScreen() {
   const flash = useChallengeStore((s) => s.flash);
   const [email, setEmail] = useState(prefill ?? '');
   const [password, setPassword] = useState('');
+  const passwordRef = useRef<ComponentRef<typeof TextInput>>(null);
   const [notice] = useState(flash);
   useEffect(() => {
     // One-shot message: consume it so it doesn't reappear.
@@ -30,9 +32,12 @@ export default function SignInScreen() {
 
   const submit = useSubmit(
     useCallback(async () => {
-      const result = await session.login(email.trim(), password);
+      const typed = password;
+      const result = await session.login(email.trim(), typed);
       setPassword('');
       if (result.kind === 'verification_required') {
+        // Memory-only, single use: once the code is accepted we sign straight in.
+        holdCredential(email.trim(), typed);
         useChallengeStore.getState().setPending({
           purpose: 'verify_email',
           handle: result.challenge.challenge_handle,
@@ -45,11 +50,31 @@ export default function SignInScreen() {
     }, [email, password, router, session]),
   );
 
+  const canSubmit = email.trim() !== '' && password !== '' && !submit.busy;
   const err = submit.error;
   const next = err instanceof ApiRequestError ? err.nextOptions : [];
   return (
-    <FormScreen>
-      <ScreenHeader title="Sign in" />
+    <AuthScreen
+      title="Welcome back"
+      subtitle="Sign in to continue with KAREN."
+      action={
+        <>
+          <PrimaryButton
+            label={submit.busy ? 'Signing in…' : 'Sign in'}
+            busy={submit.busy}
+            disabled={!canSubmit}
+            onPress={() => submit.run()}
+          />
+        </>
+      }
+      footer={
+        <AuthSwitch
+          prompt="New to KAREN?"
+          action="Create an account"
+          onPress={() => router.replace('/sign-up')}
+        />
+      }
+    >
       {notice ? <Banner tone="success">{notice}</Banner> : null}
       <TextField
         label="E-mail"
@@ -59,34 +84,45 @@ export default function SignInScreen() {
         keyboardType="email-address"
         textContentType="emailAddress"
         autoComplete="email"
+        placeholder="you@example.com"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => passwordRef.current?.focus()}
       />
-      <TextField
-        label="Password"
-        value={password}
-        onChangeText={setPassword}
-        secure
-        autoCapitalize="none"
-        textContentType="password"
-        autoComplete="current-password"
-        onSubmitEditing={() => submit.run()}
-      />
-      {err ? <ErrorState message={describeError(err)} /> : null}
+      <View style={{ gap: 2 }}>
+        <TextField
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          secure
+          autoCapitalize="none"
+          textContentType="password"
+          autoComplete="current-password"
+          inputRef={passwordRef}
+          returnKeyType="go"
+          onSubmitEditing={() => {
+            if (canSubmit) submit.run();
+          }}
+        />
+        <View style={{ alignItems: 'flex-end' }}>
+          <TextButton label="Forgot password?" onPress={() => router.push('/forgot-password')} />
+        </View>
+      </View>
+      {err ? (
+        <ErrorState
+          message={
+            next.includes('CONTACT_SUPPORT')
+              ? `${describeError(err)} This account needs help from KAREN support to be restored.`
+              : describeError(err)
+          }
+        />
+      ) : null}
       {next.includes('RESET_PASSWORD') ? (
-        <TextButton label="Reset your password" onPress={() => router.push('/forgot-password')} />
+        <SecondaryButton
+          label="Reset your password"
+          onPress={() => router.push('/forgot-password')}
+        />
       ) : null}
-      {next.includes('CONTACT_SUPPORT') ? (
-        <Caption>This account needs help from KAREN support to be restored.</Caption>
-      ) : null}
-      <PrimaryButton
-        label={submit.busy ? 'Signing in…' : 'Sign in'}
-        disabled={submit.busy || email.trim() === '' || password === ''}
-        onPress={() => submit.run()}
-      />
-      <TextButton label="Forgot password?" onPress={() => router.push('/forgot-password')} />
-      <TextButton
-        label="New to KAREN? Create an account"
-        onPress={() => router.replace('/sign-up')}
-      />
-    </FormScreen>
+    </AuthScreen>
   );
 }

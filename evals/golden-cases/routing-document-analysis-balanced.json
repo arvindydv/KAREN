@@ -1,0 +1,23 @@
+{
+  "id": "routing-document-analysis-balanced",
+  "description": "Document analysis uses the BALANCED tier (long-context, cost-first).",
+  "language": "en",
+  "tags": [
+    "routing",
+    "phase-03"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "DOCUMENT_ANALYSIS",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Summarise the key obligations in this rental agreement: the tenant pays rent by the 5th, a two-month deposit is refundable within 30 days of vacating, and either party gives one month's notice."
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "BALANCED",
+    "no_model_call": false
+  }
+}

@@ -1,1 +1,1 @@
-"""GatewayClient protocol and implementations (mock + Vercel AI Gateway)."""
+"""GatewayClient protocol and implementations (mock + OpenRouter)."""

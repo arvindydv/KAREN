@@ -1,0 +1,24 @@
+{
+  "id": "chat-date-planning-goes-to-model",
+  "description": "A planning question that mentions a date is NOT a clock question: it goes to the model.",
+  "language": "en",
+  "tags": [
+    "chat",
+    "routing",
+    "phase-02"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "CHAT",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What date should I book my Goa trip for the long weekend?"
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "BALANCED",
+    "no_model_call": false
+  }
+}

@@ -1,0 +1,258 @@
+{
+  "catalog_version": "2026-11-22.deepgram",
+  "stt_models": [
+    {
+      "model_id": "deepgram/nova-3",
+      "provider": "deepgram",
+      "modes": [
+        "batch"
+      ],
+      "verified_at": "2026-11-22",
+      "price": {
+        "unit": "minute",
+        "usd": 0.0052,
+        "observed_at": "2026-11-22",
+        "source": "https://deepgram.com/pricing"
+      },
+      "notes": "Batch voice messages. language=multi (code-switching, hints en+hi) for Hinglish/unknown, language=hi or en when known. Price: Nova-3 Multilingual pre-recorded pay-as-you-go (monolingual is cheaper; multilingual used as the worst case). Docs: developers.deepgram.com/docs/models-languages-overview, /docs/multilingual-code-switching. NOT VERIFIED: no paid probe; Hindi/Hinglish WER not measured."
+    },
+    {
+      "model_id": "deepgram/flux-general-multi",
+      "provider": "deepgram",
+      "modes": [
+        "live"
+      ],
+      "verified_at": "2026-11-22",
+      "price": {
+        "unit": "minute",
+        "usd": 0.0078,
+        "observed_at": "2026-11-22",
+        "source": "https://deepgram.com/pricing"
+      },
+      "notes": "Live conversations: Flux Multilingual with built-in end-of-turn detection; languages include en and hi; language_hint=en,hi. Accepts WebM/Ogg Opus without encoding params. Docs: developers.deepgram.com/docs/flux/quickstart, /reference/speech-to-text/listen-flux. NOT VERIFIED: no paid probe; Hinglish turn detection and accuracy not measured."
+    }
+  ],
+  "tts_models": [
+    {
+      "model_id": "deepgram/flux-tts",
+      "provider": "deepgram",
+      "modes": [
+        "batch"
+      ],
+      "verified_at": "2026-11-22",
+      "supports_speed": true,
+      "price": {
+        "unit": "thousand_chars",
+        "usd": 0.045,
+        "observed_at": "2026-11-22",
+        "source": "https://deepgram.com/pricing"
+      },
+      "notes": "Flux TTS (GA 2026-08-12) on POST /v2/speak; model=<voice id>; encoding=mp3. Only Deepgram model family with Indian English and Hindi voices. speed 0.5-1.5 documented for English voices only. Docs: developers.deepgram.com/docs/flux-tts/voices, /reference/speak/v-2/audio/generate. NOT VERIFIED: no paid probe or listening check."
+    },
+    {
+      "model_id": "deepgram/aura-2",
+      "provider": "deepgram",
+      "modes": [
+        "batch"
+      ],
+      "verified_at": "2026-11-22",
+      "supports_speed": true,
+      "price": {
+        "unit": "thousand_chars",
+        "usd": 0.03,
+        "observed_at": "2026-11-22",
+        "source": "https://deepgram.com/pricing"
+      },
+      "notes": "Aura-2 on POST /v1/speak; American/British English only (no Indian English, no Hindi). speed 0.7-1.5. Max 2000 chars per request. Docs: developers.deepgram.com/docs/tts-models, /docs/tts-voice-controls. NOT VERIFIED: no paid probe or listening check."
+    }
+  ],
+  "voices": [
+    {
+      "voice_id": "flux-priya-en",
+      "model_id": "deepgram/flux-tts",
+      "language": "en",
+      "accent": "indian",
+      "gender": "female",
+      "display_name": "Priya · Indian English",
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-meena-en",
+      "model_id": "deepgram/flux-tts",
+      "language": "en",
+      "accent": "indian",
+      "gender": "female",
+      "display_name": "Meena · Indian English",
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-naveen-en",
+      "model_id": "deepgram/flux-tts",
+      "language": "en",
+      "accent": "indian",
+      "gender": "male",
+      "display_name": "Naveen · Indian English",
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-anjali-hi",
+      "model_id": "deepgram/flux-tts",
+      "language": "hi",
+      "accent": "indian",
+      "gender": "female",
+      "display_name": "Anjali · Hindi",
+      "supports_speed": false,
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-divya-hi",
+      "model_id": "deepgram/flux-tts",
+      "language": "hi",
+      "accent": "indian",
+      "gender": "female",
+      "display_name": "Divya · Hindi",
+      "supports_speed": false,
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-shreya-hi",
+      "model_id": "deepgram/flux-tts",
+      "language": "hi",
+      "accent": "indian",
+      "gender": "female",
+      "display_name": "Shreya · Hindi",
+      "supports_speed": false,
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-arjun-hi",
+      "model_id": "deepgram/flux-tts",
+      "language": "hi",
+      "accent": "indian",
+      "gender": "male",
+      "display_name": "Arjun · Hindi",
+      "supports_speed": false,
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-vikram-hi",
+      "model_id": "deepgram/flux-tts",
+      "language": "hi",
+      "accent": "indian",
+      "gender": "male",
+      "display_name": "Vikram · Hindi",
+      "supports_speed": false,
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-rahul-hi",
+      "model_id": "deepgram/flux-tts",
+      "language": "hi",
+      "accent": "indian",
+      "gender": "male",
+      "display_name": "Rahul · Hindi",
+      "supports_speed": false,
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-hannah-en",
+      "model_id": "deepgram/flux-tts",
+      "language": "en",
+      "accent": "american",
+      "gender": "female",
+      "display_name": "Hannah · American English",
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-alexis-en",
+      "model_id": "deepgram/flux-tts",
+      "language": "en",
+      "accent": "american",
+      "gender": "female",
+      "display_name": "Alexis · American English",
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-cliff-en",
+      "model_id": "deepgram/flux-tts",
+      "language": "en",
+      "accent": "american",
+      "gender": "male",
+      "display_name": "Cliff · American English",
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-miles-en",
+      "model_id": "deepgram/flux-tts",
+      "language": "en",
+      "accent": "american",
+      "gender": "male",
+      "display_name": "Miles · American English",
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-gemma-en",
+      "model_id": "deepgram/flux-tts",
+      "language": "en",
+      "accent": "british",
+      "gender": "female",
+      "display_name": "Gemma · British English",
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-kit-en",
+      "model_id": "deepgram/flux-tts",
+      "language": "en",
+      "accent": "british",
+      "gender": "male",
+      "display_name": "Kit · British English",
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "flux-colin-en",
+      "model_id": "deepgram/flux-tts",
+      "language": "en",
+      "accent": "british",
+      "gender": "male",
+      "display_name": "Colin · British English",
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "aura-2-thalia-en",
+      "model_id": "deepgram/aura-2",
+      "language": "en",
+      "accent": "american",
+      "gender": "female",
+      "display_name": "Thalia · American English (Aura-2)",
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "aura-2-apollo-en",
+      "model_id": "deepgram/aura-2",
+      "language": "en",
+      "accent": "american",
+      "gender": "male",
+      "display_name": "Apollo · American English (Aura-2)",
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "aura-2-pandora-en",
+      "model_id": "deepgram/aura-2",
+      "language": "en",
+      "accent": "british",
+      "gender": "female",
+      "display_name": "Pandora · British English (Aura-2)",
+      "verified_at": "2026-11-22"
+    },
+    {
+      "voice_id": "aura-2-draco-en",
+      "model_id": "deepgram/aura-2",
+      "language": "en",
+      "accent": "british",
+      "gender": "male",
+      "display_name": "Draco · British English (Aura-2)",
+      "verified_at": "2026-11-22"
+    }
+  ],
+  "hinglish_voice_language": "en"
+}

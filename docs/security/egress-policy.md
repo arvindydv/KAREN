@@ -21,7 +21,7 @@ prompt-injected service exfiltrate to any HTTPS host. Required destinations per 
 
 | Service         | Allowed destinations (FQDN allowlist)                                                             |
 | --------------- | ------------------------------------------------------------------------------------------------- |
-| ai-service      | Vercel AI Gateway host, Langfuse host (when enabled), AWS APIs via VPC endpoints                  |
+| ai-service      | OpenRouter host (`openrouter.ai`), Langfuse host (when enabled), AWS APIs via VPC endpoints       |
 | api             | IdP JWKS/issuer host, Temporal Cloud, LiveKit API (token minting is local; none needed), AWS APIs |
 | provider-worker | each **approved** partner API host (added per integration, reviewed), Temporal Cloud              |
 | temporal-worker | Temporal Cloud, AWS APIs — **no partner hosts** (partner calls belong to provider-worker)         |

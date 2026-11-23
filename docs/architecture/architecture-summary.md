@@ -17,7 +17,7 @@ A goal-driven, permission-based, accountable personal AI agent (India-first). Th
 ## Deployables (7, within the 5–7 target)
 
 1. **api** — NestJS 12/Fastify BFF + core domains (identity, consent, audit, policy, admin; future: conversations, memory, goals, tasks, approvals, notifications, billing).
-2. **ai-service** — Python FastAPI: ModelRouter, budget/policy, GatewayClient (Vercel AI Gateway), LangGraph, evals.
+2. **ai-service** — Python FastAPI: ModelRouter, budget/policy, GatewayClient (OpenRouter, ADR-0025), LangGraph, evals.
 3. **temporal-worker** — Responsibility Engine workflows (`karen-tasks`).
 4. **provider-worker** — provider adapters as Temporal activities (`karen-provider-ops`) + signed webhook ingress.
 5. **voice-agent** — LiveKit worker (pilot; audio NOT verified).
@@ -30,7 +30,7 @@ flowchart LR
   C[Mobile / Web / Admin] -->|OIDC bearer, /v1| API[api]
   API -->|HMAC-signed internal HTTP| AI[ai-service]
   AI --> R[ModelRouter → budget → GatewayClient]
-  R -->|mock by default| GW[(Vercel AI Gateway)]
+  R -->|mock by default| GW[(OpenRouter)]
   API -. start/signal .-> T[temporal-worker]
   T -->|karen-provider-ops| P[provider-worker]
   EXT[Provider webhooks] -->|HMAC verified, replay-guarded| P

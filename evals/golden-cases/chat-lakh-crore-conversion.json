@@ -1,0 +1,26 @@
+{
+  "id": "chat-lakh-crore-conversion",
+  "description": "Indian number terms: 50 lakh = 0.5 crore = 5,000,000; amounts shown in ₹.",
+  "language": "hi-Latn",
+  "tags": [
+    "chat",
+    "numbers",
+    "inr",
+    "phase-02"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "CHAT",
+    "messages": [
+      {
+        "role": "user",
+        "content": "50 lakh rupaye ko crore aur million mein kitna hota hai?"
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "BALANCED",
+    "reply_language": "hi-Latn",
+    "behaviour": "states 0.5 crore and 5 million (₹50,00,000) correctly"
+  }
+}

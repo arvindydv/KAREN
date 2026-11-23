@@ -4,42 +4,43 @@
  * Platform-neutral: no DOM or React Native imports here.
  *
  * Visual direction (product spec §26.1): premium "deep space" theme — navy starfield, frosted
- * glass surfaces, one bright blue action colour. Colour pairs are chosen for WCAG AA text
+ * glass surfaces, one blue action colour. Softened (2026-11-21): every hue kept but pulled back
+ * in saturation/brightness and the navy lifted slightly, so nothing glares on OLED screens. Colour pairs are chosen for WCAG AA text
  * contrast on their surfaces (enforced by tokens.test.ts).
  */
 
 export const palette = {
   // Deep-space navy neutrals (dark scheme backbone).
-  space950: '#060A1C',
-  space900: '#0B1230',
-  space850: '#111A3E',
-  space800: '#18234F',
-  space700: '#27346A',
-  space400: '#9AA6CB',
-  space300: '#C3CBE6',
+  space950: '#0A0F24',
+  space900: '#111833',
+  space850: '#172042',
+  space800: '#1E284D',
+  space700: '#2B365F',
+  space400: '#9CA6C8',
+  space300: '#C4CBE3',
   // Light scheme neutrals (cool periwinkle).
-  mist50: '#F3F5FD',
-  mist100: '#E7EBF8',
-  mist200: '#CFD6EE',
-  mist500: '#4B5578',
-  mist950: '#0A1030',
+  mist50: '#F3F5FB',
+  mist100: '#E8EBF5',
+  mist200: '#D3D9EC',
+  mist500: '#4F5878',
+  mist950: '#0E1430',
   white: '#FFFFFF',
   // Brand blue (primary actions).
-  blue700: '#1D4ED8',
-  blue600: '#2563EB',
-  blue400: '#60A5FA',
-  blue300: '#93C5FD',
+  blue700: '#2A5BC9',
+  blue600: '#3A6FE0',
+  blue400: '#7FAEF2',
+  blue300: '#A9C8F5',
   // Category accents (icon chips, charts).
-  green500: '#22C55E',
-  green700: '#047857',
-  green300: '#4ADE80',
-  violet500: '#8B5CF6',
-  orange500: '#F97316',
-  lime400: '#C6F432',
-  amber700: '#B45309',
-  amber300: '#FCD34D',
-  red600: '#C53030',
-  red400: '#F87171',
+  green500: '#3FBF7F',
+  green700: '#1e7a52',
+  green300: '#5FD49A',
+  violet500: '#8E7CEB',
+  orange500: '#EE8A4E',
+  lime400: '#CDE77A',
+  amber700: '#9A5B0E',
+  amber300: '#F2C96B',
+  red600: '#C03A3A',
+  red400: '#F48A8A',
 } as const;
 
 export interface ColorScheme {
@@ -80,7 +81,7 @@ export const colors: Readonly<Record<'light' | 'dark', ColorScheme>> = {
     surface: palette.space900,
     surfaceRaised: palette.space850,
     border: palette.space700,
-    textPrimary: '#F4F6FF',
+    textPrimary: '#EEF1FB',
     textSecondary: palette.space400,
     highlight: palette.blue400,
     accent: palette.blue600,
@@ -105,8 +106,9 @@ export const brand = {
   },
   ribbonCool: [palette.blue600, palette.violet500],
   ribbonWarm: [palette.lime400, palette.green500],
-  orb: [palette.blue300, palette.blue600, '#0B2A8F'],
-  buttonGradient: [palette.blue400, palette.blue600],
+  orb: [palette.blue300, palette.blue600, '#1A3580'],
+  // Both stops keep white label text ≥ 4.5:1.
+  buttonGradient: [palette.blue600, palette.blue700],
 } as const;
 
 /** 4-pt spacing scale (px / dp). */

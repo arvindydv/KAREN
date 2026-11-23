@@ -15,7 +15,7 @@
 ## Implementation blockers (external)
 
 - **IdP not chosen** → no real sign-in (local-dev issuer only).
-- **No Vercel AI Gateway credentials / verified model IDs** → live inference NOT VERIFIED; mock mode only.
+- **No gateway credentials / verified model IDs** → live inference NOT VERIFIED; mock mode only. (Gateway is OpenRouter since ADR-0025; candidate registry from its public catalog, unverified.)
 - **No LiveKit credentials / devices** → realtime voice NOT VERIFIED.
 - **No AWS account/credentials** → Terraform validated offline only; nothing planned/applied.
 - **No approved provider contracts** → only the SANDBOX mock adapter exists.

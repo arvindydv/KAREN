@@ -1,7 +1,7 @@
 [project]
 name = "karen-ai-service"
 version = "0.1.0"
-description = "KAREN AI orchestration service: ModelRouter, Vercel AI Gateway client, LangGraph agents, evals."
+description = "KAREN AI orchestration service: ModelRouter, OpenRouter gateway client, LangGraph agents, evals."
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
 dependencies = [
@@ -19,11 +19,16 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi==0.66b2",
     "sentry-sdk==2.73.0",
     "redis==8.1.0",  # shared atomic AI budget + internal-auth replay cache (ADR-0013)
+    # Deepgram streaming STT client (ADR-0027). Already locked via uvicorn[standard]; now direct.
+    "websockets==17.4",
 ]
 
 [project.scripts]
 karen-ai-dev = "karen_ai.cli:dev"
 karen-ai-serve = "karen_ai.cli:serve"
+karen-ai-probe = "karen_ai.gateway.probe:main"  # manual SP-1 live probe; never run in tests/CI
+karen-ai-speech-probe = "karen_ai.speech.probe:main"  # manual paid Deepgram probe; never run in tests/CI
+karen-ai-voice-catalog = "karen_ai.speech.catalog_tool:main"  # free public catalog read; writes the voice catalog
 
 [dependency-groups]
 dev = [
@@ -63,6 +68,8 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S106", "PLR2004", "PLC0415"]
 "src/karen_ai/cli.py" = ["T201"]
+# Prompts are prose: wrapping lines would change the text the model sees.
+"src/karen_ai/prompts/catalog.py" = ["E501"]
 "src/karen_ai/evaluation/run_golden.py" = ["T201"]
 "src/karen_ai/observability/telemetry.py" = ["PLC0415"]
 

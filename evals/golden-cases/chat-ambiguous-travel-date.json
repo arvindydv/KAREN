@@ -1,0 +1,26 @@
+{
+  "id": "chat-ambiguous-travel-date",
+  "description": "Ambiguous travel request: asks which date/city before detailing; never claims a booking.",
+  "language": "hi-Latn",
+  "tags": [
+    "chat",
+    "ambiguity",
+    "no-action",
+    "phase-02"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "CHAT",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Mumbai ka ticket book kar do kal ke liye"
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "BALANCED",
+    "no_tool_execution": true,
+    "behaviour": "says it cannot book; asks from-city, date certainty, mode of travel; offers steps"
+  }
+}

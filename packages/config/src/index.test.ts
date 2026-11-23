@@ -97,7 +97,15 @@ describe('public env guard', () => {
         'NEXT_PUBLIC_AI_GATEWAY_API_KEY',
         'EXPO_PUBLIC_SECRET',
         'AI_GATEWAY_API_KEY',
+        'NEXT_PUBLIC_OPENROUTER_API_KEY',
+        'EXPO_PUBLIC_OPENROUTER_BASE_URL',
+        'OPENROUTER_API_KEY',
       ]),
-    ).toEqual(['NEXT_PUBLIC_AI_GATEWAY_API_KEY', 'EXPO_PUBLIC_SECRET']);
+    ).toEqual([
+      'NEXT_PUBLIC_AI_GATEWAY_API_KEY',
+      'EXPO_PUBLIC_SECRET',
+      'NEXT_PUBLIC_OPENROUTER_API_KEY',
+      'EXPO_PUBLIC_OPENROUTER_BASE_URL',
+    ]);
   });
 });

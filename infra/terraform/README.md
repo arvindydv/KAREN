@@ -141,7 +141,7 @@ The dominant fixed costs are:
 
 Very rough totals before meaningful traffic: dev ≈ USD 250–450/month, staging ≈ USD
 600–1,000/month, production ≈ USD 2,000–3,500/month. These are guesses for planning
-orders of magnitude only. Vercel AI Gateway, Temporal Cloud, LiveKit Cloud, Cloudflare,
+orders of magnitude only. OpenRouter, Temporal Cloud, LiveKit Cloud, Cloudflare,
 Sentry and Langfuse are billed separately. Set `budget_monthly_limit_usd` (requires the
 `Environment` cost-allocation tag to be activated in Billing).
 
@@ -173,7 +173,7 @@ the log bucket. tflint and checkov weren't run because they aren't installed.
 
 | Check | Where | Decision |
 |---|---|---|
-| AWS-0104 unrestricted egress (CRITICAL) | `security-groups` TLS egress (443, Temporal 7233, LiveKit UDP) | Accepted: external SaaS endpoints (Vercel AI Gateway, Temporal Cloud, LiveKit Cloud, partner APIs) have no stable CIDRs. Mitigation: Network Firewall/egress proxy in Phase B. |
+| AWS-0104 unrestricted egress (CRITICAL) | `security-groups` TLS egress (443, Temporal 7233, LiveKit UDP) | Accepted: external SaaS endpoints (OpenRouter, Temporal Cloud, LiveKit Cloud, partner APIs) have no stable CIDRs. Mitigation: Network Firewall/egress proxy in Phase B. |
 | AWS-0053 public load balancer (HIGH) | `alb` | Accepted: it's the public origin; ingress is limited to Cloudflare CIDRs, HTTPS-only, invalid headers dropped. |
 | AWS-0177 deletion protection off (MEDIUM) | `rds-postgres` in dev | Accepted for dev only (staging/production default to `true`). |
 | AWS-0133 Performance Insights off (LOW) | `rds-postgres` in dev | Accepted for dev only (cost; small burstable class). |

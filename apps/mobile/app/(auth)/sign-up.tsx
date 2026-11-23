@@ -1,19 +1,13 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState, type ComponentRef } from 'react';
+import type { TextInput } from 'react-native';
 import { useApi } from '../../src/auth/services';
-import {
-  Body,
-  Caption,
-  ErrorState,
-  FormScreen,
-  PrimaryButton,
-  TextButton,
-  TextField,
-} from '../../src/components/primitives';
-import { ScreenHeader } from '../../src/components/screen-header';
+import { AuthScreen, AuthSwitch, FinePrint, InlineLink } from '../../src/components/auth-screen';
+import { ErrorState, PrimaryButton, TextField } from '../../src/components/primitives';
 import { PASSWORD_RULES_HINT, describeError, unwrap } from '../../src/lib/api-error';
 import { useSubmit } from '../../src/lib/use-submit';
 import { deviceTimezone, looksLikeEmail, passwordProblem } from '../../src/lib/validation';
+import { holdCredential } from '../../src/auth/pending-credential';
 import { useChallengeStore } from '../../src/state/challenge-store';
 
 export default function SignUpScreen() {
@@ -23,6 +17,7 @@ export default function SignUpScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [touched, setTouched] = useState(false);
+  const passwordRef = useRef<ComponentRef<typeof TextInput>>(null);
 
   const emailError = touched && !looksLikeEmail(email) ? 'Enter a valid e-mail address.' : null;
   const pwError = touched ? passwordProblem(password) : null;
@@ -46,8 +41,10 @@ export default function SignUpScreen() {
         email: email.trim(),
         expiresAt: challenge.expires_at,
       });
+      // Memory-only, single use: lets verify-email sign the user straight in.
+      holdCredential(email.trim(), password);
       setPassword('');
-      router.push('/verify-email');
+      router.push({ pathname: '/verify-email', params: { from: 'sign-up' } });
     }, [api, email, password, router, setPending]),
   );
 
@@ -58,9 +55,34 @@ export default function SignUpScreen() {
   };
 
   return (
-    <FormScreen>
-      <ScreenHeader title="Create your account" />
-      <Body muted>We’ll send a 6-digit code to confirm your e-mail address.</Body>
+    <AuthScreen
+      title="Create your account"
+      subtitle="We’ll send a 6-digit code to confirm your e-mail."
+      action={
+        <>
+          <PrimaryButton
+            label={submit.busy ? 'Creating account…' : 'Create account'}
+            busy={submit.busy}
+            onPress={onSubmit}
+          />
+          <FinePrint>
+            You’ll review the{' '}
+            <InlineLink
+              label="Privacy Notice"
+              onPress={() => router.push('/notice?kind=privacy_notice')}
+            />{' '}
+            and Terms during setup.
+          </FinePrint>
+        </>
+      }
+      footer={
+        <AuthSwitch
+          prompt="Already have an account?"
+          action="Sign in"
+          onPress={() => router.replace('/sign-in')}
+        />
+      }
+    >
       <TextField
         label="E-mail"
         value={email}
@@ -69,6 +91,10 @@ export default function SignUpScreen() {
         keyboardType="email-address"
         textContentType="emailAddress"
         autoComplete="email"
+        placeholder="you@example.com"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => passwordRef.current?.focus()}
         error={emailError}
       />
       <TextField
@@ -81,25 +107,11 @@ export default function SignUpScreen() {
         autoComplete="new-password"
         hint={PASSWORD_RULES_HINT}
         error={pwError}
+        inputRef={passwordRef}
+        returnKeyType="go"
+        onSubmitEditing={onSubmit}
       />
       {submit.error ? <ErrorState message={describeError(submit.error)} /> : null}
-      <PrimaryButton
-        label={submit.busy ? 'Creating account…' : 'Create account'}
-        disabled={submit.busy}
-        onPress={onSubmit}
-      />
-      <Caption>
-        During setup you’ll be asked to read and accept the Privacy Notice and Terms. Optional
-        permissions (like memory) are always off until you turn them on.
-      </Caption>
-      <TextButton
-        label="Read the Privacy Notice"
-        onPress={() => router.push('/notice?kind=privacy_notice')}
-      />
-      <TextButton
-        label="Already have an account? Sign in"
-        onPress={() => router.replace('/sign-in')}
-      />
-    </FormScreen>
+    </AuthScreen>
   );
 }

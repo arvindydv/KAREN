@@ -153,7 +153,7 @@ terraform init -backend-config=backend.hcl
    | `shared/SENTRY_DSN`                                                               | all services                                                   |                                                  |
    | `shared/TEMPORAL_ADDRESS`, `shared/TEMPORAL_NAMESPACE`, `shared/TEMPORAL_API_KEY` | api, temporal-worker, provider-worker                          | Temporal Cloud                                   |
    | `shared/LIVEKIT_API_KEY`, `shared/LIVEKIT_API_SECRET`                             | api, voice-agent                                               | LiveKit Cloud                                    |
-   | `ai-service/AI_GATEWAY_API_KEY`                                                   | **ai-service only**                                            | Never in clients or other services               |
+   | `ai-service/OPENROUTER_API_KEY`                                                   | **ai-service only**                                            | Never in clients or other services               |
    | `ai-service/LANGFUSE_PUBLIC_KEY`, `ai-service/LANGFUSE_SECRET_KEY`                | ai-service                                                     |                                                  |
    | `provider-worker/PROVIDER_WEBHOOK_SECRETS`                                        | provider-worker                                                | JSON `{ "<provider>": "<signing secret>" }`      |
    | `<service>/DATABASE_URL`                                                          | that service only                                              | Per-service Postgres role, `sslmode=verify-full` |

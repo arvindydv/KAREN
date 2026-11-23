@@ -26,6 +26,8 @@ export const API_ERROR_CODES = [
   'PRECONDITION_REQUIRED',
   'PAYLOAD_TOO_LARGE',
   'RATE_LIMITED',
+  /** A per-user AI usage limit (daily/monthly) is reached; `next_options` says when it resets. */
+  'USAGE_LIMIT_REACHED',
   'CONSENT_REQUIRED',
   'APPROVAL_REQUIRED',
   'PROVIDER_CAPABILITY_UNAVAILABLE',

@@ -1,0 +1,23 @@
+{
+  "id": "routing-extraction-economy-hindi",
+  "description": "Structured extraction from Devanagari text stays on the cheap ECONOMY tier.",
+  "language": "hi",
+  "tags": [
+    "routing",
+    "phase-03"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "EXTRACTION",
+    "messages": [
+      {
+        "role": "user",
+        "content": "कल शाम 6 बजे राहुल को 2500 रुपये भेजने हैं।"
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "ECONOMY",
+    "no_model_call": false
+  }
+}

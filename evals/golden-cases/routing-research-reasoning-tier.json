@@ -1,0 +1,23 @@
+{
+  "id": "routing-research-reasoning-tier",
+  "description": "Research questions need deep reasoning: REASONING tier (quality floor 45).",
+  "language": "en",
+  "tags": [
+    "routing",
+    "phase-03"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "RESEARCH",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Compare the tax implications of the old and new income tax regimes for a salaried person earning 18 lakh a year, with sources I should check."
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "REASONING",
+    "no_model_call": false
+  }
+}

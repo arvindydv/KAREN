@@ -1,0 +1,25 @@
+{
+  "id": "chat-date-devanagari-no-model",
+  "description": "Devanagari date question in CHAT is answered by code: NO_MODEL, zero gateway calls.",
+  "language": "hi",
+  "tags": [
+    "chat",
+    "routing",
+    "no-model",
+    "phase-02"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "CHAT",
+    "messages": [
+      {
+        "role": "user",
+        "content": "आज कौन सी तारीख है?"
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "NO_MODEL",
+    "no_model_call": true
+  }
+}

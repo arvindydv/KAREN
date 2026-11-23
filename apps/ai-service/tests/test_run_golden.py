@@ -14,7 +14,7 @@ GOLDEN = REPO_ROOT / "evals/golden-cases"
 
 def test_repo_golden_cases_load() -> None:
     cases = load_cases(GOLDEN)
-    assert 4 <= len(cases) <= 6
+    assert 18 <= len(cases) <= 40
     assert all(c.synthetic for c in cases)
 
 

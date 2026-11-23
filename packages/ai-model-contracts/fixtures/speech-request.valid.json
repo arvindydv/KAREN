@@ -1,0 +1,13 @@
+{
+  "contract_version": "2026-11-22.v3",
+  "request_id": "req_speech_0001",
+  "user_ref": "usr_hmac_test01",
+  "text": "Kal subah 7 baje main aapko yaad dila doongi.",
+  "voice": {
+    "accent": "indian",
+    "gender": "any",
+    "speed": 1.0,
+    "voice_id": "mock-en-IN-female"
+  },
+  "max_cost_usd": 0.05
+}

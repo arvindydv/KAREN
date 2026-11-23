@@ -1,0 +1,189 @@
+{
+  "registry_version": "2026-11-22.openrouter",
+  "models": [
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "tiers": [
+        "ECONOMY",
+        "BALANCED",
+        "VISION"
+      ],
+      "supports_streaming": true,
+      "supports_tools": true,
+      "supports_json_schema": true,
+      "supports_vision": true,
+      "max_context_tokens": 100000,
+      "max_output_tokens": 128000,
+      "input_usd_per_million_tokens": 0.1,
+      "output_usd_per_million_tokens": 0.5,
+      "verified_at": "2026-11-22",
+      "notes": "Prices/limits from the OpenRouter catalog on 2026-11-22. zdr_endpoint=True. moderated=True. context capped at 100000 tokens: higher price band above it (catalog overrides). Suggested env: KAREN_MODEL_ECONOMY, KAREN_MODEL_BALANCED, KAREN_MODEL_VISION, KAREN_MODEL_VOICE (ADR-0034: spoken turns need emotional understanding and persona adherence; ~0.5 s slower first word than Llama 4 Maverick). SP-1 probe passed 2026-11-22; TTFT 1523 ms from the operator machine. Review upstream data-processing terms before enabling for users (architecture §9).",
+      "quality_index": 36.5,
+      "latency_p50_ms": 1935.0,
+      "throughput_p50_tps": 120.0,
+      "metadata_observed_at": "2026-11-22"
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "tiers": [
+        "ECONOMY",
+        "BALANCED",
+        "VISION"
+      ],
+      "supports_streaming": true,
+      "supports_tools": true,
+      "supports_json_schema": true,
+      "supports_vision": true,
+      "max_context_tokens": 272000,
+      "max_output_tokens": 128000,
+      "input_usd_per_million_tokens": 0.1,
+      "output_usd_per_million_tokens": 0.5,
+      "verified_at": "2026-11-22",
+      "notes": "Prices/limits from the OpenRouter catalog on 2026-11-22. zdr_endpoint=True. moderated=True. context capped at 272000 tokens: higher price band above it (catalog overrides). Suggested env: KAREN_MODEL_ECONOMY_FALLBACK, KAREN_MODEL_BALANCED_FALLBACK. SP-1 probe passed 2026-11-22; TTFT 2649 ms from the operator machine. Review upstream data-processing terms before enabling for users (architecture §9).",
+      "quality_index": 27.9,
+      "latency_p50_ms": 2738.0,
+      "throughput_p50_tps": 47.0,
+      "metadata_observed_at": "2026-11-22"
+    },
+    {
+      "model_id": "deepseek/deepseek-v4.1-flash-1017",
+      "tiers": [
+        "ECONOMY",
+        "BALANCED"
+      ],
+      "supports_streaming": true,
+      "supports_tools": true,
+      "supports_json_schema": true,
+      "supports_vision": true,
+      "max_context_tokens": 1048576,
+      "max_output_tokens": 393216,
+      "input_usd_per_million_tokens": 0.15,
+      "output_usd_per_million_tokens": 0.6,
+      "verified_at": "2026-11-22",
+      "notes": "Prices/limits from the OpenRouter catalog on 2026-11-22. zdr_endpoint=True. moderated=False. SP-1 probe passed 2026-11-22; TTFT 1250 ms from the operator machine. Review upstream data-processing terms before enabling for users (architecture §9).",
+      "quality_index": 32.6,
+      "latency_p50_ms": 2743.0,
+      "throughput_p50_tps": 53.0,
+      "metadata_observed_at": "2026-11-22"
+    },
+    {
+      "model_id": "openai/gpt-6.1-terra",
+      "tiers": [
+        "BALANCED",
+        "REASONING"
+      ],
+      "supports_streaming": true,
+      "supports_tools": true,
+      "supports_json_schema": true,
+      "supports_vision": true,
+      "max_context_tokens": 272000,
+      "max_output_tokens": 128000,
+      "input_usd_per_million_tokens": 1.0,
+      "output_usd_per_million_tokens": 5.0,
+      "verified_at": "2026-11-22",
+      "notes": "Prices/limits from the OpenRouter catalog on 2026-11-22. zdr_endpoint=True. moderated=True. context capped at 272000 tokens: higher price band above it (catalog overrides). Suggested env: KAREN_MODEL_REASONING. SP-1 probe passed 2026-11-22; TTFT 2316 ms from the operator machine. Review upstream data-processing terms before enabling for users (architecture §9).",
+      "quality_index": 51.3,
+      "latency_p50_ms": 2366.0,
+      "throughput_p50_tps": 49.0,
+      "metadata_observed_at": "2026-11-22"
+    },
+    {
+      "model_id": "openai/gpt-6-sol",
+      "tiers": [
+        "REASONING"
+      ],
+      "supports_streaming": true,
+      "supports_tools": true,
+      "supports_json_schema": true,
+      "supports_vision": true,
+      "max_context_tokens": 272000,
+      "max_output_tokens": 128000,
+      "input_usd_per_million_tokens": 2.0,
+      "output_usd_per_million_tokens": 10.0,
+      "verified_at": "2026-11-22",
+      "notes": "Prices/limits from the OpenRouter catalog on 2026-11-22. zdr_endpoint=True. moderated=True. context capped at 272000 tokens: higher price band above it (catalog overrides). Suggested env: KAREN_MODEL_REASONING_FALLBACK. SP-1 probe passed 2026-11-22; TTFT 1685 ms from the operator machine. Review upstream data-processing terms before enabling for users (architecture §9).",
+      "quality_index": 44.2,
+      "latency_p50_ms": 2465.0,
+      "throughput_p50_tps": 50.0,
+      "metadata_observed_at": "2026-11-22"
+    },
+    {
+      "model_id": "openai/gpt-5.3-codex",
+      "tiers": [
+        "REASONING"
+      ],
+      "supports_streaming": true,
+      "supports_tools": true,
+      "supports_json_schema": true,
+      "supports_vision": true,
+      "max_context_tokens": 400000,
+      "max_output_tokens": 128000,
+      "input_usd_per_million_tokens": 1.75,
+      "output_usd_per_million_tokens": 14.0,
+      "verified_at": "2026-11-22",
+      "notes": "Prices/limits from the OpenRouter catalog on 2026-11-22. zdr_endpoint=True. moderated=True. Suggested env: KAREN_MODEL_CODING. SP-1 probe passed 2026-11-22; TTFT 1917 ms from the operator machine. Review upstream data-processing terms before enabling for users (architecture §9).",
+      "latency_p50_ms": 2291.0,
+      "throughput_p50_tps": 90.0,
+      "metadata_observed_at": "2026-11-22"
+    },
+    {
+      "model_id": "anthropic/claude-sonnet-5.5",
+      "tiers": [
+        "REASONING"
+      ],
+      "supports_streaming": true,
+      "supports_tools": true,
+      "supports_json_schema": true,
+      "supports_vision": true,
+      "max_context_tokens": 1000000,
+      "max_output_tokens": 128000,
+      "input_usd_per_million_tokens": 2.0,
+      "output_usd_per_million_tokens": 10.0,
+      "verified_at": "2026-11-22",
+      "notes": "Prices/limits from the OpenRouter catalog on 2026-11-22. zdr_endpoint=True. moderated=True. reasoning=mandatory (counts against max_tokens). SP-1 probe passed 2026-11-22; TTFT 1010 ms from the operator machine. Review upstream data-processing terms before enabling for users (architecture §9).",
+      "quality_index": 54.5,
+      "latency_p50_ms": 2458.5,
+      "throughput_p50_tps": 99.0,
+      "metadata_observed_at": "2026-11-22"
+    },
+    {
+      "model_id": "google/gemini-4-hydrogen",
+      "tiers": [
+        "REASONING"
+      ],
+      "supports_streaming": true,
+      "supports_tools": true,
+      "supports_json_schema": true,
+      "supports_vision": true,
+      "max_context_tokens": 1048576,
+      "max_output_tokens": 943718,
+      "input_usd_per_million_tokens": 1.5,
+      "output_usd_per_million_tokens": 7.5,
+      "verified_at": "2026-11-22",
+      "notes": "Prices/limits from the OpenRouter catalog on 2026-11-22. zdr_endpoint=True. moderated=False. reasoning=mandatory (counts against max_tokens). SP-1 probe passed 2026-11-22; TTFT 1491 ms from the operator machine. Review upstream data-processing terms before enabling for users (architecture §9).",
+      "quality_index": 53.9,
+      "latency_p50_ms": 2398.0,
+      "throughput_p50_tps": 105.0,
+      "metadata_observed_at": "2026-11-22"
+    },
+    {
+      "model_id": "meta-llama/llama-4-maverick",
+      "tiers": [
+        "BALANCED"
+      ],
+      "supports_streaming": true,
+      "supports_tools": true,
+      "supports_json_schema": true,
+      "supports_vision": true,
+      "max_context_tokens": 524288,
+      "max_output_tokens": 32768,
+      "input_usd_per_million_tokens": 0.35,
+      "output_usd_per_million_tokens": 1.0,
+      "verified_at": "2026-11-22",
+      "notes": "Prices/limits from the OpenRouter catalog on 2026-11-22. zdr_endpoint=True. moderated=False. Formerly KAREN_MODEL_VOICE (ADR-0032; replaced by Claude Haiku 5.5 in ADR-0034 for conversation quality): time to first word median 1.07 s / max 1.57 s over 12 warm calls with the spoken prompt (Haiku 1.56 / 2.30, Gemini 3.1 Flash-Lite 1.60 / 6.24); not used for typed chat. SP-1 probe passed 2026-11-22; TTFT 621 ms from the operator machine. Review upstream data-processing terms before enabling for users (architecture §9).",
+      "latency_p50_ms": 526.0,
+      "throughput_p50_tps": 67.0,
+      "metadata_observed_at": "2026-11-22"
+    }
+  ]
+}

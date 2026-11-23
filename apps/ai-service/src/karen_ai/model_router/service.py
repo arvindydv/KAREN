@@ -11,12 +11,15 @@ import logging
 import uuid
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
+from typing import Final
 
 from opentelemetry import trace
 
+from karen_ai.agents.fast_path import deterministic_reply, today_label
 from karen_ai.contracts import (
     CONTRACT_VERSION,
     AiErrorCode,
+    ChatMessage,
     CompletionRequest,
     CompletionResponse,
     DeltaEvent,
@@ -27,6 +30,7 @@ from karen_ai.contracts import (
     StreamEvent,
     Usage,
 )
+from karen_ai.core.errors import KarenAIError
 from karen_ai.core.logging_setup import log_fields
 from karen_ai.gateway.base import GatewayClient, GatewayError, GatewayRequest, GatewayStreamEnd
 from karen_ai.model_router.router import ModelRouter, RouteDecision, RouteRequirements
@@ -34,15 +38,22 @@ from karen_ai.observability.invocations import InvocationSink, InvocationStatus,
 from karen_ai.policies.budget import (
     DailyBudgetTracker,
     Reservation,
+    budget_cap_usd,
     check_request_budget,
     estimate_prompt_tokens,
     usage_cost_usd,
     worst_case_cost_usd,
 )
+from karen_ai.prompts.catalog import CHAT_PROMPT_VERSION, chat_system_prompt
 
 _logger = logging.getLogger(__name__)
 
 Clock = Callable[[], dt.datetime]
+
+
+# Fast tiers answer directly; hidden reasoning there only adds latency and cost and can leave the
+# answer empty when it uses up max_output_tokens. REASONING keeps the model's default behaviour.
+REASONING_OFF_TIERS: Final[frozenset[str]] = frozenset({"ECONOMY", "BALANCED", "VISION"})
 
 
 def _utcnow() -> dt.datetime:
@@ -62,6 +73,8 @@ class PreparedCompletion:
     gateway_request: GatewayRequest | None
     estimated_cost_usd: float
     reservation: Reservation | None
+    # NO_MODEL fast path: the exact answer computed by code (no gateway call).
+    deterministic_text: str | None = None
 
 
 @dataclass
@@ -75,6 +88,7 @@ class _Outcome:
     gateway_request_id: str | None = None
     attempts: int = 0
     cost_usd: float | None = None
+    reported_cost_usd: float | None = None
 
 
 def _current_trace_id() -> str | None:
@@ -102,16 +116,69 @@ class CompletionService:
 
     # ------------------------------------------------------------------ preparation
 
+    def _with_chat_prompt(self, request: CompletionRequest) -> CompletionRequest:
+        """CHAT requests get the catalogued system prompt unless the caller supplied one."""
+        if request.task_kind != "CHAT" or request.messages[0].role == "system":
+            return request
+        today, zone = today_label(timezone=request.timezone, now=self._clock())
+        system = ChatMessage(
+            role="system",
+            content=chat_system_prompt(
+                locale=request.locale,
+                today=today,
+                timezone=zone,
+                reply_language=request.reply_language,
+                spoken=request.reply_style == "spoken",
+                user_name=request.user_name,
+            ),
+        )
+        return request.model_copy(
+            update={
+                "messages": [system, *request.messages],
+                "prompt_version": request.prompt_version or CHAT_PROMPT_VERSION,
+            }
+        )
+
     async def prepare(self, request: CompletionRequest, *, stream: bool) -> PreparedCompletion:
         tier = self.router.select_tier(request.task_kind, request.route_tier)
         if tier == "NO_MODEL":
             return PreparedCompletion(request, RouteDecision("NO_MODEL", None), None, 0.0, None)
+        if request.task_kind == "CHAT" and request.route_tier is None and request.messages[-1].role == "user":
+            exact = deterministic_reply(
+                request.messages[-1].content, timezone=request.timezone, now=self._clock()
+            )
+            if exact is not None:
+                return PreparedCompletion(request, RouteDecision("NO_MODEL", None), None, 0.0, None, exact)
+        request = self._with_chat_prompt(request)
 
-        primary = self.router.model_for(tier)
         cap = self._limits.max_output_tokens
-        max_output = min(request.max_output_tokens or cap, cap, primary.max_output_tokens)
+        budget_cap = budget_cap_usd(
+            service_cap_usd=self._limits.max_request_cost_usd, request_cap_usd=request.max_cost_usd
+        )
         input_tokens = estimate_prompt_tokens(request.messages)
-        decision = self.router.route(tier, RouteRequirements(stream, input_tokens, max_output))
+        requirements = RouteRequirements(
+            stream=stream,
+            input_tokens=input_tokens,
+            max_output_tokens=min(request.max_output_tokens or cap, cap),
+            max_cost_usd=budget_cap,
+            needs_vision=any(m.images for m in request.messages),
+        )
+        try:
+            decision = self.router.route(
+                tier,
+                requirements,
+                task_kind=request.task_kind,
+                # ADR-0031: a spoken turn goes to the low-latency voice model when one is set.
+                task_route="VOICE" if request.reply_style == "spoken" else None,
+            )
+        except KarenAIError as exc:
+            if exc.code == "BUDGET_EXCEEDED":
+                _logger.warning("budget_rejected", extra=log_fields(route_tier=tier, stage="routing"))
+            raise
+        primary = decision.primary
+        if primary is None:  # pragma: no cover - NO_MODEL returned earlier
+            raise KarenAIError("INTERNAL_ERROR", "Router returned no model for a model tier.")
+        max_output = decision.max_output_tokens
 
         estimate = worst_case_cost_usd(decision.candidates, input_tokens, max_output)
         try:
@@ -133,6 +200,8 @@ class CompletionService:
             messages=tuple(request.messages),
             max_output_tokens=max_output,
             fallback_models=tuple(m.model_id for m in decision.fallbacks),
+            disable_reasoning=tier in REASONING_OFF_TIERS,
+            prefer_latency=request.reply_style == "spoken",
         )
         return PreparedCompletion(request, decision, gateway_request, estimate, reservation)
 
@@ -141,7 +210,7 @@ class CompletionService:
     async def complete(self, request: CompletionRequest) -> CompletionResponse:
         prepared = await self.prepare(request, stream=False)
         if prepared.gateway_request is None:
-            return self._no_model_response(request)
+            return self._no_model_response(request, prepared.deterministic_text)
         started = self._clock()
         outcome = _Outcome()
         try:
@@ -152,7 +221,10 @@ class CompletionService:
         else:
             outcome.status, outcome.usage, outcome.attempts = "succeeded", result.usage, result.attempts
             outcome.served_model, outcome.gateway_request_id = result.served_model, result.gateway_request_id
-            outcome.served_provider = result.served_provider
+            outcome.served_provider, outcome.reported_cost_usd = (
+                result.served_provider,
+                result.reported_cost_usd,
+            )
             outcome.cost_usd = usage_cost_usd(self._priced_model(prepared, result.served_model), result.usage)
         finally:
             await self._finish(prepared, started, outcome)
@@ -185,8 +257,17 @@ class CompletionService:
                 served_model=None,
                 is_mock=False,
             )
+            if prepared.deterministic_text:
+                yield DeltaEvent(event="delta", index=0, text=prepared.deterministic_text)
             yield DoneEvent(
-                event="done", finish_reason="no_model", usage=Usage.unknown(), estimated_cost_usd=0.0
+                event="done",
+                finish_reason="no_model",
+                usage=Usage.unknown(),
+                estimated_cost_usd=0.0,
+                requested_model=None,
+                served_model=None,
+                gateway_request_id=None,
+                prompt_version=None,
             )
             return
 
@@ -219,6 +300,7 @@ class CompletionService:
             outcome.status, outcome.usage, outcome.attempts = "succeeded", end.usage, end.attempts
             outcome.served_model, outcome.gateway_request_id = end.served_model, end.gateway_request_id
             outcome.served_provider = end.served_provider
+            outcome.reported_cost_usd = end.reported_cost_usd
             outcome.cost_usd = usage_cost_usd(self._priced_model(prepared, end.served_model), end.usage)
             yield DoneEvent(
                 event="done",
@@ -227,6 +309,10 @@ class CompletionService:
                 estimated_cost_usd=outcome.cost_usd
                 if outcome.cost_usd is not None
                 else prepared.estimated_cost_usd,
+                requested_model=gateway_request.model,
+                served_model=end.served_model,
+                gateway_request_id=end.gateway_request_id,
+                prompt_version=request.prompt_version,
             )
         except GatewayError as exc:
             outcome.status, outcome.error_class, outcome.attempts = "failed", exc.code, exc.attempts
@@ -250,7 +336,7 @@ class CompletionService:
         return max(candidates, key=lambda m: m.output_usd_per_million_tokens, default=None)
 
     @staticmethod
-    def _no_model_response(request: CompletionRequest) -> CompletionResponse:
+    def _no_model_response(request: CompletionRequest, text: str | None = None) -> CompletionResponse:
         return CompletionResponse(
             contract_version=CONTRACT_VERSION,
             request_id=request.request_id,
@@ -258,7 +344,7 @@ class CompletionService:
             requested_model=None,
             served_model=None,
             gateway_request_id=None,
-            output_text="",
+            output_text=text or "",
             finish_reason="no_model",
             usage=Usage.unknown(),
             estimated_cost_usd=0.0,
@@ -280,6 +366,8 @@ class CompletionService:
             user_id_hash=request.user_ref,
             task_id=request.task_id,
             route_tier=prepared.decision.tier,
+            task_route=prepared.decision.task_route,
+            selection=prepared.decision.selection,
             gateway_request_id=outcome.gateway_request_id,
             requested_model=prepared.gateway_request.model,
             served_model=outcome.served_model,
@@ -298,6 +386,7 @@ class CompletionService:
             if outcome.cost_usd is not None
             else prepared.estimated_cost_usd,
             final_cost_usd=None,
+            gateway_reported_cost_usd=outcome.reported_cost_usd,
             consent_policy_id=None,
             data_residency_policy_id=None,
             retry_chain_id=request.request_id,

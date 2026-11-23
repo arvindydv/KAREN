@@ -1,0 +1,24 @@
+{
+  "id": "chat-reply-language-hindi",
+  "description": "A Devanagari question gets a Devanagari answer.",
+  "language": "hi",
+  "tags": [
+    "chat",
+    "language",
+    "phase-02"
+  ],
+  "synthetic": true,
+  "request": {
+    "task_kind": "CHAT",
+    "messages": [
+      {
+        "role": "user",
+        "content": "मुझे बारिश के मौसम में घर को सीलन से बचाने के उपाय बताइए।"
+      }
+    ]
+  },
+  "expect": {
+    "route_tier": "BALANCED",
+    "reply_language": "hi"
+  }
+}

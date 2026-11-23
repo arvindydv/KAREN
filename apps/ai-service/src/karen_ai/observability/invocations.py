@@ -2,7 +2,9 @@
 
 Records carry metadata only, never prompt or response content. Fields the gateway did not
 report stay ``None``. ``final_cost_usd`` is always ``None`` here: it is filled by periodic
-reconciliation against Vercel gateway usage reports, not by this service.
+reconciliation against OpenRouter usage reports (``GET /generation`` by ``gateway_request_id``),
+not by this service. ``gateway_reported_cost_usd`` is OpenRouter's in-response ``usage.cost``,
+kept as reconciliation input only (budgets are settled from registry prices).
 """
 
 from __future__ import annotations
@@ -15,6 +17,7 @@ from pydantic import BaseModel, ConfigDict
 
 from karen_ai.contracts import AiErrorCode, RouteTier
 from karen_ai.core.logging_setup import log_fields
+from karen_ai.core.settings import TaskRoute
 
 InvocationStatus = Literal["succeeded", "failed", "cancelled"]
 
@@ -29,6 +32,9 @@ class ModelInvocationRecord(BaseModel):
     user_id_hash: str
     task_id: str | None
     route_tier: RouteTier
+    task_route: TaskRoute | None
+    # "auto" = least expensive qualified model; "pinned" = operator KAREN_MODEL_* override.
+    selection: Literal["pinned", "auto", "none"]
     gateway_request_id: str | None
     requested_model: str
     served_model: str | None
@@ -45,12 +51,16 @@ class ModelInvocationRecord(BaseModel):
     reasoning_tokens: int | None
     estimated_cost_usd: float | None
     final_cost_usd: float | None
+    gateway_reported_cost_usd: float | None
     consent_policy_id: str | None
     data_residency_policy_id: str | None
     retry_chain_id: str
     # Not in the §2.6 column list but needed for honest reconciliation:
     attempts: int
     is_mock: bool
+    # Speech usage (ADR-0027): billed units, when the call was speech.
+    audio_seconds: float | None = None
+    characters: int | None = None
 
 
 class InvocationSink(Protocol):

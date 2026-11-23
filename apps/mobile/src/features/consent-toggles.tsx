@@ -7,7 +7,9 @@ import {
   Caption,
   DeniedState,
   ErrorState,
+  ListCard,
   LoadingState,
+  Pill,
   ToggleRow,
 } from '../components/primitives';
 import { ApiRequestError, describeError, isDenied, unwrap } from '../lib/api-error';
@@ -105,40 +107,44 @@ export function ConsentToggles({
       ) : notice.state === 'draft' ? (
         <Banner tone="warning">Draft — not legally reviewed. Shown for testing only.</Banner>
       ) : null}
-      {items.map((p) => {
-        if (p.availability === 'not_yet_available') {
+      <ListCard>
+        {items.map((p) => {
+          if (p.availability === 'not_yet_available') {
+            return (
+              <View
+                key={p.purpose}
+                accessible
+                accessibilityLabel={`${p.title}. Coming later.`}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              >
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Body>{p.title}</Body>
+                  <Caption>{p.description}</Caption>
+                </View>
+                <Pill label="Coming later" />
+              </View>
+            );
+          }
+          const on = granted(p.purpose);
+          const missing = p.depends_on.filter((d) => !granted(d));
+          const blocked = !on && missing.length > 0;
           return (
-            <View
-              key={p.purpose}
-              accessible
-              accessibilityLabel={`${p.title}. Coming later.`}
-              style={{ gap: 2 }}
-            >
-              <Body>{p.title}</Body>
-              <Caption>{p.description}</Caption>
-              <Caption>Coming later — not available to turn on yet.</Caption>
+            <View key={p.purpose} style={{ gap: 4 }}>
+              <ToggleRow
+                label={p.title}
+                description={p.description}
+                value={on}
+                disabled={!notice || busy !== null || blocked}
+                {...(blocked
+                  ? { disabledReason: `Turn on ${missing.map(titleOf).join(', ')} first.` }
+                  : {})}
+                onChange={(next) => void decide(p.purpose, next)}
+              />
+              {rowError?.purpose === p.purpose ? <ErrorState message={rowError.message} /> : null}
             </View>
           );
-        }
-        const on = granted(p.purpose);
-        const missing = p.depends_on.filter((d) => !granted(d));
-        const blocked = !on && missing.length > 0;
-        return (
-          <View key={p.purpose} style={{ gap: 4 }}>
-            <ToggleRow
-              label={p.title}
-              description={p.description}
-              value={on}
-              disabled={!notice || busy !== null || blocked}
-              {...(blocked
-                ? { disabledReason: `Turn on ${missing.map(titleOf).join(', ')} first.` }
-                : {})}
-              onChange={(next) => void decide(p.purpose, next)}
-            />
-            {rowError?.purpose === p.purpose ? <ErrorState message={rowError.message} /> : null}
-          </View>
-        );
-      })}
+        })}
+      </ListCard>
     </View>
   );
 }

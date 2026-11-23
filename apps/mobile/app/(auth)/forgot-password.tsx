@@ -1,14 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useApi } from '../../src/auth/services';
-import {
-  Body,
-  ErrorState,
-  FormScreen,
-  PrimaryButton,
-  TextField,
-} from '../../src/components/primitives';
-import { ScreenHeader } from '../../src/components/screen-header';
+import { AuthScreen, AuthSwitch } from '../../src/components/auth-screen';
+import { ErrorState, PrimaryButton, TextField } from '../../src/components/primitives';
 import { describeError, unwrap } from '../../src/lib/api-error';
 import { useSubmit } from '../../src/lib/use-submit';
 import { looksLikeEmail } from '../../src/lib/validation';
@@ -33,11 +27,27 @@ export default function ForgotPasswordScreen() {
     }, [api, email, router]),
   );
   return (
-    <FormScreen>
-      <ScreenHeader title="Reset your password" />
-      <Body muted>
-        Enter your account e-mail. We’ll send a 6-digit code to reset your password.
-      </Body>
+    <AuthScreen
+      title="Reset your password"
+      subtitle="Enter your account e-mail and we’ll send a 6-digit code to reset your password."
+      action={
+        <>
+          <PrimaryButton
+            label={submit.busy ? 'Sending…' : 'Send code'}
+            busy={submit.busy}
+            disabled={!looksLikeEmail(email)}
+            onPress={() => submit.run()}
+          />
+        </>
+      }
+      footer={
+        <AuthSwitch
+          prompt="Remembered it?"
+          action="Sign in"
+          onPress={() => router.replace('/sign-in')}
+        />
+      }
+    >
       <TextField
         label="E-mail"
         value={email}
@@ -46,14 +56,10 @@ export default function ForgotPasswordScreen() {
         keyboardType="email-address"
         textContentType="emailAddress"
         autoComplete="email"
+        placeholder="you@example.com"
         error={email !== '' && !looksLikeEmail(email) ? 'Enter a valid e-mail address.' : null}
       />
       {submit.error ? <ErrorState message={describeError(submit.error)} /> : null}
-      <PrimaryButton
-        label={submit.busy ? 'Sending…' : 'Send code'}
-        disabled={submit.busy || !looksLikeEmail(email)}
-        onPress={() => submit.run()}
-      />
-    </FormScreen>
+    </AuthScreen>
   );
 }

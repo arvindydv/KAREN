@@ -84,7 +84,7 @@ export function HomePhone() {
     <Frame label="Preview of the KAREN home dashboard">
       <div className="relative mt-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <span className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-[#93c5fd] to-[#2563eb] text-sm font-semibold ring-2 ring-white/20">
+          <span className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-[#a9c8f5] to-[#3a6fe0] text-sm font-semibold ring-2 ring-white/20">
             P
           </span>
           <span>
@@ -98,13 +98,13 @@ export function HomePhone() {
       </div>
 
       <p className="relative mt-4 text-[21px] leading-tight font-medium">
-        <span className="text-[#60a5fa]">Your day,</span> organised and followed through.
+        <span className="text-[#7faef2]">Your day,</span> organised and followed through.
       </p>
 
       <div className="landing-phone-glass relative mt-3 rounded-2xl p-2.5">
         <div className="flex justify-between text-[10px]">
           <span className="text-white/70">
-            Done: <span className="text-[#60a5fa]">3 tasks</span>
+            Done: <span className="text-[#7faef2]">3 tasks</span>
           </span>
           <span className="text-white/70">Planned today: 5</span>
         </div>
@@ -128,7 +128,7 @@ export function HomePhone() {
           </span>
           <p className="mt-1 text-[9.5px] leading-snug text-white/60">₹10,000 a month</p>
           <div className="mt-1.5 flex justify-between text-[9.5px] font-semibold">
-            <span className="text-[#60a5fa]">₹6,200</span>
+            <span className="text-[#7faef2]">₹6,200</span>
             <span>₹10k</span>
           </div>
           <Bar value={62} color={C.blue} />
@@ -139,7 +139,7 @@ export function HomePhone() {
           </span>
           <p className="mt-1 text-[9.5px] leading-snug text-white/60">Follow-up day 4 of 7</p>
           <div className="mt-1.5 flex justify-between text-[9.5px] font-semibold">
-            <span className="text-[#fdba74]">Day 4</span>
+            <span className="text-[#f2b98a]">Day 4</span>
             <span>Day 7</span>
           </div>
           <Bar value={57} color={C.orange} />
@@ -148,7 +148,7 @@ export function HomePhone() {
 
       <div className="relative mt-3 flex items-center justify-between text-[12px] font-semibold">
         <span>Upcoming</span>
-        <span className="text-[10px] font-medium text-[#60a5fa]">See all</span>
+        <span className="text-[10px] font-medium text-[#7faef2]">See all</span>
       </div>
       <div className="landing-phone-glass relative mt-1.5 space-y-1.5 rounded-2xl p-1.5">
         {rows.map((r) => (
@@ -169,7 +169,7 @@ export function HomePhone() {
             <span
               key={icon}
               className={`grid size-9 place-items-center rounded-full ${
-                i === 0 ? 'bg-[#2563eb] shadow-[0_6px_16px_-4px_rgb(37_99_235/0.9)]' : 'bg-white/5'
+                i === 0 ? 'bg-[#3a6fe0] shadow-[0_6px_16px_-4px_rgb(37_99_235/0.9)]' : 'bg-white/5'
               }`}
             >
               <Icon name={icon} className="size-4" />
@@ -211,7 +211,7 @@ export function AskPhone() {
         <KarenOrb size={140} />
       </div>
       <p className="relative mt-12 text-center text-[19px] leading-snug font-medium">
-        <span className="text-[#60a5fa]">Hi Priya,</span> what should I take care of today?
+        <span className="text-[#7faef2]">Hi Priya,</span> what should I take care of today?
       </p>
       <div className="relative mt-auto grid grid-cols-3 gap-2">
         {quick.map((a) => (
@@ -228,7 +228,7 @@ export function AskPhone() {
       </div>
       <div className="landing-phone-glass relative mt-3 flex items-center justify-between rounded-full py-1.5 pr-1.5 pl-4">
         <span className="text-[11px] text-white/60">Type, talk or share a photo</span>
-        <span className="flex items-center gap-2 rounded-full bg-[#2563eb] px-3 py-2">
+        <span className="flex items-center gap-2 rounded-full bg-[#3a6fe0] px-3 py-2">
           <Icon name="mic" className="size-3.5" />
           <Icon name="sparkle" className="size-3.5" />
         </span>

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type {
   EmailChanged,
   PasswordChanged,
@@ -14,6 +15,7 @@ import { MAX_SAVED_PLACES } from '@karen/api-contracts';
 import { canonicalizeEmail } from '@karen/domain';
 import { Injectable } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service.js';
+import { AiServiceClient, AiServiceError } from '../infrastructure/ai/ai-service.client.js';
 import { ApiError } from '../common/api-error.js';
 import { isValidCurrency, isValidTimeZone } from '../common/locale.js';
 import { Prisma } from '../generated/prisma/client.js';
@@ -54,6 +56,14 @@ const DEFAULT_PREFERENCES: Omit<Preferences, 'version'> = {
   notify_product_email: false,
   notify_push: false,
   quiet_hours: null,
+  voice_accent: 'indian',
+  voice_gender: 'any',
+  voice_speed_pct: 100,
+  voice_autoplay: false,
+  voice_enabled: true,
+  voice_replies: true,
+  reply_language: 'auto',
+  voice_id: null,
 };
 
 /**
@@ -76,7 +86,31 @@ export class ProfileService {
     private readonly mail: MailService,
     private readonly budget: EmailSendBudget,
     private readonly audit: AuditService,
+    private readonly ai: AiServiceClient,
   ) {}
+
+  /**
+   * A preferred voice must be one the deployment can actually use (ADR-0027): checked against
+   * the AI service's voice catalog, never trusted from the client.
+   */
+  private async assertUsableVoice(voiceId: string): Promise<void> {
+    let known: boolean;
+    try {
+      const catalog = await this.ai.voices(`prefs-voice-${randomUUID()}`);
+      known = catalog.voices.some((v) => v.voice_id === voiceId);
+    } catch (error) {
+      if (error instanceof AiServiceError && error.code === 'TIER_DISABLED') known = false;
+      else {
+        throw new ApiError('DEPENDENCY_UNAVAILABLE', 'Voices can’t be checked right now.', {
+          retryable: true,
+          cause: error,
+        });
+      }
+    }
+    if (!known) {
+      throw new ApiError('VALIDATION_FAILED', 'That voice is not available.', { retryable: false });
+    }
+  }
 
   // ── Profile ─────────────────────────────────────────────────────────────────────────────
 
@@ -141,6 +175,7 @@ export class ProfileService {
     expectedVersion: number,
     patch: PreferencesPatch,
   ): Promise<Preferences> {
+    if (patch.voice_id) await this.assertUsableVoice(patch.voice_id);
     const data = {
       ...(patch.language !== undefined ? { language: patch.language } : {}),
       ...(patch.script !== undefined ? { script: patch.script } : {}),
@@ -160,6 +195,14 @@ export class ProfileService {
             quietHoursEnd: patch.quiet_hours?.end ?? null,
           }
         : {}),
+      ...(patch.voice_accent !== undefined ? { voiceAccent: patch.voice_accent } : {}),
+      ...(patch.voice_gender !== undefined ? { voiceGender: patch.voice_gender } : {}),
+      ...(patch.voice_speed_pct !== undefined ? { voiceSpeedPct: patch.voice_speed_pct } : {}),
+      ...(patch.voice_autoplay !== undefined ? { voiceAutoplay: patch.voice_autoplay } : {}),
+      ...(patch.voice_enabled !== undefined ? { voiceEnabled: patch.voice_enabled } : {}),
+      ...(patch.voice_replies !== undefined ? { voiceReplies: patch.voice_replies } : {}),
+      ...(patch.reply_language !== undefined ? { replyLanguage: patch.reply_language } : {}),
+      ...(patch.voice_id !== undefined ? { voiceId: patch.voice_id } : {}),
     };
     const row = await this.prisma.withUserScope(userId, async (tx) => {
       const existing = await tx.userPreferences.findUnique({
@@ -471,6 +514,14 @@ function toPreferences(row: UserPreferences): Preferences {
       row.quietHoursStart && row.quietHoursEnd
         ? { start: row.quietHoursStart, end: row.quietHoursEnd }
         : null,
+    voice_accent: row.voiceAccent as Preferences['voice_accent'],
+    voice_gender: row.voiceGender as Preferences['voice_gender'],
+    voice_speed_pct: row.voiceSpeedPct,
+    voice_autoplay: row.voiceAutoplay,
+    voice_enabled: row.voiceEnabled,
+    voice_replies: row.voiceReplies,
+    reply_language: row.replyLanguage as Preferences['reply_language'],
+    voice_id: row.voiceId,
     version: row.version,
   };
 }

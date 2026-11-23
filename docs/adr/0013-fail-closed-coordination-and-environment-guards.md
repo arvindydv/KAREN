@@ -32,7 +32,7 @@ degraded dependency or a missing setting silently weakened a control:
 - The AI budget is a per-UTC-day Redis hash; reserve/settle/release are single Lua scripts using
   integer micro-USD. A reservation from a crashed process stays counted for that day
   (over-counts, never under-counts). Settings **refuse** `KAREN_AI_BUDGET_STORE=memory` in
-  dev/staging/production. Vercel gateway-side budgets remain the third layer (architecture §2.7).
+  dev/staging/production. Gateway-side key limits (OpenRouter since ADR-0025) remain the third layer (architecture §2.7).
 - Replay: a verified signature is accepted once (`SET NX EX 601`). Callers already re-sign
   every attempt, so legitimate retries are unaffected. Safe methods are exempt.
 - Rotation: the ai-service verifier accepts `INTERNAL_SERVICE_HMAC_SECRET` and, during a

@@ -21,9 +21,158 @@ html {
   color: var(--karen-text-primary);
 }
 
+/* Chat: blinking caret while an answer is being written, and the "thinking" dots. */
+.chat-caret .chat-md > :last-child::after {
+  content: '';
+  display: inline-block;
+  width: 0.5ch;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: currentColor;
+  opacity: 0.6;
+  animation: chat-blink 1s steps(2, start) infinite;
+}
+.chat-dots > span[aria-hidden] {
+  animation: chat-dot 1.2s ease-in-out infinite;
+}
+.chat-dots > span[aria-hidden]:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.chat-dots > span[aria-hidden]:nth-child(4) {
+  animation-delay: 0.3s;
+}
+@keyframes chat-blink {
+  to {
+    visibility: hidden;
+  }
+}
+@keyframes chat-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
     animation: none !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* ── Motion: one easing everywhere (fast start, soft settle); transform/opacity only. ── */
+:root {
+  --karen-ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes karen-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.karen-rise {
+  animation: karen-rise 0.5s var(--karen-ease) both;
+}
+
+/* Children rise in one after another. */
+.karen-stagger > * {
+  animation: karen-rise 0.5s var(--karen-ease) both;
+}
+.karen-stagger > :nth-child(1) {
+  animation-delay: 60ms;
+}
+.karen-stagger > :nth-child(2) {
+  animation-delay: 120ms;
+}
+.karen-stagger > :nth-child(3) {
+  animation-delay: 180ms;
+}
+.karen-stagger > :nth-child(4) {
+  animation-delay: 240ms;
+}
+.karen-stagger > :nth-child(5) {
+  animation-delay: 300ms;
+}
+.karen-stagger > :nth-child(n + 6) {
+  animation-delay: 360ms;
+}
+
+/* Smooth page-to-page transitions (cross-document view transitions; ignored where unsupported). */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root) {
+  animation: 220ms var(--karen-ease) both karen-fade-out;
+}
+::view-transition-new(root) {
+  animation: 420ms var(--karen-ease) both karen-rise;
+}
+@keyframes karen-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Voice mode orb (ADR-0032): the orb shows what KAREN is doing. */
+@keyframes karen-orb-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+@keyframes karen-orb-speak {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.1);
+    filter: brightness(1.25);
+  }
+}
+@keyframes karen-orb-think {
+  from {
+    transform: rotate(0deg) scale(0.98);
+  }
+  to {
+    transform: rotate(360deg) scale(0.98);
+  }
+}
+.karen-orb-listening {
+  animation: karen-orb-breathe 2.8s ease-in-out infinite;
+}
+.karen-orb-speaking {
+  animation: karen-orb-speak 0.85s ease-in-out infinite;
+}
+.karen-orb-thinking {
+  animation: karen-orb-think 2.6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .karen-orb-listening,
+  .karen-orb-speaking,
+  .karen-orb-thinking {
+    animation: none;
   }
 }

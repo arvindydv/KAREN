@@ -157,7 +157,7 @@ export const requiredWhenDeployed =
  */
 export const PUBLIC_ENV_PREFIXES = ['NEXT_PUBLIC_', 'EXPO_PUBLIC_'] as const;
 const SECRET_NAME_PATTERN =
-  /(SECRET|PASSWORD|PRIVATE|API_KEY|APIKEY|TOKEN|CREDENTIAL|DATABASE_URL|REDIS_URL|AI_GATEWAY)/i;
+  /(SECRET|PASSWORD|PRIVATE|API_KEY|APIKEY|TOKEN|CREDENTIAL|DATABASE_URL|REDIS_URL|AI_GATEWAY|OPENROUTER)/i;
 
 export function findSecretLookingPublicEnvNames(names: Iterable<string>): string[] {
   return [...names].filter(

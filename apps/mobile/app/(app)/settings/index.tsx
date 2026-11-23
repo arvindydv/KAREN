@@ -1,12 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { useServices } from '../../../src/auth/services';
-import {
-  FormScreen,
-  GlassCard,
-  LinkRow,
-  SecondaryButton,
-} from '../../../src/components/primitives';
+import { FormScreen, LinkRow, ListCard, SecondaryButton } from '../../../src/components/primitives';
 import { ScreenHeader } from '../../../src/components/screen-header';
 import { useSubmit } from '../../../src/lib/use-submit';
 
@@ -17,7 +12,7 @@ export default function SettingsScreen() {
   return (
     <FormScreen>
       <ScreenHeader title="Settings" />
-      <GlassCard>
+      <ListCard>
         <LinkRow
           label="Profile"
           description="Name, language, time zone, currency"
@@ -38,7 +33,7 @@ export default function SettingsScreen() {
           description="Consents, legal, export or delete your data"
           onPress={() => router.push('/settings/privacy')}
         />
-      </GlassCard>
+      </ListCard>
       <SecondaryButton
         label={signOut.busy ? 'Signing out…' : 'Sign out'}
         disabled={signOut.busy}
