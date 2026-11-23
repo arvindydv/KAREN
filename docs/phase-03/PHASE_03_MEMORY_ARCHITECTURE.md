@@ -1097,6 +1097,11 @@ the owner and lifecycle filters. There is no shared or global index query.
 | **F2** app-side tokens → `array_to_tsvector(tokens)` for **matching only**; query as quoted-lexeme `tsquery`; lexical **score computed in TypeScript** | Deterministic normaliser in `@karen/domain`: NFC, case-fold Latin, split on `[^\p{L}\p{M}\p{N}]+`, small EN/HI/Hinglish stop-lists, Hinglish vowel folding (`aa→a`, `ee→i`, `oo→u`) | Normaliser quality is ours to test; independent of DB locale. `array_to_tsvector` yields **position-less** lexemes, so `ts_rank_cd` scores them **0** **[V-local]** (validation F27) — SQL must not rank with it (H2) |
 | **F3** F1 or F2 **+ `pg_trgm`** similarity on `value_text`                                                                                             | Catches spelling variants (`khana/khaana`, `Pune/Poona`)                                                                                                                            | Needs `CREATE EXTENSION pg_trgm` (not enabled **[V]**); RDS availability **[NV]**; only if compatibility and evaluation justify it (D3 owner condition)                                                               |
 
+> **M1 implementation note (tokenizer `mt-1`).** In addition to the F2 rules: Devanagari digits →
+> ASCII; Devanagari nukta folded; ZWNJ/ZWJ ignored for matching; English plural `-s` folded (length
+> ≥ 4); one final vowel dropped on Latin words of length ≥ 5 (Hinglish inflection `khana/khane`),
+> except a short keep-list (`caste`). Defined in `packages/domain/src/memory/normalise.ts`.
+
 **Proposed default: F2**, with F1 run on the same eval set for comparison, and F3 added only if
 F2 misses the Hinglish threshold because of spelling variance. The choice is recorded in the M4
 evaluation report. `search_lexemes` is written by the API on every insert/update (no generated
@@ -1156,6 +1161,15 @@ place, the TypeScript scorer.
 ### 6.5 Ranking, freshness, dedupe (pure function, unit-tested)
 
 `score = 3·pinned + 2·lexicalNorm + 1·alwaysPreference + freshness(kind, age) + 0.5·recent`
+
+> **M1 implementation note (2026-11-23, scorer `ms-1`, tuned on the dev split only).** With the
+> formula above, a partial lexical match (`2·lexicalNorm` < 1) lost to any non-matching preference
+> (+1) and pinned rows (+3) filled the top five, contradicting T-RET-05 ("an old lexical match still
+> included **ahead of** non-matching always-include rows"); dev recall@5 was 0.38. Implemented
+> weights: `score = 1·pinned + 2·lexicalNorm + 2·[lexicalNorm > 0] + 0.5·alwaysPreference +
+freshness + 0.25·recent`, and the budget admits pinned items first so they are always sent when
+> they fit (`applyBudget`). Dev recall@5 EN/HI/Hinglish 1.00/1.00/0.97, recall-in-context 1.00.
+> The sealed test split was not evaluated (M4b/M7).
 
 - `lexicalNorm` _(H2)_: computed in TypeScript from the query tokens and the item's stored
   lexemes (both produced by the same domain normaliser): weighted token overlap

@@ -159,3 +159,33 @@ export const INTERNAL_DATA_RIGHTS_PATHS = {
 
 /** Result of expiring an export download (payload purged). */
 export type ExportExpiryOutcome = 'expired' | 'not_due' | 'already_done';
+
+// ------------------------------------------------------------------------------------------
+// Phase 03 memory extraction (ADR-0036, arch §8.3). Ids only cross this boundary.
+// ------------------------------------------------------------------------------------------
+
+export const MEMORY_WORKFLOWS = { EXTRACTION: 'memoryExtractionWorkflow' } as const;
+
+/** One workflow per source message; started with REJECT_DUPLICATE (a closed id is never reused). */
+export const memoryExtractionWorkflowId = (sourceMessageId: string): string =>
+  `memory-extract:${sourceMessageId}`;
+
+/** AI request id per attempt (`memx_<job id>_<attempt>`; never reused, arch §7.4). */
+export const memoryExtractionRequestId = (jobId: string, attempt: number): string =>
+  `memx_${jobId}_${attempt}`;
+
+export interface MemoryExtractionWorkflowInput {
+  jobId: string;
+}
+
+/** Result of the API's run / abandon step: a content-free outcome code. */
+export interface MemoryExtractionStepResult {
+  outcome: string;
+}
+
+/** Internal routes (signed; never public). API routes are called by the worker; `extract` is the ai-service route. */
+export const INTERNAL_MEMORY_PATHS = {
+  runExtractionJob: (jobId: string) => `/internal/v1/memory/extraction-jobs/${jobId}/run`,
+  abandonExtractionJob: (jobId: string) => `/internal/v1/memory/extraction-jobs/${jobId}/abandon`,
+  extract: '/internal/v1/memory/extract',
+} as const;
