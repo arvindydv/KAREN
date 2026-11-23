@@ -14,17 +14,24 @@ export type MemorySubject = (typeof MEMORY_SUBJECTS)[number];
 export const MEMORY_ITEM_STATUSES = ['active', 'suspended'] as const;
 export type MemoryItemStatus = (typeof MEMORY_ITEM_STATUSES)[number];
 
-/** How an item came to exist (arch §4.3 `origin`). */
-export const MEMORY_ORIGINS = [
-  'explicit_request',
-  'suggestion_confirmed',
-  'user_created',
-  'restored',
-] as const;
+/** How an item came to exist (arch §4.3 `items_origin`; restore keeps the original origin). */
+export const MEMORY_ORIGINS = ['explicit_request', 'confirmed_suggestion', 'user_created'] as const;
 export type MemoryOrigin = (typeof MEMORY_ORIGINS)[number];
 
-/** Why a suggestion exists (arch §4.6, §3.3). */
-export const MEMORY_SUGGESTION_REASONS = ['confirm', 'conflict', 'restore_conflict'] as const;
+/** Why a suggestion exists (arch §4.3 `suggestions.reason`, §4.6, §3.3). */
+export const MEMORY_SUGGESTION_REASONS = [
+  'stated',
+  'third_party',
+  'conflict',
+  'ask_before_saving',
+  'restore_conflict',
+] as const;
+
+/** Why an item was retrieved (arch §4.3 `access_events.reason`, §6.4). */
+export const MEMORY_ACCESS_REASONS = ['pinned', 'always', 'lexical', 'recent'] as const;
+
+/** Who changed a revision's value (arch §4.3 `item_revisions.changed_by`). */
+export const MEMORY_REVISION_CAUSES = ['user_edit', 'explicit_supersede'] as const;
 export type MemorySuggestionReason = (typeof MEMORY_SUGGESTION_REASONS)[number];
 
 /**

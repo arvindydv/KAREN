@@ -808,6 +808,16 @@ Notes:
 - FK referential actions (cascade/set null) are not subject to RLS in PostgreSQL **[PG]**, so
   thread or message deletion propagates even with FORCE RLS on `memory.*`. Proven in M2a by a
   test run as a non-superuser owner (§5.5 item 5).
+- **M2a implementation notes (2026-11-23).** (1) The generated classes live once each in
+  `memory.text_allowed(text)` / `memory.label_allowed(text)` (`IMMUTABLE`), which every CHECK calls;
+  the label rule is an explicit code-point pattern because PostgreSQL regexes have no `\p{L}`;
+  integration tests assert the migration embeds the generated strings and that both functions agree
+  with the TS policy for every BMP code point. (2) **Deviation:**
+  `suggestions.conflicts_with_item_id` uses `ON DELETE CASCADE` instead of the column-list
+  `SET NULL (conflicts_with_item_id)`, because Prisma cannot model it and the drift check would
+  fail; a conflict suggestion whose item the user deleted is moot. (3) The owner trigger checks
+  only changed columns, so FK `SET NULL` cascades pass. (4) Q6 decided: the consent trigger writes
+  a content-free `memory.suspended` audit row (counts only).
 - **Placeholders.** `:MEMORY_TEXT_BANNED:` / `:MEMORY_LABEL_ALLOWED:` are not SQL; the reviewed
   migration contains the generated literal classes, and a unit test checks they match the domain
   policy (M-01).

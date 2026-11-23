@@ -106,3 +106,47 @@ export function memoryTextSqlCheck(column: string): string {
     `AND btrim(${column}) <> '' AND ${column} !~ '${memoryTextSqlCharClass()}')`
   );
 }
+
+const LETTER = /^\p{L}$/u;
+const MARK = /^\p{M}$/u;
+const LABEL_EXTRA = new Set([0x20, 0x27, 0x2019, 0x2e, 0x2d]); // space ' ’ . -
+
+function rangesWhere(pred: (cp: number) => boolean): Array<[number, number]> {
+  const ranges: Array<[number, number]> = [];
+  let start = -1;
+  for (let cp = 1; cp <= 0x10ffff; cp++) {
+    if (cp === 0xd800) {
+      if (start !== -1) ranges.push([start, cp - 1]);
+      start = -1;
+      cp = 0xdfff;
+      continue;
+    }
+    const ok = pred(cp);
+    if (ok && start === -1) start = cp;
+    if (!ok && start !== -1) {
+      ranges.push([start, cp - 1]);
+      start = -1;
+    }
+  }
+  if (start !== -1) ranges.push([start, 0x10ffff]);
+  return ranges;
+}
+
+function pgClass(ranges: Array<[number, number]>): string {
+  return `[${ranges.map(([a, b]) => (a === b ? pgEscape(a) : `${pgEscape(a)}-${pgEscape(b)}`)).join('')}]`;
+}
+
+/**
+ * PostgreSQL ARE anchored pattern equivalent to `isMemoryLabelAllowed` (PostgreSQL regexes have no
+ * \p{L}, so letters and marks are emitted as explicit code-point classes). Generated; parity-tested.
+ */
+export function memoryLabelSqlPattern(): string {
+  const letter = pgClass(rangesWhere((cp) => LETTER.test(String.fromCodePoint(cp))));
+  const rest = pgClass(
+    rangesWhere((cp) => {
+      const s = String.fromCodePoint(cp);
+      return LETTER.test(s) || MARK.test(s) || LABEL_EXTRA.has(cp);
+    }),
+  );
+  return `^${letter}${rest}{0,39}$`;
+}
