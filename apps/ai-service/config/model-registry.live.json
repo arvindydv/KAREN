@@ -17,7 +17,7 @@
       "input_usd_per_million_tokens": 0.1,
       "output_usd_per_million_tokens": 0.5,
       "verified_at": "2026-11-22",
-      "notes": "Prices/limits from the OpenRouter catalog on 2026-11-22. zdr_endpoint=True. moderated=True. context capped at 100000 tokens: higher price band above it (catalog overrides). Suggested env: KAREN_MODEL_ECONOMY, KAREN_MODEL_BALANCED, KAREN_MODEL_VISION, KAREN_MODEL_VOICE (ADR-0034: spoken turns need emotional understanding and persona adherence; ~0.5 s slower first word than Llama 4 Maverick). SP-1 probe passed 2026-11-22; TTFT 1523 ms from the operator machine. Review upstream data-processing terms before enabling for users (architecture §9).",
+      "notes": "Prices/limits from the OpenRouter catalog on 2026-11-22. zdr_endpoint=True. moderated=True. context capped at 100000 tokens: higher price band above it (catalog overrides). Suggested env: KAREN_MODEL_ECONOMY, KAREN_MODEL_BALANCED, KAREN_MODEL_VISION. SP-1 probe passed 2026-11-22; TTFT 1523 ms from the operator machine. Review upstream data-processing terms before enabling for users (architecture §9).",
       "quality_index": 36.5,
       "latency_p50_ms": 1935.0,
       "throughput_p50_tps": 120.0,
@@ -180,7 +180,7 @@
       "input_usd_per_million_tokens": 0.35,
       "output_usd_per_million_tokens": 1.0,
       "verified_at": "2026-11-22",
-      "notes": "Prices/limits from the OpenRouter catalog on 2026-11-22. zdr_endpoint=True. moderated=False. Formerly KAREN_MODEL_VOICE (ADR-0032; replaced by Claude Haiku 5.5 in ADR-0034 for conversation quality): time to first word median 1.07 s / max 1.57 s over 12 warm calls with the spoken prompt (Haiku 1.56 / 2.30, Gemini 3.1 Flash-Lite 1.60 / 6.24); not used for typed chat. SP-1 probe passed 2026-11-22; TTFT 621 ms from the operator machine. Review upstream data-processing terms before enabling for users (architecture §9).",
+      "notes": "Prices/limits from the OpenRouter catalog on 2026-11-22. zdr_endpoint=True. moderated=False. SP-1 probe passed 2026-11-22; TTFT 621 ms from the operator machine. Review upstream data-processing terms before enabling for users (architecture §9).",
       "latency_p50_ms": 526.0,
       "throughput_p50_tps": 67.0,
       "metadata_observed_at": "2026-11-22"

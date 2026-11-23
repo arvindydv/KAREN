@@ -2,9 +2,8 @@
 
 Deterministic and dependency-free: the Devanagari share decides Hindi; Latin-script text is
 Hinglish when enough common Hindi function words appear. A heuristic with known limits (very short
-text, names, code): it picks a TTS voice and a reply-language hint, never anything authoritative.
-Calibrate thresholds against the SP-3 baseline before gating on it. New languages extend
-``Language`` plus a detector rule; voice selection falls back gracefully for unknown ones.
+text, names, code): evals use it to grade reply language; it is never authoritative. Calibrate
+thresholds before gating on it. New languages extend ``Language`` plus a detector rule.
 """
 
 from __future__ import annotations

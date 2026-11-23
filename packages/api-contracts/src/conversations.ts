@@ -192,16 +192,9 @@ const messageContentSchema = z
   .refine((s) => s.trim().length > 0, 'Message cannot be empty')
   .refine((s) => s.length <= MESSAGE_MAX_CHARS, `At most ${MESSAGE_MAX_CHARS} characters`);
 
-export const MESSAGE_INPUT_MODES = ['text', 'voice'] as const;
-
 export const sendMessageRequestSchema = z
   .object({
     content: messageContentSchema,
-    /**
-     * `voice` = the text is a spoken turn (live conversation or reviewed voice message); KAREN
-     * then answers briefly in speakable sentences for reading aloud (ADR-0029). Default `text`.
-     */
-    input_mode: z.enum(MESSAGE_INPUT_MODES).optional(),
   })
   .strict()
   .meta({ id: 'SendMessageRequest' });

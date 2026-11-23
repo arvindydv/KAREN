@@ -5,9 +5,8 @@ import { useState, type FormEvent } from 'react';
 import { bff } from '@/lib/api';
 import { errorMessage } from '@/lib/errors';
 import { FormAlert, SelectField, SubmitButton, TextField, Toggle, formString } from '../forms';
-import { LANGUAGE_OPTIONS } from './options';
+import { LANGUAGE_OPTIONS, REPLY_LANGUAGE_OPTIONS } from './options';
 import { useAction } from './use-action';
-import { VoiceSettings, type VoiceSettingsValue } from './voice-settings';
 
 export function PreferencesForm({ prefs }: { prefs: Preferences }) {
   const action = useAction();
@@ -16,16 +15,6 @@ export function PreferencesForm({ prefs }: { prefs: Preferences }) {
   const [productEmail, setProductEmail] = useState(prefs.notify_product_email);
   const [push, setPush] = useState(prefs.notify_push);
   const [quiet, setQuiet] = useState(prefs.quiet_hours !== null);
-  const [voice, setVoice] = useState<VoiceSettingsValue>({
-    voice_enabled: prefs.voice_enabled,
-    voice_replies: prefs.voice_replies,
-    voice_autoplay: prefs.voice_autoplay,
-    reply_language: prefs.reply_language,
-    voice_accent: prefs.voice_accent,
-    voice_gender: prefs.voice_gender,
-    voice_id: prefs.voice_id,
-    voice_speed_pct: prefs.voice_speed_pct,
-  });
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -44,7 +33,7 @@ export function PreferencesForm({ prefs }: { prefs: Preferences }) {
       quiet_hours: quiet
         ? { start: formString(f, 'quiet_start', '22:00'), end: formString(f, 'quiet_end', '07:00') }
         : null,
-      ...voice,
+      reply_language: formString(f, 'reply_language', 'auto') as Preferences['reply_language'],
     };
     await action.run(
       () =>
@@ -74,6 +63,13 @@ export function PreferencesForm({ prefs }: { prefs: Preferences }) {
           name="language"
           defaultValue={prefs.language}
           options={LANGUAGE_OPTIONS}
+        />
+        <SelectField
+          label="Reply language in chat"
+          name="reply_language"
+          defaultValue={prefs.reply_language}
+          options={REPLY_LANGUAGE_OPTIONS}
+          hint="Automatic replies in the language you write in."
         />
         <SelectField
           label="Script"
@@ -131,7 +127,6 @@ export function PreferencesForm({ prefs }: { prefs: Preferences }) {
           <Toggle label="High contrast" checked={highContrast} onChange={setHighContrast} />
         </div>
       </fieldset>
-      <VoiceSettings value={voice} onChange={setVoice} />
       <fieldset className="space-y-2">
         <legend className="mb-2 text-base font-semibold">Notifications</legend>
         <p className="text-xs text-muted">

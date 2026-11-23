@@ -121,13 +121,14 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
 
   // ── runner ──────────────────────────────────────────────────────────────────────────────
 
-  private async run(job: GenerationJob, controller: AbortController): Promise<void> {
-    const loaded = await this.prisma.withUserScope(job.userId, async (tx) => {
+  /** Loads the message and its bounded context; null when it is no longer active. */
+  private async load(job: GenerationJob) {
+    return this.prisma.withUserScope(job.userId, async (tx) => {
       const msg = await tx.conversationMessage.findFirst({
         where: { id: job.messageId, userId: job.userId, role: 'assistant' },
       });
       if (!msg || !ACTIVE.includes(msg.status as MessageStatus)) return null;
-      const [thread, user, prefs, history, question] = await Promise.all([
+      const [thread, user, prefs, history] = await Promise.all([
         tx.conversationThread.findUniqueOrThrow({ where: { id: msg.threadId } }),
         tx.user.findUnique({
           where: { id: job.userId },
@@ -148,12 +149,6 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
           take: this.env.CHAT_CONTEXT_MAX_MESSAGES * 2,
           select: { role: true, content: true },
         }),
-        msg.replyToMessageId
-          ? tx.conversationMessage.findFirst({
-              where: { id: msg.replyToMessageId, userId: job.userId },
-              select: { inputMode: true },
-            })
-          : null,
       ]);
       const replyLanguage = prefs?.replyLanguage;
       return {
@@ -162,12 +157,19 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
         timezone: user?.timezone ?? null,
         // ADR-0034: KAREN addresses the user by the name they chose (cleaned; may be omitted).
         userName: addressName(user?.preferredName, user?.displayName),
-        // ADR-0027: a saved reply language overrides automatic detection ("auto" = detect).
+        // A saved reply language overrides automatic detection ("auto" = detect).
         replyLanguage: isReplyLanguage(replyLanguage) ? replyLanguage : null,
-        // ADR-0029: a spoken question gets an answer written to be read aloud.
-        spoken: question?.inputMode === 'voice',
         history: history.reverse(),
       };
+    });
+  }
+
+  private async run(job: GenerationJob, controller: AbortController): Promise<void> {
+    const loaded = await this.load(job).catch(async (error: unknown) => {
+      // Nothing was sent to the AI service: give the reservation back, then let the reaper close
+      // the message once its lease expires (it is never silently re-run).
+      await this.usage.settleCounters(job.userId, job.reservationKey, 0);
+      throw error;
     });
     if (!loaded) {
       await this.usage.settleCounters(job.userId, job.reservationKey, 0);
@@ -220,7 +222,6 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
           locale: loaded.thread.locale,
           ...(loaded.timezone ? { timezone: loaded.timezone } : {}),
           ...(loaded.replyLanguage ? { reply_language: loaded.replyLanguage } : {}),
-          ...(loaded.spoken ? { reply_style: 'spoken' as const } : {}),
           ...(loaded.userName ? { user_name: loaded.userName } : {}),
         },
         { signal: controller.signal },

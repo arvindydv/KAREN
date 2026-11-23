@@ -12,7 +12,6 @@ import { createAppServices, ServicesProvider, type AppServices } from './auth/se
 import { MarkdownText } from './features/chat/markdown';
 import { createInMemoryCredentialStore } from './lib/secure-storage';
 import { useChatDrafts } from './state/chat-drafts';
-import { useVoiceStore } from './state/voice-store';
 
 const CID = '9b2f0c1e-1d6a-4c2b-8f0e-3a5b6c7d8e9f';
 const UID = '0b2f0c1e-1d6a-4c2b-8f0e-3a5b6c7d8e90';
@@ -24,20 +23,6 @@ const mockRouter = {
   back: jest.fn(),
   canGoBack: jest.fn(() => true),
 };
-// Voice native code: present by default (a current development build); tests flip `talk`.
-const mockVoiceSupport = { talk: true, wakeWord: true };
-jest.mock('./features/voice/native-modules', () => ({
-  /* eslint-disable @typescript-eslint/no-require-imports */
-  audioLib: require('./test/expo-audio-stub'),
-  fileSystemLib: require('./test/expo-file-system-stub'),
-  speechLib: require('./test/expo-speech-recognition-stub'),
-  /* eslint-enable @typescript-eslint/no-require-imports */
-  // A getter: jest hoists this factory above the `mockVoiceSupport` initialiser.
-  get voiceSupport() {
-    return mockVoiceSupport;
-  },
-}));
-
 jest.mock('expo-router', () => {
   const { Text } = jest.requireActual<typeof ReactNative>('react-native');
   return {
@@ -276,21 +261,12 @@ const baseRoutes = (granted: boolean, items: Message[] = []): Record<string, Rou
 });
 
 describe('Conversation', () => {
-  it('talking opens the immersive voice mode (orb + greeting, no transcript); ✕ leaves it', async () => {
-    useVoiceStore.setState({ handoff: null, loaded: true, handsFree: false });
+  it('is a text chat: no voice controls on the conversation screen', async () => {
     await renderWith(<ConversationScreen />, {
       ...baseRoutes(true, [msg({ content: 'An earlier answer' })]),
-      'GET /v1/voice/options': () =>
-        json(200, { available: true, live_available: true, is_mock: false, voices: [] }),
-      'GET /v1/me/profile': () =>
-        json(200, { display_name: 'Arvind Yadav', preferred_name: 'Arvind', version: 0 }),
     });
     await enabledComposer();
-    await fireEvent.press(screen.getByRole('button', { name: 'Talk to KAREN' }));
-    expect(await screen.findByLabelText('Leave voice mode')).toBeTruthy();
-    expect(screen.getByText(/Arvind\./)).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText('Leave voice mode'));
-    await waitFor(() => expect(screen.queryByLabelText('Leave voice mode')).toBeNull());
+    expect(screen.queryByRole('button', { name: 'Talk to KAREN' })).toBeNull();
   });
 
   it('asks for AI-processing consent instead of showing the composer', async () => {
@@ -469,66 +445,11 @@ describe('New chat (signed-in landing)', () => {
     expect(useChatDrafts.getState().drafts.new).toBeUndefined();
   });
 
-  it('offers talking to KAREN when voice is available: mic tap opens a voice chat', async () => {
-    useVoiceStore.setState({ handoff: null, loaded: true, handsFree: false });
-    const { calls } = await renderWith(<NewChatScreen />, {
-      ...baseRoutes(true),
-      'GET /v1/voice/options': () =>
-        json(200, {
-          available: true,
-          live_available: true,
-          is_mock: false,
-          speed_pct_min: 70,
-          speed_pct_max: 150,
-          voices: [],
-        }),
-      'POST /v1/conversations': () => json(201, conversation({ title: 'New conversation' })),
-    });
-    // The hands-free switch and the voice status are shown; nothing says "coming soon".
-    expect(await screen.findByLabelText('Hands-free: listen for Hey KAREN')).toBeTruthy();
-    expect(screen.queryByText(/coming soon/)).toBeNull();
+  it('is a text chat: no voice controls on the landing screen', async () => {
+    const { calls } = await renderWith(<NewChatScreen />, baseRoutes(true));
     await enabledComposer();
-    await fireEvent.press(screen.getByRole('button', { name: 'Talk to KAREN' }));
-    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith(`/chat/${CID}`));
-    expect(useVoiceStore.getState().handoff).toEqual({ conversationId: CID, question: null });
-    expect(calls.filter((c) => c.method === 'POST').map((c) => c.path)).toEqual([
-      '/v1/conversations',
-    ]);
-  });
-
-  it('an app build without voice still works and explains how to get voice', async () => {
-    mockVoiceSupport.talk = false;
-    mockVoiceSupport.wakeWord = false;
-    try {
-      const { calls } = await renderWith(<NewChatScreen />, {
-        ...baseRoutes(true),
-        'GET /v1/voice/options': () =>
-          json(200, { available: true, live_available: true, is_mock: false, voices: [] }),
-      });
-      await enabledComposer();
-      expect(screen.queryByLabelText('Hands-free: listen for Hey KAREN')).toBeNull();
-      await fireEvent.press(screen.getByRole('button', { name: 'Talk to KAREN' }));
-      expect(await screen.findByText(/built without voice/)).toBeTruthy();
-      expect(mockRouter.replace).not.toHaveBeenCalled();
-      expect(calls.some((c) => c.method === 'POST')).toBe(false);
-    } finally {
-      mockVoiceSupport.talk = true;
-      mockVoiceSupport.wakeWord = true;
-    }
-  });
-
-  it('explains instead of listening when voice is turned off in settings', async () => {
-    await renderWith(<NewChatScreen />, {
-      ...baseRoutes(true),
-      'GET /v1/me/preferences': () => json(200, { voice_enabled: false, version: 0 }),
-      'GET /v1/voice/options': () =>
-        json(200, { available: true, live_available: true, is_mock: false, voices: [] }),
-    });
-    await enabledComposer();
-    expect(screen.queryByLabelText('Hands-free: listen for Hey KAREN')).toBeNull();
-    const mics = await screen.findAllByRole('button', { name: 'Talk to KAREN' });
-    await fireEvent.press(mics[0]!);
-    expect(await screen.findByText(/Voice is turned off/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Talk to KAREN' })).toBeNull();
+    expect(calls.some((c) => c.path.startsWith('/v1/voice'))).toBe(false);
   });
 
   it('retries a failed send in the same chat with the same Idempotency-Key', async () => {

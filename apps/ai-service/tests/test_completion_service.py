@@ -1,20 +1,21 @@
 from __future__ import annotations
 
+import asyncio
 import dataclasses
-import json
 from collections.abc import AsyncGenerator
 from pathlib import Path
 
+import anyio
 import pytest
 
 from karen_ai.api.app import build_completion_service
 from karen_ai.contracts import CompletionRequest, DeltaEvent, DoneEvent, ErrorEvent, StartEvent
 from karen_ai.core.errors import KarenAIError
 from karen_ai.gateway.base import GatewayRequest, GatewayResult
-from karen_ai.gateway.mock import MockGatewayClient
+from karen_ai.gateway.mock import MockGatewayClient, chat_responder
 from karen_ai.model_router.service import CompletionService
 from karen_ai.observability.invocations import InMemoryInvocationSink
-from karen_ai.policies.budget import InMemoryDailyBudgetTracker
+from karen_ai.policies.budget import InMemoryDailyBudgetTracker, Reservation
 from tests.conftest import SettingsFactory, completion_body, write_registry
 
 
@@ -236,29 +237,45 @@ async def test_chat_without_task_route_records_none(make_settings: SettingsFacto
     assert sink.records[0].gateway_reported_cost_usd is None
 
 
-async def test_spoken_turn_uses_the_voice_model_with_the_chat_model_as_fallback(
+class _YieldingTracker(InMemoryDailyBudgetTracker):
+    """Settles after a real suspension point, like the Redis tracker's network round trip."""
+
+    async def settle(self, reservation: Reservation, actual_usd: float) -> None:
+        await asyncio.sleep(0)
+        await super().settle(reservation, actual_usd)
+
+
+async def test_cancelled_stream_still_settles_budget_and_records(
     make_settings: SettingsFactory, tmp_path: Path
 ) -> None:
-    # ADR-0031: a fast model for spoken turns only; typed chat keeps the normal selection.
-    data = json.loads(write_registry(tmp_path / "base.json", price=1.0).read_text())
-    fast = {**data["models"][1], "model_id": "test-creator/fast-voice"}
-    fast.pop("quality_index", None)  # unknown quality: only usable as an explicit pin
-    data["models"].append(fast)
-    registry = tmp_path / "r.json"
-    registry.write_text(json.dumps(data))
-    gateway, sink = MockGatewayClient(), InMemoryInvocationSink()
-    service = _service(
-        make_settings,
-        gateway,
-        sink,
-        karen_model_registry_path=registry,
-        karen_model_voice="test-creator/fast-voice",
+    """Regression: Starlette (ASGI spec < 2.4, as uvicorn reports) cancels the response task's
+    anyio cancel scope on client disconnect. Cancellation is level-triggered there, so an
+    unshielded ``await`` in the stream's ``finally`` was cancelled too: the reservation leaked
+    as in-flight for the day and no invocation record was written."""
+    tracker = _YieldingTracker(1.0)
+    gateway = MockGatewayClient(responder=chat_responder, scenarios=True)
+    sink = InMemoryInvocationSink()
+    settings = make_settings(karen_model_registry_path=write_registry(tmp_path / "r.json", price=1.0))
+    service = build_completion_service(settings, gateway=gateway, sink=sink, budget=tracker)
+    prepared = await service.prepare(
+        _request(messages=[{"role": "user", "content": "[[mock:slow]] hello there"}]), stream=True
     )
-    spoken = await service.complete(_request(reply_style="spoken"))
-    typed = await service.complete(_request())
-    assert spoken.requested_model == "test-creator/fast-voice"
-    assert gateway.calls[0].fallback_models[0] == "mock/balanced"
-    assert gateway.calls[0].prefer_latency is True
-    assert typed.requested_model == "mock/balanced"
-    assert gateway.calls[1].prefer_latency is False
-    assert [r.task_route for r in sink.records] == ["VOICE", None]
+    first_delta = anyio.Event()
+
+    async def consume() -> None:
+        async for event in service.stream_events(prepared):
+            if isinstance(event, DeltaEvent):
+                first_delta.set()
+
+    async with anyio.create_task_group() as task_group:
+        task_group.start_soon(consume)
+        await first_delta.wait()
+        task_group.cancel_scope.cancel()  # what StreamingResponse does on http.disconnect
+    for _ in range(5):  # let shielded clean-up finish
+        await asyncio.sleep(0)
+
+    assert prepared.estimated_cost_usd > 0
+    assert tracker._reserved == {}
+    assert await tracker.spent_today() == pytest.approx(prepared.estimated_cost_usd)
+    [record] = sink.records
+    assert record.status == "cancelled"

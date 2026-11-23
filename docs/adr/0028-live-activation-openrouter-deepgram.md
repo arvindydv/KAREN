@@ -1,6 +1,6 @@
 # 0028 — Live activation of OpenRouter and Deepgram; hidden reasoning off on fast tiers
 
-- Status: Accepted · Date: 2026-11-22
+- Status: Accepted; **voice parts superseded by ADR-0035** (2026-11-23) · Date: 2026-11-22
 - Builds on: ADR-0025 (OpenRouter), ADR-0026 (routing, voice), ADR-0027 (Deepgram).
 
 ## Context

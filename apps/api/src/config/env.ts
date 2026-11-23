@@ -170,26 +170,6 @@ export const apiEnvShape = {
     .default(168),
   /** Interval of the in-process maintenance sweep (reaper + retention). 0 disables (tests). */
   CHAT_MAINTENANCE_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(3_600).default(30),
-  /**
-   * Voice (ADR-0026): per-request reservations against the same per-user daily/monthly limits as
-   * chat (sent to the AI service as max_cost_usd, so they must be ≥ its KAREN_VOICE_*_RESERVE_USD).
-   */
-  VOICE_STT_RESERVE_USD: z.coerce.number().positive().max(1).default(0.01),
-  /**
-   * Upper bound for one spoken reply. The AI service prices the actual text (Deepgram Flux TTS:
-   * ~$0.09 for 2,000 characters, ADR-0027) and refuses replies above this cap.
-   */
-  VOICE_TTS_RESERVE_USD: z.coerce.number().positive().max(1).default(0.1),
-  VOICE_REQUESTS_PER_MINUTE: z.coerce.number().int().min(1).max(600).default(20),
-  /**
-   * Live voice conversations (ADR-0027): worst-case cost reserved per session (must cover the AI
-   * service's KAREN_VOICE_LIVE_MAX_SECONDS at the live model's price; settled to actual audio).
-   */
-  VOICE_LIVE_RESERVE_USD: z.coerce.number().positive().max(2).default(0.05),
-  /** Streamed audio chunks per user per minute (~4/s at a 250 ms timeslice). */
-  VOICE_LIVE_CHUNKS_PER_MINUTE: z.coerce.number().int().min(60).max(3_000).default(600),
-  /** How long the API remembers a live session (≥ the AI service's max + idle seconds). */
-  VOICE_LIVE_SESSION_TTL_SECONDS: z.coerce.number().int().min(60).max(7_200).default(900),
   KAREN_EXECUTION_PAUSED: booleanFlag(false),
 };
 

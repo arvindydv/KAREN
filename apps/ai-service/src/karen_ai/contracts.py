@@ -26,7 +26,7 @@ from pydantic import (
     model_validator,
 )
 
-CONTRACT_VERSION: Final = "2026-11-22.v3"
+CONTRACT_VERSION: Final = "2026-11-23.v4"
 
 RouteTier = Literal[
     "NO_MODEL",
@@ -75,7 +75,6 @@ AiErrorCode = Literal[
     "GATEWAY_INVALID_RESPONSE",
     "FALLBACK_EXHAUSTED",
     "INTERNAL_ERROR",
-    "NOT_FOUND",
 ]
 AI_ERROR_CODES: Final[tuple[AiErrorCode, ...]] = get_args(AiErrorCode)
 
@@ -177,12 +176,11 @@ class CompletionRequest(ContractModel):
             "locale",
             "timezone",
             "reply_language",
-            "reply_style",
             "user_name",
         }
     )
 
-    contract_version: Literal["2026-11-22.v3"]
+    contract_version: Literal["2026-11-23.v4"]
     request_id: Annotated[str, StringConstraints(min_length=8, max_length=128)]
     task_kind: TaskKind
     route_tier: RouteTier | None = None
@@ -197,9 +195,7 @@ class CompletionRequest(ContractModel):
     timezone: Annotated[str, StringConstraints(min_length=1, max_length=64)] | None = None
     # v3 (ADR-0027): saved reply language; omitted = reply in the latest message's language.
     reply_language: Literal["en", "hi", "hi-Latn"] | None = None
-    # v3 additive (ADR-0029): "spoken" = voice turn, reply will be read aloud.
-    reply_style: Literal["spoken"] | None = None
-    # v3 additive (ADR-0034): what KAREN calls the user. Letters, spaces and . ' - only.
+    # v3 additive: what KAREN calls the user. Letters, spaces and . ' - only.
     user_name: (
         Annotated[
             str,
@@ -221,7 +217,7 @@ class Usage(ContractModel):
 
 
 class CompletionResponse(ContractModel):
-    contract_version: Literal["2026-11-22.v3"]
+    contract_version: Literal["2026-11-23.v4"]
     request_id: str
     route_tier: RouteTier
     requested_model: str | None
@@ -280,168 +276,3 @@ class ErrorEvent(ContractModel):
 
 StreamEvent = Annotated[StartEvent | DeltaEvent | DoneEvent | ErrorEvent, Field(discriminator="event")]
 STREAM_EVENT_ADAPTER: Final[TypeAdapter[StreamEvent]] = TypeAdapter(StreamEvent)
-
-
-# ------------------------------------------------------------------------------- speech (ADR-0026)
-
-SpeechLanguage = Literal["en", "hi", "hi-Latn"]
-SPEECH_LANGUAGES: Final[tuple[SpeechLanguage, ...]] = get_args(SpeechLanguage)
-VoiceAccent = Literal["indian", "american", "british"]
-VOICE_ACCENTS: Final[tuple[VoiceAccent, ...]] = get_args(VoiceAccent)
-VoiceGender = Literal["female", "male", "any"]
-VOICE_GENDERS: Final[tuple[VoiceGender, ...]] = get_args(VoiceGender)
-AudioInputFormat = Literal["webm", "ogg", "mp3", "wav", "m4a", "aac", "flac"]
-AUDIO_INPUT_FORMATS: Final[tuple[AudioInputFormat, ...]] = get_args(AudioInputFormat)
-
-MAX_TRANSCRIPTION_AUDIO_BYTES: Final = 1_500_000
-MAX_TRANSCRIPTION_AUDIO_MS: Final = 60_000
-MAX_SPEECH_TEXT_CHARS: Final = 4_000
-# v3: Deepgram documents 0.7-1.5 (Aura-2) and 0.5-1.5 (Flux TTS); KAREN uses the overlap.
-VOICE_SPEED_MIN: Final = 0.7
-VOICE_SPEED_MAX: Final = 1.5
-VOICE_ID_PATTERN: Final = r"^[A-Za-z0-9._:-]{1,128}$"
-_MAX_AUDIO_BASE64_CHARS: Final = -(-MAX_TRANSCRIPTION_AUDIO_BYTES // 3) * 4
-
-SPEECH_RESPONSE_HEADERS: Final = {
-    "voiceId": "x-karen-voice-id",
-    "language": "x-karen-speech-language",
-    "servedModel": "x-karen-served-model",
-    "isMock": "x-karen-is-mock",
-    "estimatedCostUsd": "x-karen-estimated-cost-usd",
-    "textTruncated": "x-karen-text-truncated",
-}
-
-
-class VoicePreferences(ContractModel):
-    _omittable: ClassVar[frozenset[str]] = frozenset({"voice_id"})
-
-    accent: VoiceAccent
-    gender: VoiceGender
-    speed: Annotated[float, Field(ge=VOICE_SPEED_MIN, le=VOICE_SPEED_MAX)]
-    # v3: preferred catalog voice; used when it can speak the reply's language, else ignored.
-    voice_id: Annotated[str, StringConstraints(pattern=VOICE_ID_PATTERN)] | None = None
-
-
-class TranscriptionRequest(ContractModel):
-    _omittable: ClassVar[frozenset[str]] = frozenset({"duration_ms", "language_hint", "max_cost_usd"})
-
-    contract_version: Literal["2026-11-22.v3"]
-    request_id: Annotated[str, StringConstraints(min_length=8, max_length=128)]
-    user_ref: Annotated[str, StringConstraints(min_length=8, max_length=128)]
-    audio_base64: Annotated[
-        str,
-        StringConstraints(
-            min_length=4, max_length=_MAX_AUDIO_BASE64_CHARS, pattern=r"^[A-Za-z0-9+/]+={0,2}$"
-        ),
-    ]
-    audio_format: AudioInputFormat
-    duration_ms: Annotated[int, Field(gt=0, le=MAX_TRANSCRIPTION_AUDIO_MS)] | None = None
-    language_hint: SpeechLanguage | None = None
-    max_cost_usd: Annotated[float, Field(gt=0, le=10)] | None = None
-
-
-class TranscriptionResponse(ContractModel):
-    contract_version: Literal["2026-11-22.v3"]
-    request_id: str
-    text: str
-    language: SpeechLanguage | None
-    duration_seconds: Annotated[float, Field(ge=0)] | None
-    served_model: str | None
-    estimated_cost_usd: Annotated[float, Field(ge=0)] | None
-    is_mock: bool
-
-
-class SpeechRequest(ContractModel):
-    _omittable: ClassVar[frozenset[str]] = frozenset({"language", "max_cost_usd"})
-
-    contract_version: Literal["2026-11-22.v3"]
-    request_id: Annotated[str, StringConstraints(min_length=8, max_length=128)]
-    user_ref: Annotated[str, StringConstraints(min_length=8, max_length=128)]
-    text: Annotated[str, StringConstraints(min_length=1, max_length=MAX_SPEECH_TEXT_CHARS)]
-    language: SpeechLanguage | None = None
-    voice: VoicePreferences
-    max_cost_usd: Annotated[float, Field(gt=0, le=10)] | None = None
-
-
-# --------------------------------------------------------------------- voice catalog (ADR-0027)
-
-SpeechProviderName = Literal["mock", "openrouter", "deepgram"]
-
-
-class CatalogVoice(ContractModel):
-    voice_id: Annotated[str, StringConstraints(pattern=VOICE_ID_PATTERN)]
-    language: Literal["en", "hi"]
-    accent: VoiceAccent
-    gender: Literal["female", "male"] | None
-    display_name: str | None
-    supports_speed: bool
-
-
-class VoiceCatalogResponse(ContractModel):
-    contract_version: Literal["2026-11-22.v3"]
-    catalog_version: str
-    tts_provider: SpeechProviderName
-    stt_provider: SpeechProviderName
-    live_available: bool
-    speed_min: float
-    speed_max: float
-    voices: list[CatalogVoice]
-
-
-# ------------------------------------------------------------------------ live voice (ADR-0027)
-
-# pcm16 (ADR-0031): raw signed 16-bit little-endian mono PCM at 16 kHz (phone microphone).
-LiveAudioFormat = Literal["webm", "ogg", "pcm16"]
-MAX_LIVE_CHUNK_BYTES: Final = 32_768
-LIVE_SESSION_ID_PATTERN: Final = r"^lv_[A-Za-z0-9]{24,48}$"
-_MAX_LIVE_CHUNK_BASE64_CHARS: Final = -(-MAX_LIVE_CHUNK_BYTES // 3) * 4
-LiveCloseReason = Literal["client_closed", "idle_timeout", "max_duration", "provider_error", "shutdown"]
-
-
-class LiveSessionStartRequest(ContractModel):
-    _omittable: ClassVar[frozenset[str]] = frozenset({"language_hint", "max_cost_usd"})
-
-    contract_version: Literal["2026-11-22.v3"]
-    request_id: Annotated[str, StringConstraints(min_length=8, max_length=128)]
-    user_ref: Annotated[str, StringConstraints(min_length=8, max_length=128)]
-    audio_format: LiveAudioFormat
-    language_hint: SpeechLanguage | None = None
-    max_cost_usd: Annotated[float, Field(gt=0, le=10)] | None = None
-
-
-class LiveSessionStartResponse(ContractModel):
-    contract_version: Literal["2026-11-22.v3"]
-    session_id: Annotated[str, StringConstraints(pattern=LIVE_SESSION_ID_PATTERN)]
-    served_model: str
-    is_mock: bool
-    max_seconds: Annotated[int, Field(gt=0)]
-    idle_seconds: Annotated[int, Field(gt=0)]
-    reserved_cost_usd: Annotated[float, Field(ge=0)]
-
-
-class LiveAudioChunk(ContractModel):
-    contract_version: Literal["2026-11-22.v3"]
-    user_ref: Annotated[str, StringConstraints(min_length=8, max_length=128)]
-    seq: Annotated[int, Field(ge=0, le=1_000_000)]
-    audio_base64: Annotated[
-        str,
-        StringConstraints(
-            min_length=4, max_length=_MAX_LIVE_CHUNK_BASE64_CHARS, pattern=r"^[A-Za-z0-9+/]+={0,2}$"
-        ),
-    ]
-
-
-class LiveSessionCloseRequest(ContractModel):
-    contract_version: Literal["2026-11-22.v3"]
-    user_ref: Annotated[str, StringConstraints(min_length=8, max_length=128)]
-
-
-class LiveSessionUsage(ContractModel):
-    session_id: str
-    status: Literal["succeeded", "failed", "cancelled"]
-    reason: LiveCloseReason
-    audio_seconds: Annotated[float, Field(ge=0)]
-    estimated_cost_usd: Annotated[float, Field(ge=0)]
-    served_model: str
-    provider_request_id: str | None
-    is_mock: bool

@@ -174,12 +174,11 @@ export function useChatActions() {
    * action must pass the same key so the server returns the same messages (never a second answer).
    */
   const send = useCallback(
-    async (id: string, content: string, key: string, inputMode: 'text' | 'voice' = 'text') => {
+    async (id: string, content: string, key: string) => {
       const res = await unwrap<SendMessageResponse>(
         api.POST('/v1/conversations/{id}/messages', {
           params: { path: { id }, header: { 'Idempotency-Key': key } },
-          // `voice`: a spoken turn, answered briefly in speakable sentences (ADR-0029).
-          body: { content, ...(inputMode === 'voice' ? { input_mode: 'voice' as const } : {}) },
+          body: { content },
         }),
       );
       client.setQueryData(chatKeys.conversation(id), res.conversation);

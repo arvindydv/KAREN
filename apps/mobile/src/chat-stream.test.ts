@@ -131,6 +131,20 @@ function streamResponse(chunks: string[], opts: { failAfter?: boolean } = {}): R
   };
   return { status: 200, ok: true, body } as unknown as Response;
 }
+/** A fake streaming Response that yields the chunks, then stays open (never ends). */
+function openStream(chunks: string[]): Response {
+  let i = 0;
+  const body = {
+    getReader: () => ({
+      read: () =>
+        i < chunks.length
+          ? Promise.resolve({ done: false, value: chunks[i++] })
+          : new Promise<never>(() => undefined),
+      cancel: async () => undefined,
+    }),
+  };
+  return { status: 200, ok: true, body } as unknown as Response;
+}
 const status = (code: number) => ({ status: code, ok: false, body: null }) as unknown as Response;
 
 function follow(
@@ -252,6 +266,56 @@ describe('ChatStreamFollower', () => {
     expect(f.fetchImpl.mock.calls.length).toBeGreaterThan(calls);
     expect(f.requests.at(-1)!.headers['last-event-id']).toBe('2');
     f.follower.close();
+  });
+
+  it('ignores resume() while still connected (iOS inactive → active): one connection only', async () => {
+    const f = follow([openStream([frame(delta(2, 'a'))])]);
+    f.follower.start();
+    await settle();
+    f.follower.resume();
+    await settle();
+    expect(f.fetchImpl).toHaveBeenCalledTimes(1);
+    expect(f.states.filter((s) => s === 'connecting')).toHaveLength(1);
+    f.follower.close();
+  });
+
+  it('a late response from a paused attempt never aborts the newer connection', async () => {
+    let resolveFirst: (r: Response) => void = () => undefined;
+    const signals: AbortSignal[] = [];
+    const fetchImpl = jest.fn((_url: unknown, init?: RequestInit) => {
+      signals.push(init!.signal!);
+      // The first request ignores its abort signal and answers late.
+      if (signals.length === 1) return new Promise<Response>((r) => (resolveFirst = r));
+      return Promise.resolve(openStream([frame(delta(2, 'a'))]));
+    });
+    const f = follow([], { fetch: fetchImpl as unknown as typeof fetch });
+    f.follower.start();
+    await settle();
+    f.follower.pause();
+    f.follower.resume();
+    await settle();
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    resolveFirst(openStream([]));
+    await settle();
+    expect(signals[1]!.aborted).toBe(false);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    f.follower.close();
+  });
+
+  it('stops polling with a fatal error when the message is gone (404)', async () => {
+    const pollMessage = jest.fn(async (): Promise<Message> => {
+      throw new ApiRequestError({ status: 404, code: 'NOT_FOUND', message: 'Not found' });
+    });
+    const f = follow([{ status: 200, ok: true, body: null } as unknown as Response], {
+      pollMessage,
+      sleep: () => new Promise<void>((r) => setTimeout(r, 0)),
+    });
+    f.follower.start();
+    await settle();
+    await settle();
+    expect(pollMessage).toHaveBeenCalledTimes(1);
+    expect(f.fatal).toEqual(['This answer is no longer available.']);
+    expect(f.follower.isFinished).toBe(true);
   });
 });
 

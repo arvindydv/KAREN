@@ -62,7 +62,7 @@ export function AssistantOrb({ size = 136 }: { size?: number }) {
 
 /**
  * KAREN's AI orb — the native counterpart of the web `KarenOrb` (apps/web landing): a glowing
- * cyan plasma sphere (dark-navy heart, bright icy rim) with flowing rings and a white voice
+ * cyan plasma sphere (dark-navy heart, bright icy rim) with flowing rings and a white
  * mic with twinkling sparkles. React Native has no SVG turbulence/masks/blend modes, so the
  * "plasma" is approximated with off-centre ring layers that rotate in opposite directions —
  * the offsets make them wobble like the web's warped wisps. All motion is transform/opacity

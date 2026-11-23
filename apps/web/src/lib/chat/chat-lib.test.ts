@@ -131,6 +131,35 @@ describe('followChatStream', () => {
     expect(fetch).toHaveBeenCalledTimes(3);
   });
 
+  it('reports the connection closed when it gives up (no endless "reconnecting")', async () => {
+    const states: string[] = [];
+    const fetch = vi.fn<typeof globalThis.fetch>(() =>
+      Promise.resolve(new Response('upstream down', { status: 503 })),
+    );
+    const out = await followChatStream({
+      ...base,
+      afterSeq: 0,
+      fetch,
+      maxAttempts: 2,
+      signal: new AbortController().signal,
+      onEvent: () => undefined,
+      onConnection: (s) => states.push(s),
+    });
+    expect(out).toMatchObject({ kind: 'error', status: 503 });
+    expect(states).toEqual(['connecting', 'reconnecting', 'closed']);
+
+    const gone: string[] = [];
+    await followChatStream({
+      ...base,
+      afterSeq: 0,
+      fetch: () => Promise.resolve(Response.json({}, { status: 404 })),
+      signal: new AbortController().signal,
+      onEvent: () => undefined,
+      onConnection: (s) => gone.push(s),
+    });
+    expect(gone.at(-1)).toBe('closed');
+  });
+
   it('waits for the browser to come back online before reconnecting', async () => {
     let online = false;
     const waitForOnline = vi.fn(() => {

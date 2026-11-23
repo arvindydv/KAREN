@@ -1,24 +1,9 @@
 'use client';
 
-import type {
-  AiUsage,
-  Conversation,
-  Message,
-  Preferences,
-  SendMessageResponse,
-  VoiceOptions,
-} from '@karen/api-contracts';
+import type { AiUsage, Conversation, Message, SendMessageResponse } from '@karen/api-contracts';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import {
-  useCallback,
-  useEffect,
-  useReducer,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type ReactNode,
-} from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState, type ReactNode } from 'react';
 import { bff, handleSessionError, newIdempotencyKey, type BffResult } from '@/lib/api';
 import { chatApi, resetsAt } from '@/lib/chat/api';
 import {
@@ -35,34 +20,6 @@ import { Composer } from './composer';
 import { IconArrowDown, IconClock } from './icons';
 import { MessageItem } from './message-item';
 import { conversationsKey } from './sidebar';
-import {
-  SpeechPlayer,
-  transcribe,
-  voiceInputSupported,
-  VoiceRecorder,
-  type PlaybackError,
-} from '@/lib/chat/voice';
-import {
-  LiveVoiceSession,
-  liveVoiceSupported,
-  type LiveTurn,
-  type LiveVoiceState,
-} from '@/lib/chat/live-voice';
-import { playWakeChime } from '@/lib/chat/earcon';
-import {
-  ECHO_TAIL_MS,
-  isLikelyEcho,
-  isUsableQuestion,
-  matchWakePhrase,
-  shouldInterrupt,
-  stripLeadingWakeWords,
-} from '@karen/domain';
-import { BrowserWakeWord, wakeWordSupported, type WakeStatus } from '@/lib/chat/wake-word';
-import { LiveVoicePanel } from './live-voice-panel';
-import { VoiceMode } from './voice-mode';
-
-const WAKE_STORAGE_KEY = 'karen.voice.hello_karen';
-/** After KAREN stops talking, her last words can still reach the microphone for a moment. */
 
 export interface ChatGateProps {
   consentGranted: boolean;
@@ -102,8 +59,6 @@ const SUGGESTIONS = [
   'मुझे एक विनम्र छुट्टी का आवेदन लिखने में मदद करें',
 ];
 
-const noSubscription = () => () => undefined;
-
 /**
  * One conversation (or a new one when `conversationId` is null): transcript, live streaming,
  * composer and every chat state (consent, limits, offline, errors).
@@ -121,42 +76,10 @@ export function ChatView({
   const reduceMotion = osReducedMotion || gate.reducedMotionPreference;
 
   const [state, dispatch] = useReducer(messagesReducer, { items: [], olderCursor: null });
-  const itemsRef = useRef(state.items);
-  useEffect(() => {
-    itemsRef.current = state.items;
-  });
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error' | 'missing'>(
     conversationId ? 'loading' : 'ready',
   );
   const [loadError, setLoadError] = useState<ApiErrorBody | null>(null);
-  // ---- voice (ADR-0026): mic input → transcript for review; replies read aloud on request.
-  const recorderRef = useRef<VoiceRecorder | null>(null);
-  const playerRef = useRef<SpeechPlayer | null>(null);
-  const voiceTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [voiceState, setVoiceState] = useState<'idle' | 'recording' | 'transcribing'>('idle');
-  const [voiceSeconds, setVoiceSeconds] = useState(0);
-  // Browser capability, read client-side only (server render: no mic button).
-  const voiceSupported = useSyncExternalStore(noSubscription, voiceInputSupported, () => false);
-  const [speakingId, setSpeakingId] = useState<string | null>(null);
-  const [voiceAutoplay, setVoiceAutoplay] = useState(false);
-  // ---- voice preferences + live conversation mode (ADR-0027).
-  const [voicePrefs, setVoicePrefs] = useState<Pick<
-    Preferences,
-    'voice_enabled' | 'voice_replies' | 'reply_language'
-  > | null>(null);
-  const [voiceOptions, setVoiceOptions] = useState<VoiceOptions | null>(null);
-  const liveRef = useRef<LiveVoiceSession | null>(null);
-  const [liveState, setLiveState] = useState<LiveVoiceState>('idle');
-  const [livePartial, setLivePartial] = useState('');
-  const [liveMock, setLiveMock] = useState(false);
-  const liveSupported = useSyncExternalStore(noSubscription, liveVoiceSupported, () => false);
-  const draftFromVoice = useRef(false);
-  const autoplayFor = useRef<string | null>(null);
-  // What KAREN is (or just was) saying aloud: the live-voice echo guard compares against it.
-  // `id`: while KAREN speaks an answer that is still being written, its text keeps growing.
-  const spokenRef = useRef<{ id: string; text: string; until: number } | null>(null);
-  // True while the user wants to be in a live conversation (survives a session rollover).
-  const wantLive = useRef(false);
   const [draft, setDraftState] = useState('');
   const [busy, setBusy] = useState(false);
   const [banner, setBanner] = useState<Banner>(null);
@@ -203,153 +126,6 @@ export function ChatView({
     // Re-set on the next tick so screen readers announce repeated identical messages.
     setTimeout(() => setAnnounce(text), 30);
   }, []);
-
-  useEffect(() => {
-    void bff<Preferences>('/api/v1/me/preferences').then((r) => {
-      if (!r.ok) return;
-      setVoiceAutoplay(r.data.voice_autoplay);
-      setVoicePrefs({
-        voice_enabled: r.data.voice_enabled,
-        voice_replies: r.data.voice_replies,
-        reply_language: r.data.reply_language,
-      });
-    });
-    void bff<VoiceOptions>('/api/v1/voice/options').then((r) => {
-      if (r.ok) setVoiceOptions(r.data);
-    });
-    return () => {
-      void liveRef.current?.stop();
-      recorderRef.current?.cancel();
-      playerRef.current?.stop();
-      if (voiceTimer.current) clearInterval(voiceTimer.current);
-    };
-  }, []);
-
-  const player = () => (playerRef.current ??= new SpeechPlayer());
-
-  const endSpoken = useCallback(() => {
-    const spoken = spokenRef.current;
-    if (spoken && spoken.until === Number.POSITIVE_INFINITY) {
-      const latest = itemsRef.current.find((m) => m.id === spoken.id)?.content ?? spoken.text;
-      spokenRef.current = { id: spoken.id, text: latest, until: Date.now() + ECHO_TAIL_MS };
-    }
-  }, []);
-
-  const stopSpeaking = useCallback(() => {
-    playerRef.current?.stop();
-    endSpoken();
-    setSpeakingId(null);
-    // KAREN is silent again: the live microphone gate must not stay closed (ADR-0033).
-    if (liveRef.current?.current === 'speaking') liveRef.current.setPhase('listening');
-  }, [endSpoken]);
-
-  /** KAREN's words that may still be echoing into the microphone, or null. */
-  const recentlySpoken = () => {
-    const spoken = spokenRef.current;
-    if (!spoken || spoken.until <= Date.now()) return null;
-    return itemsRef.current.find((m) => m.id === spoken.id)?.content || spoken.text;
-  };
-
-  const PLAYBACK_COPY: Record<PlaybackError, string> = {
-    UNAVAILABLE: 'Reading aloud isn’t available right now.',
-    LIMIT: 'You’ve reached your AI limit for now; reading aloud resumes after it resets.',
-    NETWORK: 'Couldn’t reach KAREN to read this aloud.',
-    PLAYBACK: 'Your browser couldn’t play this audio.',
-  };
-
-  function listen(messageId: string, text?: string) {
-    if (!conversationId) return;
-    if (speakingId === messageId) {
-      stopSpeaking();
-      return;
-    }
-    setSpeakingId(messageId);
-    spokenRef.current = {
-      id: messageId,
-      text: text ?? itemsRef.current.find((m) => m.id === messageId)?.content ?? '',
-      until: Number.POSITIVE_INFINITY,
-    };
-    void player().play(`/api/v1/conversations/${conversationId}/messages/${messageId}/speech`, {
-      onStart: (info) => {
-        if (info.isMock) notify('Mock voice: silent audio, no speech model was called.');
-      },
-      // Only once audio is really audible: the live gate then keeps KAREN's voice out of the
-      // microphone (ADR-0033). Before that the user can still keep talking.
-      onPlaying: () => liveRef.current?.setPhase('speaking'),
-      onEnd: () => {
-        endSpoken();
-        liveRef.current?.setPhase('listening');
-        setSpeakingId((id) => (id === messageId ? null : id));
-      },
-      onError: (error) => {
-        endSpoken();
-        liveRef.current?.setPhase('listening');
-        setSpeakingId((id) => (id === messageId ? null : id));
-        notify(PLAYBACK_COPY[error]);
-      },
-    });
-  }
-
-  function endVoiceTimer() {
-    if (voiceTimer.current) clearInterval(voiceTimer.current);
-    voiceTimer.current = null;
-  }
-
-  async function startVoice() {
-    stopSpeaking(); // the user talking interrupts KAREN speaking (barge-in)
-    const recorder = new VoiceRecorder(() => void stopVoice());
-    try {
-      await recorder.start();
-    } catch (error) {
-      recorder.cancel();
-      notify(
-        error instanceof DOMException && error.name === 'NotAllowedError'
-          ? 'Microphone access is blocked. Allow it in your browser settings to speak to KAREN.'
-          : 'Couldn’t start the microphone.',
-      );
-      return;
-    }
-    recorderRef.current = recorder;
-    setVoiceSeconds(0);
-    setVoiceState('recording');
-    voiceTimer.current = setInterval(() => setVoiceSeconds((n) => n + 1), 1000);
-  }
-
-  function cancelVoice() {
-    recorderRef.current?.cancel();
-    recorderRef.current = null;
-    endVoiceTimer();
-    setVoiceState('idle');
-  }
-
-  async function stopVoice() {
-    const recorder = recorderRef.current;
-    if (!recorder?.recording) return;
-    recorderRef.current = null;
-    endVoiceTimer();
-    setVoiceState('transcribing');
-    const recording = await recorder.stop();
-    const hint = voicePrefs?.reply_language;
-    const result = await transcribe(recording, hint && hint !== 'auto' ? hint : undefined);
-    setVoiceState('idle');
-    if (!result.ok) {
-      notify(result.error.message || 'Couldn’t transcribe that. Please try again or type instead.');
-      return;
-    }
-    const text = result.data.text.trim();
-    if (!text) {
-      notify('KAREN didn’t catch anything. Please try again.');
-      return;
-    }
-    // Review before sending: the transcript goes through the same send path as typed text.
-    setDraft(draft.trim() ? `${draft.trim()} ${text}` : text);
-    draftFromVoice.current = true;
-    notify(
-      result.data.is_mock
-        ? 'Mock transcript (no speech model was called). Review it, then send.'
-        : 'Here’s what KAREN heard. Review it, then send.',
-    );
-  }
 
   // Draft restore after hydration (sessionStorage does not exist during server rendering).
   useEffect(() => {
@@ -417,13 +193,6 @@ export function ChatView({
       if (fresh.ok) dispatch({ type: 'upsert', messages: [fresh.data] });
       if (outcome.kind === 'terminal') {
         const e = outcome.event;
-        if (e.type === 'complete' && autoplayFor.current === messageId) {
-          autoplayFor.current = null;
-          listen(messageId, fresh.ok ? fresh.data.content : undefined);
-        } else if (liveRef.current && spokenRef.current?.until !== Number.POSITIVE_INFINITY) {
-          // (While KAREN is still speaking this answer, she stays in the speaking phase.)
-          liveRef.current.setPhase('listening');
-        }
         notify(
           e.type === 'complete'
             ? 'KAREN finished answering.'
@@ -552,14 +321,7 @@ export function ChatView({
       }
       targetId = created.data.id;
     }
-    // A voice message whose answer will be read aloud is answered in a spoken style (ADR-0029).
-    const spokenTurn = draftFromVoice.current && voiceAutoplay;
-    const res = await chatApi.send(
-      targetId,
-      content,
-      pendingKey.current.key,
-      spokenTurn ? 'voice' : 'text',
-    );
+    const res = await chatApi.send(targetId, content, pendingKey.current.key);
     setBusy(false);
     if (!res.ok) {
       handleFailure(res.error, res.status);
@@ -572,10 +334,6 @@ export function ChatView({
       return;
     }
     pendingKey.current = null;
-    // A voice-originated message gets its answer read aloud when the user chose autoplay.
-    autoplayFor.current =
-      draftFromVoice.current && voiceAutoplay ? res.data.assistant_message.id : null;
-    draftFromVoice.current = false;
     setDraft('');
     void client.invalidateQueries({ queryKey: conversationsKey });
     if (!conversationId) {
@@ -585,216 +343,6 @@ export function ChatView({
     }
     applySent(res.data);
   }
-
-  // ---- live conversation (ADR-0027): hands-free turns sent exactly like typed messages.
-  const liveCtx = useRef({ conversationId, activeId: active?.id ?? null, speakingId, voicePrefs });
-  useEffect(() => {
-    liveCtx.current = { conversationId, activeId: active?.id ?? null, speakingId, voicePrefs };
-  });
-
-  async function sendLiveTurn(turn: LiveTurn) {
-    const ctx = liveCtx.current;
-    if (!ctx.conversationId) return;
-    // KAREN's own voice picked up by the microphone is not a user turn (prevents a loop).
-    if (isLikelyEcho(turn.text, recentlySpoken())) return;
-    // "Hello KAREN" on its own is a greeting to start listening, not a question; with a question
-    // in the same breath, only the question is sent.
-    const wake = matchWakePhrase(turn.text);
-    if (wake && !isUsableQuestion(wake.rest)) return;
-    if (wake) turn = { ...turn, text: wake.rest };
-    // Recording starts the instant "Hello KAREN" is heard: a turn may begin with its tail.
-    const question = stripLeadingWakeWords(turn.text);
-    if (!question) return;
-    turn = { ...turn, text: question };
-    // A real turn while KAREN is still talking or writing replaces that answer.
-    if (ctx.speakingId || ctx.activeId) bargeIn();
-    liveRef.current?.setPhase('processing');
-    // The Idempotency-Key is derived from the session and turn: a repeated turn is a no-op.
-    const res = await chatApi.send(ctx.conversationId, turn.text, turn.idempotencyKey, 'voice');
-    if (!res.ok) {
-      liveRef.current?.setPhase('listening');
-      handleFailure(res.error, res.status);
-      return;
-    }
-    autoplayFor.current = null;
-    applySent(res.data);
-    // ADR-0031: start speaking right away — the server begins with the first sentence while the
-    // rest of the answer is still being written (instead of waiting for the whole answer).
-    if (ctx.voicePrefs?.voice_replies !== false) listen(res.data.assistant_message.id, '');
-  }
-
-  /** Partial transcript: show it, and interrupt KAREN only for real words (not echo or noise). */
-  function onLivePartial(text: string) {
-    const spoken = recentlySpoken();
-    setLivePartial(isLikelyEcho(text, spoken) ? '' : text);
-    const ctx = liveCtx.current;
-    if ((ctx.speakingId || ctx.activeId) && shouldInterrupt(text, spoken)) bargeIn();
-  }
-
-  function bargeIn() {
-    const ctx = liveCtx.current;
-    // The user started talking: KAREN stops speaking and stops writing the current answer.
-    if (ctx.speakingId) stopSpeaking();
-    autoplayFor.current = null;
-    if (ctx.conversationId && ctx.activeId) {
-      void chatApi.cancel(ctx.conversationId, ctx.activeId).then((r) => {
-        if (r.ok) dispatch({ type: 'upsert', messages: [r.data] });
-      });
-    }
-    liveRef.current?.setPhase('listening');
-  }
-
-  async function startLive() {
-    if (liveRef.current) return;
-    stopSpeaking();
-    let targetId = conversationId;
-    if (!targetId) {
-      const created = await chatApi.create({ mode: ephemeral ? 'ephemeral' : 'standard' });
-      if (!created.ok) {
-        handleFailure(created.error, created.status);
-        return;
-      }
-      targetId = created.data.id;
-      void client.invalidateQueries({ queryKey: conversationsKey });
-      router.replace(`/app/chat/${targetId}?talk=1`);
-      return;
-    }
-    wantLive.current = true;
-    const lang = voicePrefs?.reply_language;
-    const session = new LiveVoiceSession({
-      onState: setLiveState,
-      onPartial: onLivePartial,
-      // A bare "speech started" may be a cough or KAREN's echo: interruption waits for words.
-      onTurn: (turn) => void sendLiveTurn(turn),
-      // The user is clearly talking over KAREN (local microphone level, ADR-0033): she stops
-      // speaking at once; the answer being written is replaced only when their words arrive.
-      onBargeIn: () => stopSpeaking(),
-      onError: (code) => {
-        if (code === 'MIC_PERMISSION_DENIED') {
-          notify(
-            'Microphone access is blocked. Allow it in your browser settings to talk to KAREN.',
-          );
-        } else if (code !== 'STREAM_LOST') {
-          notify('Live voice had a problem. You can keep talking or switch to typing.');
-        }
-      },
-      onClosed: (reason) => {
-        liveRef.current = null;
-        setLivePartial('');
-        setLiveMock(false);
-        if (reason === 'max_duration' && wantLive.current) {
-          // A session has a bounded length (cost cap); keep the conversation going seamlessly.
-          void startLive();
-          return;
-        }
-        wantLive.current = false;
-        notify(
-          reason === 'idle_timeout'
-            ? 'Voice conversation ended after a pause.'
-            : reason === 'max_duration'
-              ? 'Voice conversation reached its time limit.'
-              : 'Voice conversation ended.',
-        );
-      },
-    });
-    liveRef.current = session;
-    await session.start({
-      conversationId: targetId,
-      ...(lang && lang !== 'auto' ? { language: lang } : {}),
-    });
-    if (session.current === 'permission_denied' || session.current === 'error') {
-      liveRef.current = null;
-      wantLive.current = false;
-      return;
-    }
-    setLiveMock(session.isMock);
-  }
-
-  async function stopLive() {
-    wantLive.current = false;
-    const session = liveRef.current;
-    liveRef.current = null;
-    stopSpeaking();
-    await session?.stop();
-    setLiveState('idle');
-  }
-
-  // ---- Voice mode (ADR-0032): an immersive orb screen whenever a voice conversation runs.
-  const [voiceModeOpen, setVoiceModeOpen] = useState(false);
-  const showVoiceMode = voiceModeOpen || liveState !== 'idle';
-  function closeVoiceMode() {
-    setVoiceModeOpen(false);
-    void stopLive();
-  }
-  function onOrb() {
-    if (liveState === 'speaking' || liveState === 'processing') bargeIn();
-    else if (liveState === 'listening' || liveState === 'connecting') void stopLive();
-    else void startLive();
-  }
-  /** A suggestion tapped in voice mode is asked (and answered) out loud. */
-  function askAloud(text: string) {
-    void sendLiveTurn({
-      text,
-      language: null,
-      turnIndex: -1,
-      idempotencyKey: newIdempotencyKey(),
-    });
-  }
-
-  // ---- "Hello KAREN" (ADR-0031): on-device wake word. While the switch is on and no voice
-  // conversation is running, a local model listens for the phrase; then the conversation starts.
-  const [wakeOn, setWakeOn] = useState(false);
-  const [wakeStatus, setWakeStatus] = useState<WakeStatus | null>(null);
-  const wakeSupported = useSyncExternalStore(noSubscription, wakeWordSupported, () => false);
-  useEffect(() => {
-    try {
-      // Per-device preference (this computer's microphone), so localStorage is the right place.
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- read once after hydration
-      setWakeOn(window.localStorage.getItem(WAKE_STORAGE_KEY) === '1');
-    } catch {
-      // Storage blocked (private mode): the switch simply starts off.
-    }
-  }, []);
-  const toggleWake = (on: boolean) => {
-    setWakeOn(on);
-    if (!on) setWakeStatus(null);
-    try {
-      window.localStorage.setItem(WAKE_STORAGE_KEY, on ? '1' : '0');
-    } catch {
-      // Not persisted (storage blocked); the switch still works for this visit.
-    }
-  };
-  const wakeAllowed =
-    wakeOn &&
-    wakeSupported &&
-    consent &&
-    (voicePrefs?.voice_enabled ?? true) &&
-    voiceOptions?.available !== false &&
-    voiceOptions?.live_available === true;
-  const startLiveRef = useRef(startLive);
-  startLiveRef.current = startLive;
-  useEffect(() => {
-    if (!wakeAllowed || liveState !== 'idle') return;
-    const wake = new BrowserWakeWord(() => {
-      wake.stop();
-      playWakeChime(); // instant "I heard you" while the conversation connects
-      void startLiveRef.current();
-    }, setWakeStatus);
-    void wake.start();
-    return () => wake.stop();
-  }, [wakeAllowed, liveState]);
-
-  // A new chat started from "Talk to KAREN" lands here with ?talk=1: continue in live mode.
-  useEffect(() => {
-    if (!conversationId || typeof window === 'undefined') return;
-    const url = new URL(window.location.href);
-    if (url.searchParams.get('talk') !== '1') return;
-    url.searchParams.delete('talk');
-    window.history.replaceState(null, '', url.pathname + url.search);
-    void startLive();
-    // startLive reads the latest state through refs; run once per conversation.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationId]);
 
   async function stop() {
     if (!conversationId || !active) return;
@@ -873,11 +421,6 @@ export function ChatView({
   const visible = visibleMessages(state.items);
   const latest = latestAssistant(state.items);
   const generating = active !== null;
-  // Voice preferences (ADR-0027): defaults are on until loaded, so existing users see no change.
-  const voiceInputAllowed =
-    (voicePrefs?.voice_enabled ?? true) && voiceOptions?.available !== false;
-  const voiceRepliesAllowed =
-    (voicePrefs?.voice_replies ?? true) && (voicePrefs?.voice_enabled ?? true);
   const usageData: AiUsage | undefined = usage.data;
   const limit = usageData?.daily.limit_reached
     ? usageData.daily
@@ -1005,9 +548,6 @@ export function ChatView({
                       onClearFeedback: () =>
                         void feedback(m, () => chatApi.clearFeedback(conversationId!, m.id)),
                       ...(consent ? { onEdit: (content: string) => void fork(m, content) } : {}),
-                      ...(consent && m.role === 'assistant' && voiceRepliesAllowed
-                        ? { onListen: () => listen(m.id), speaking: speakingId === m.id }
-                        : {}),
                     }}
                   />
                 ))}
@@ -1062,34 +602,6 @@ export function ChatView({
               </button>
             </div>
           ) : null}
-          {showVoiceMode && consent && voiceInputAllowed && liveSupported ? (
-            <VoiceMode
-              state={liveState}
-              wakeStatus={wakeAllowed ? wakeStatus : null}
-              suggestions={SUGGESTIONS}
-              onOrb={onOrb}
-              onClose={closeVoiceMode}
-              onSuggestion={conversationId ? askAloud : null}
-            />
-          ) : null}
-          {consent && voiceInputAllowed && liveSupported && voiceOptions?.live_available ? (
-            <LiveVoicePanel
-              state={liveState}
-              partial={livePartial}
-              isMock={liveMock}
-              active={liveState !== 'idle'}
-              onStart={() => {
-                setVoiceModeOpen(true);
-                void startLive();
-              }}
-              onStop={() => void stopLive()}
-              wake={
-                wakeSupported
-                  ? { on: wakeOn, status: wakeAllowed ? wakeStatus : null, onToggle: toggleWake }
-                  : null
-              }
-            />
-          ) : null}
           <Composer
             value={draft}
             onChange={setDraft}
@@ -1099,17 +611,6 @@ export function ChatView({
             busy={busy}
             disabledReason={disabledReason}
             autoFocus={consent}
-            {...(consent && voiceSupported && voiceInputAllowed && liveState === 'idle'
-              ? {
-                  voice: {
-                    state: voiceState,
-                    seconds: voiceSeconds,
-                    onStart: () => void startVoice(),
-                    onStop: () => void stopVoice(),
-                    onCancel: cancelVoice,
-                  },
-                }
-              : {})}
           />
           <AiDisclosure disclosure={gate.aiDisclosure} />
         </div>

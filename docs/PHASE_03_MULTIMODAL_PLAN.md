@@ -1,6 +1,6 @@
 # Multimodal assistant — architecture and implementation plan
 
-- **Date:** 2026-11-21. **Status:** in implementation (owner instruction 2026-11-21). Decision record: ADR-0026.
+- **Date:** 2026-11-21. **Status:** voice parts **superseded by ADR-0035** (2026-11-23) — voice moved back to Phase 06; image input and task routing remain. Decision record: ADR-0026.
 - **Builds on:** Phase 02 chat (ADR-0021/0022/0023), OpenRouter gateway (ADR-0025), content policy (ADR-0024).
 - **Hard constraints kept:** mock mode is the default and the only mode tests use; no paid call without the
   owner's explicit approval; the OpenRouter key stays in ai-service; no model, voice or price is

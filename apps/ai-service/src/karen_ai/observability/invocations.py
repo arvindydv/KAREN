@@ -58,9 +58,6 @@ class ModelInvocationRecord(BaseModel):
     # Not in the §2.6 column list but needed for honest reconciliation:
     attempts: int
     is_mock: bool
-    # Speech usage (ADR-0027): billed units, when the call was speech.
-    audio_seconds: float | None = None
-    characters: int | None = None
 
 
 class InvocationSink(Protocol):

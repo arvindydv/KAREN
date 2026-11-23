@@ -1,6 +1,6 @@
 # 0034 — KAREN as a companion: Claude Haiku for spoken turns, chat.v4 persona, name, voice-first phone
 
-- Status: Accepted · Date: 2026-11-22
+- Status: **Superseded by ADR-0035** (voice removed 2026-11-23; code on `archive/phase-02-voice`) · was Accepted · Date: 2026-11-22
 - Builds on: ADR-0029 (spoken style), ADR-0032 (voice model), ADR-0033 (echo gate).
 
 ## Context

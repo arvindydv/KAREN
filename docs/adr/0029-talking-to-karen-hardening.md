@@ -1,6 +1,6 @@
 # 0029 — Talking to KAREN: spoken-style answers, echo-safe barge-in, uninterrupted sessions
 
-- Status: Accepted · Date: 2026-11-22
+- Status: **Superseded by ADR-0035** (voice removed 2026-11-23; code on `archive/phase-02-voice`) · was Accepted · Date: 2026-11-22
 - Builds on: ADR-0027 (live voice), ADR-0028 (live activation).
 
 ## Context

@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events';
 import { describe, expect, it } from 'vitest';
 import { ApiError } from '../common/api-error.js';
 import {
@@ -10,6 +11,7 @@ import {
   likePattern,
   mapAiFailure,
   parseResumeSeq,
+  waitForDrain,
   sseFrame,
   usagePeriods,
   usdToMicro,
@@ -158,5 +160,36 @@ describe('addressName (ADR-0034)', () => {
     expect(addressName('<script>', null)).toBe('script');
     expect(addressName('123', null)).toBeNull();
     expect(addressName('x'.repeat(80), null)).toHaveLength(40);
+  });
+});
+
+describe('waitForDrain (SSE backpressure)', () => {
+  const settled = async (p: Promise<void>) =>
+    Promise.race([p.then(() => true), new Promise((r) => setTimeout(() => r(false), 20))]);
+
+  it('resolves on drain and removes its listeners', async () => {
+    const socket = new EventEmitter();
+    const wait = waitForDrain(socket, new AbortController().signal);
+    expect(await settled(wait)).toBe(false);
+    socket.emit('drain');
+    expect(await settled(wait)).toBe(true);
+    expect(socket.listenerCount('drain') + socket.listenerCount('close')).toBe(0);
+  });
+
+  it('does not hang when the socket closes instead of draining', async () => {
+    const socket = new EventEmitter();
+    const wait = waitForDrain(socket, new AbortController().signal);
+    socket.emit('close');
+    expect(await settled(wait)).toBe(true);
+    expect(socket.listenerCount('drain') + socket.listenerCount('close')).toBe(0);
+  });
+
+  it('resolves when the reader is aborted (or already was)', async () => {
+    const socket = new EventEmitter();
+    const abort = new AbortController();
+    const wait = waitForDrain(socket, abort.signal);
+    abort.abort();
+    expect(await settled(wait)).toBe(true);
+    expect(await settled(waitForDrain(socket, abort.signal))).toBe(true);
   });
 });

@@ -29,17 +29,7 @@ import {
   useMessages,
   usageResetTime,
 } from '../../../src/lib/chat-queries';
-import {
-  qk,
-  useInvalidate,
-  usePreferences,
-  useProfile,
-  useVoiceOptions,
-} from '../../../src/lib/queries';
-import { useVoiceAssistant } from '../../../src/features/voice/use-voice-assistant';
-import { VoiceBar } from '../../../src/features/voice/voice-bar';
-import { VoiceMode } from '../../../src/features/voice/voice-mode';
-import { useVoiceStore } from '../../../src/state/voice-store';
+import { qk, useInvalidate, useProfile } from '../../../src/lib/queries';
 import { newUuid } from '../../../src/lib/uuid';
 import { useChatDrafts } from '../../../src/state/chat-drafts';
 import { useTheme } from '../../../src/theme/theme';
@@ -114,38 +104,6 @@ export default function ConversationScreen() {
   );
   const { live, connection, fatal } = useMessageStream(conversationId, active);
   const generating = active !== null && !live?.done;
-
-  // ---- Talking to KAREN (ADR-0030): tap-to-talk, hands-free "Hey KAREN", spoken answers.
-  const voiceOptions = useVoiceOptions();
-  const preferences = usePreferences();
-  const voiceAllowed =
-    consent === true &&
-    (preferences.data?.voice_enabled ?? true) &&
-    voiceOptions.data?.available === true;
-  const voice = useVoiceAssistant({
-    conversationId,
-    messages: all,
-    // The answer as it streams in: KAREN's own words coming back through the speaker are ignored.
-    liveAnswer: active && live ? { id: active.id, content: live.content } : null,
-    allowed: voiceAllowed,
-  });
-  // Voice mode (ADR-0032): an immersive orb screen while talking — no transcript. Open when the
-  // user starts talking (mic, "Hey KAREN", hand-off) and whenever a conversation is running.
-  const [voiceMode, setVoiceMode] = useState(
-    () => useVoiceStore.getState().handoff?.conversationId === conversationId,
-  );
-  const conversing = ['listening', 'thinking', 'speaking'].includes(voice.state.phase);
-  const showVoiceMode = voiceAllowed && voice.supported && (voiceMode || conversing);
-  // A conversation opened by "Hey KAREN" on the new-chat screen continues here.
-  const voiceRef = useRef(voice);
-  voiceRef.current = voice;
-  useEffect(() => {
-    if (!voiceAllowed) return;
-    const handoff = useVoiceStore.getState().takeHandoff(conversationId);
-    if (!handoff) return;
-    if (handoff.question) void voiceRef.current.askNow(handoff.question);
-    else void voiceRef.current.talk();
-  }, [conversationId, voiceAllowed]);
 
   // Screen readers: announce start and end only — never every token.
   const wasGenerating = useRef(false);
@@ -260,13 +218,7 @@ export default function ConversationScreen() {
               />
             </View>
           ) : visible.length === 0 ? (
-            <ChatWelcome
-              name={firstName}
-              compact={keyboardVisible}
-              {...(voiceAllowed && voice.supported
-                ? { onTalk: () => (setVoiceMode(true), void voice.talk()) }
-                : {})}
-            />
+            <ChatWelcome name={firstName} compact={keyboardVisible} />
           ) : (
             <FlatList
               style={{ flex: 1 }}
@@ -322,16 +274,6 @@ export default function ConversationScreen() {
             ) : null}
             {fatal ? <Banner tone="warning">{fatal}</Banner> : null}
             {problem ? <Banner tone={problem.tone}>{problem.text}</Banner> : null}
-            {voice.notice ? <Banner tone="info">{voice.notice}</Banner> : null}
-            {voiceAllowed && voice.supported ? (
-              <VoiceBar
-                state={voice.state}
-                handsFree={voice.handsFree}
-                wakeAvailable={voice.wakeAvailable}
-                onTalk={() => void voice.talk()}
-                onHandsFree={(on) => void voice.setHandsFree(on)}
-              />
-            ) : null}
             {limitReached && resetAt && !problem ? (
               <Banner tone="warning">
                 You’ve reached your chat limit for now. It resets {localTime(resetAt)}.
@@ -344,17 +286,6 @@ export default function ConversationScreen() {
                 value={draft}
                 onChange={(text) => setDraft(conversationId, text)}
                 onSend={() => void send()}
-                onMic={() =>
-                  voiceAllowed
-                    ? (setVoiceMode(true), void voice.talk())
-                    : setProblem({
-                        tone: 'info',
-                        text:
-                          preferences.data?.voice_enabled === false
-                            ? 'Voice is turned off. Turn it on in Settings → Preferences to talk to KAREN.'
-                            : 'Talking to KAREN isn’t available right now. Please type instead.',
-                      })
-                }
                 onStop={() => {
                   if (active) {
                     actions
@@ -379,22 +310,6 @@ export default function ConversationScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
 
-      {showVoiceMode ? (
-        <VoiceMode
-          state={voice.state}
-          name={firstName}
-          notice={voice.notice}
-          handsFree={voice.handsFree}
-          wakeAvailable={voice.wakeAvailable}
-          onOrb={() => void voice.talk()}
-          onClose={() => {
-            setVoiceMode(false);
-            voice.hangUp();
-          }}
-          onSuggestion={(s) => void voice.askNow(s.prompt)}
-          onHandsFree={(on) => void voice.setHandsFree(on)}
-        />
-      ) : null}
       <ActionSheet
         visible={menu}
         {...(c ? { title: c.title } : {})}

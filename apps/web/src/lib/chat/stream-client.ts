@@ -69,6 +69,11 @@ export async function followChatStream(options: StreamOptions): Promise<StreamOu
   let lastSeq = options.afterSeq;
   let attempt = 0;
   const report = (s: StreamConnection) => options.onConnection?.(s);
+  // Giving up ends the connection too: without this the UI kept showing "reconnecting…".
+  const fail = (status: number, error: ApiErrorBody | null): StreamOutcome => {
+    report('closed');
+    return { kind: 'error', status, error };
+  };
 
   while (!options.signal.aborted) {
     if (!isOnline()) {
@@ -91,7 +96,7 @@ export async function followChatStream(options: StreamOptions): Promise<StreamOu
       });
     } catch {
       if (options.signal.aborted) break;
-      if (++attempt >= maxAttempts) return { kind: 'error', status: 0, error: null };
+      if (++attempt >= maxAttempts) return fail(0, null);
       await sleep(backoffMs(attempt), options.signal);
       continue;
     }
@@ -104,9 +109,9 @@ export async function followChatStream(options: StreamOptions): Promise<StreamOu
         response.status < 500 &&
         ![408, 429].includes(response.status)
       ) {
-        return { kind: 'error', status: response.status, error };
+        return fail(response.status, error);
       }
-      if (++attempt >= maxAttempts) return { kind: 'error', status: response.status, error };
+      if (++attempt >= maxAttempts) return fail(response.status, error);
       await sleep(backoffMs(attempt), options.signal);
       continue;
     }
@@ -139,7 +144,7 @@ export async function followChatStream(options: StreamOptions): Promise<StreamOu
       // Network drop mid-stream: fall through to reconnect from lastSeq.
     }
     if (options.signal.aborted) break;
-    if (++attempt >= maxAttempts) return { kind: 'error', status: 0, error: null };
+    if (++attempt >= maxAttempts) return fail(0, null);
     await sleep(backoffMs(attempt), options.signal);
   }
   report('closed');

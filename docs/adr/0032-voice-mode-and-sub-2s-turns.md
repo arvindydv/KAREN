@@ -1,6 +1,6 @@
 # 0032 — Voice mode UI, a fast voice model, India speech region and tighter turn-taking
 
-- Status: Accepted · Date: 2026-11-22
+- Status: **Superseded by ADR-0035** (voice removed 2026-11-23; code on `archive/phase-02-voice`) · was Accepted · Date: 2026-11-22
 - Builds on: ADR-0029/0030/0031.
 
 ## Context

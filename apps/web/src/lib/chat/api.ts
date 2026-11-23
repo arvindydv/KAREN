@@ -30,10 +30,10 @@ export const chatApi = {
   messages: (id: string, before?: string | null) =>
     bff<MessageList>(`${base}/${id}/messages?limit=50${before ? `&before=${before}` : ''}`),
   message: (id: string, mid: string) => bff<Message>(`${base}/${id}/messages/${mid}`),
-  send: (id: string, content: string, key: string, inputMode: 'text' | 'voice' = 'text') =>
+  send: (id: string, content: string, key: string) =>
     bff<SendMessageResponse>(`${base}/${id}/messages`, {
       method: 'POST',
-      json: { content, ...(inputMode === 'voice' ? { input_mode: 'voice' } : {}) },
+      json: { content },
       idempotencyKey: key,
     }),
   fork: (id: string, fromMessageId: string, content: string, key: string) =>

@@ -1,6 +1,6 @@
 # 0033 — Duplex echo gate: KAREN must never answer her own voice
 
-- Status: Accepted · Date: 2026-11-22
+- Status: **Superseded by ADR-0035** (voice removed 2026-11-23; code on `archive/phase-02-voice`) · was Accepted · Date: 2026-11-22
 - Builds on: ADR-0029 (transcript echo guard), ADR-0031 (live phone listening), ADR-0032.
 
 ## Context

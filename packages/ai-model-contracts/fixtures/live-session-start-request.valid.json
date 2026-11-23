@@ -1,8 +1,0 @@
-{
-  "contract_version": "2026-11-22.v3",
-  "request_id": "req_live_0001",
-  "user_ref": "usr_hmac_test01",
-  "audio_format": "webm",
-  "language_hint": "hi-Latn",
-  "max_cost_usd": 0.05
-}

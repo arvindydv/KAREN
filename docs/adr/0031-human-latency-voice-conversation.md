@@ -1,6 +1,6 @@
 # 0031 — Human-speed voice conversations: speak while writing, live phone listening, "Hello KAREN" on the web
 
-- Status: Accepted · Date: 2026-11-22
+- Status: **Superseded by ADR-0035** (voice removed 2026-11-23; code on `archive/phase-02-voice`) · was Accepted · Date: 2026-11-22
 - Builds on: ADR-0027 (live voice), ADR-0029 (spoken style), ADR-0030 (mobile voice).
 
 ## Context

@@ -11,7 +11,7 @@ API (NestJS) --signed--> /internal/v1/completions[/stream]
 ```
 
 - `GET /health/live`, `GET /health/ready` — unauthenticated; readiness never calls the paid gateway.
-- `POST /internal/v1/completions` — `CompletionRequest` → `CompletionResponse` (contract `2026-11-22.v3`).
+- `POST /internal/v1/completions` — `CompletionRequest` → `CompletionResponse` (contract `2026-11-23.v4`).
 - `POST /internal/v1/completions/stream` — SSE (`start`, `delta`…, then exactly one `done` or `error`).
 - Errors use the contract envelope: 422 validation, 401 signature, 403 budget, 429 rate limit,
   503 tier disabled / capability unavailable, 504 timeout, 502 provider / invalid response / fallback exhausted.
@@ -20,7 +20,7 @@ Quick start: `cp .env.example .env && uv sync && uv run karen-ai-dev` (mock gate
 Evals: `pnpm evals` from the repo root (mock only; says nothing about model accuracy).
 
 Phase 02 chat (ADR-0022/0023): CHAT requests without a system message get the catalogued
-`chat.v2` prompt (language matching for English/Hindi/Hinglish, Indian conventions, honesty
+`chat.v4` prompt (language matching for English/Hindi/Hinglish, Indian conventions, honesty
 about missing live data, no claimed actions, injection resistance) with the caller's `locale` and
 `timezone` hints; exact date/time questions are answered by code (`NO_MODEL`, zero gateway calls).
 The app's mock gateway returns a labelled reply ("[mock] … no AI model was called") and, for
@@ -33,7 +33,6 @@ local/QA testing only, honours `[[mock:slow]]`, `[[mock:long]]`, `[[mock:fail=CO
 | Router, budget, mock gateway, SSE, internal auth, LangGraph skeleton | implemented + tested |
 | `OpenRouterGatewayClient` | tested against a fake OpenAI-compatible endpoint using OpenRouter's documented shapes, incl. the app wired in live mode (`tests/test_live_gateway_integration.py`) — **live gateway NOT VERIFIED**: no key used, SP-1 probe not run (see below) |
 | Task-based routing | least expensive qualified model per `task_kind` (quality floor, latency, capability, budget); pins optional; image input on the flag-gated VISION tier (ADR-0026) |
-| Voice | STT/TTS behind provider protocols; OpenRouter + mock adapters; voice catalog + language/accent voice selection; `/internal/v1/audio/*` (flag `KAREN_FEATURE_VOICE_ENABLED`) — **live speech NOT VERIFIED** |
 | Daily budget | in-memory locally; shared atomic Redis store required when deployed (ADR-0013) |
 | Langfuse | not a dependency; integrate as an `InvocationSink` |
 | OTel / Sentry | activate only when `OTEL_EXPORTER_OTLP_ENDPOINT` / `SENTRY_DSN` are set |

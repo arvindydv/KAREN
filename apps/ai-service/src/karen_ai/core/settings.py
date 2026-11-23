@@ -6,8 +6,7 @@ every enabled text tier needs a pinned or candidate registry entry whose capabil
 were verified (``verified_at``); feature tiers (EMBEDDING/RERANKING/AUDIO) still need a pin.
 
 The live gateway is OpenRouter (ADR-0025). ``OPENROUTER_API_KEY`` is read only here, held as a
-``SecretStr`` and never logged, returned or exposed to clients. Speech providers are chosen
-independently for STT and TTS (ADR-0027); ``DEEPGRAM_API_KEY`` follows the same rules.
+``SecretStr`` and never logged, returned or exposed to clients.
 """
 
 from __future__ import annotations
@@ -20,32 +19,26 @@ from pydantic import Field, PrivateAttr, SecretStr, StringConstraints, model_val
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from karen_ai.contracts import (
-    MAX_SPEECH_TEXT_CHARS,
     MODEL_ID_PATTERN,
     TEXT_GENERATION_TIERS,
     ModelCapability,
     RouteTier,
 )
 from karen_ai.model_router.registry import ModelRegistry, RegistryError, load_registry
-from karen_ai.speech.catalog import CatalogError, SpeechMode, SpeechProvider, VoiceCatalog, load_catalog
 
 AppEnv = Literal["local", "test", "dev", "staging", "production"]
 GatewayMode = Literal["mock", "live"]
 BudgetStore = Literal["memory", "redis"]
 DataCollection = Literal["allow", "deny"]
 # Workloads that may run on a dedicated model while keeping their tier's budget class (ADR-0025).
-TaskRoute = Literal["CODING", "DOCUMENT_ANALYSIS", "VOICE"]
-# VOICE (ADR-0031): spoken conversation turns, where time to first word matters most.
+TaskRoute = Literal["CODING", "DOCUMENT_ANALYSIS"]
 TASK_ROUTE_TIERS: Final[dict[TaskRoute, RouteTier]] = {
     "CODING": "REASONING",
     "DOCUMENT_ANALYSIS": "BALANCED",
-    "VOICE": "BALANCED",
 }
 
 SERVICE_ROOT: Final = Path(__file__).resolve().parents[3]
 MOCK_REGISTRY_PATH: Final = SERVICE_ROOT / "config" / "model-registry.mock.json"
-MOCK_VOICE_CATALOG_PATH: Final = SERVICE_ROOT / "config" / "voice-catalog.mock.json"
-DeepgramRegion = Literal["global", "in", "eu", "au"]
 
 # Always-on text tiers; VISION is a text tier too but behind KAREN_FEATURE_VISION_ENABLED.
 BASE_TEXT_TIERS: Final[frozenset[RouteTier]] = frozenset({"ECONOMY", "BALANCED", "REASONING"})
@@ -88,8 +81,6 @@ class Settings(BaseSettings):
     # Optional task-specific models; unset = the tier's model serves the task.
     karen_model_coding: ModelIdSetting = None
     karen_model_document_analysis: ModelIdSetting = None
-    # Spoken turns (reply_style=spoken): a low-latency model; unset = the BALANCED selection.
-    karen_model_voice: ModelIdSetting = None
     karen_model_vision: ModelIdSetting = None
     karen_model_embedding: ModelIdSetting = None
     karen_model_reranking: ModelIdSetting = None
@@ -104,39 +95,6 @@ class Settings(BaseSettings):
     karen_ai_allow_direct_provider_fallback: bool = False
 
     karen_feature_vision_enabled: bool = False
-    # Voice: speech-to-text and text-to-speech (ADR-0026). Off by default; mock providers in mock mode.
-    karen_feature_voice_enabled: bool = False
-    karen_voice_catalog_path: Path = MOCK_VOICE_CATALOG_PATH
-    # Operator-set per-request reservations (speech billing units are not documented upstream).
-    karen_voice_stt_reserve_usd: Annotated[float, Field(gt=0, le=1)] = 0.01
-    karen_voice_tts_reserve_usd: Annotated[float, Field(gt=0, le=1)] = 0.02
-    karen_voice_max_speech_chars: Annotated[int, Field(ge=100, le=MAX_SPEECH_TEXT_CHARS)] = 2000
-    karen_voice_timeout_seconds: Annotated[float, Field(gt=0, le=120)] = 30.0
-    # Speech providers, independently replaceable (ADR-0027). Unset = "mock" in mock gateway
-    # mode, "openrouter" in live mode (the ADR-0026 behaviour).
-    karen_voice_stt_provider: SpeechProvider | None = None
-    karen_voice_tts_provider: SpeechProvider | None = None
-    # Live (streaming) voice conversations: partial transcripts + turn detection (ADR-0027).
-    karen_feature_voice_live_enabled: bool = False
-    karen_voice_live_max_seconds: Annotated[int, Field(ge=30, le=1800)] = 300
-    karen_voice_live_idle_seconds: Annotated[int, Field(ge=5, le=120)] = 20
-
-    # Deepgram (speech only; backend-only secret, never logged or returned).
-    deepgram_api_key: SecretStr | None = None
-    # global = api.deepgram.com; in = api.in.deepgram.com (served and kept in India).
-    deepgram_region: DeepgramRegion = "global"
-    # Opt out of Deepgram's Model Improvement Program (audio not used for training).
-    deepgram_mip_opt_out: bool = True
-    # Optional pins (catalog IDs, e.g. "deepgram/<model>"); unset = first verified catalog entry.
-    deepgram_stt_model: ModelIdSetting = None
-    deepgram_stt_live_model: ModelIdSetting = None
-    deepgram_tts_model: ModelIdSetting = None
-    # Flux end-of-turn tuning (Deepgram defaults 0.7 / 5000 ms).
-    # Turn-taking (ADR-0031/0032): measured live 2026-11-22 — Deepgram's defaults (0.7 / 5000 ms)
-    # ended a turn ~1.0 s after speech; 0.5 / 1000 ms ends it ~0.7 s after (owner target: answer
-    # ~1.5 s after the user stops). A long thinking pause may end a turn early.
-    deepgram_eot_threshold: Annotated[float, Field(ge=0.5, le=0.9)] = 0.5
-    deepgram_eot_timeout_ms: Annotated[int, Field(ge=500, le=10_000)] = 1000
     karen_feature_embedding_enabled: bool = False
     karen_feature_reranking_enabled: bool = False
     karen_feature_audio_enabled: bool = False
@@ -168,7 +126,6 @@ class Settings(BaseSettings):
     langfuse_host: str | None = None
 
     _registry: ModelRegistry | None = PrivateAttr(default=None)
-    _voice_catalog: VoiceCatalog | None = PrivateAttr(default=None)
 
     # ----------------------------------------------------------------------------- derived
 
@@ -215,39 +172,6 @@ class Settings(BaseSettings):
         return self._registry
 
     @property
-    def stt_provider(self) -> SpeechProvider:
-        default: SpeechProvider = "mock" if self.is_mock else "openrouter"
-        return self.karen_voice_stt_provider or default
-
-    @property
-    def tts_provider(self) -> SpeechProvider:
-        default: SpeechProvider = "mock" if self.is_mock else "openrouter"
-        return self.karen_voice_tts_provider or default
-
-    def stt_models(self, mode: SpeechMode) -> tuple[str, ...]:
-        """Catalog STT models the configured provider may use, preferred first (pin wins)."""
-        provider = self.stt_provider
-        models = self.voice_catalog.usable_stt(
-            require_verified=provider != "mock", provider=provider, mode=mode
-        )
-        pin = self.deepgram_stt_live_model if mode == "live" else self.deepgram_stt_model
-        if provider == "deepgram" and pin is not None:
-            return tuple(m for m in models if m == pin)
-        return models
-
-    def tts_voice_models(self) -> frozenset[str] | None:
-        """TTS model restriction from the pin (``None`` = every catalog model of the provider)."""
-        if self.tts_provider == "deepgram" and self.deepgram_tts_model is not None:
-            return frozenset({self.deepgram_tts_model})
-        return None
-
-    @property
-    def voice_catalog(self) -> VoiceCatalog:
-        if self._voice_catalog is None:  # pragma: no cover - set by the validator
-            raise RuntimeError("settings were not validated")
-        return self._voice_catalog
-
-    @property
     def enabled_tiers(self) -> frozenset[RouteTier]:
         flags: dict[RouteTier, bool] = {
             "VISION": self.karen_feature_vision_enabled,
@@ -289,7 +213,6 @@ class Settings(BaseSettings):
         configured: dict[TaskRoute, str | None] = {
             "CODING": self.karen_model_coding,
             "DOCUMENT_ANALYSIS": self.karen_model_document_analysis,
-            "VOICE": self.karen_model_voice,
         }
         return {route: model for route, model in configured.items() if model}
 
@@ -317,66 +240,7 @@ class Settings(BaseSettings):
         if not self.is_mock:
             self._validate_live_gateway()
         self._validate_tier_models()
-        self._validate_voice()
         return self
-
-    def _validate_voice(self) -> None:
-        try:
-            self._voice_catalog = load_catalog(self.karen_voice_catalog_path)
-        except CatalogError as exc:
-            raise ValueError(f"KAREN_VOICE_CATALOG_PATH: {exc}") from exc
-        providers = {self.stt_provider, self.tts_provider}
-        if self.app_env == "production" and "mock" in providers:
-            raise ValueError("mock speech providers are not allowed when APP_ENV=production")
-        if "deepgram" in providers and self.deepgram_api_key is None and self.karen_feature_voice_enabled:
-            raise ValueError("DEEPGRAM_API_KEY is required when a speech provider is deepgram")
-        if "openrouter" in providers and self.openrouter_api_key is None and self.karen_feature_voice_enabled:
-            raise ValueError("OPENROUTER_API_KEY is required when a speech provider is openrouter")
-        self._validate_deepgram_pins()
-        if not self.karen_feature_voice_enabled or providers == {"mock"}:
-            return
-        if self.karen_voice_catalog_path.resolve() == MOCK_VOICE_CATALOG_PATH.resolve():
-            raise ValueError(
-                "KAREN_VOICE_CATALOG_PATH points at the mock catalog; live voice needs a verified one"
-            )
-        if self.stt_provider != "mock" and not self.stt_models("batch"):
-            raise ValueError(
-                "live voice needs at least one speech-to-text model with verified_at in the catalog "
-                f"for provider {self.stt_provider}"
-            )
-        if (
-            self.karen_feature_voice_live_enabled
-            and self.stt_provider != "mock"
-            and not self.stt_models("live")
-        ):
-            raise ValueError(
-                "KAREN_FEATURE_VOICE_LIVE_ENABLED needs a verified live speech-to-text model in the catalog"
-            )
-        if self.tts_provider != "mock":
-            restrict = self.tts_voice_models()
-            voices = [
-                v
-                for v in self.voice_catalog.usable_voices(require_verified=True, provider=self.tts_provider)
-                if restrict is None or v.model_id in restrict
-            ]
-            if not {"en", "hi"} <= {v.language for v in voices}:
-                raise ValueError("live voice needs verified English and Hindi voices in the voice catalog")
-
-    def _validate_deepgram_pins(self) -> None:
-        catalog = self.voice_catalog
-        pins: list[tuple[str, str | None, Literal["stt", "tts"], SpeechMode]] = [
-            ("DEEPGRAM_STT_MODEL", self.deepgram_stt_model, "stt", "batch"),
-            ("DEEPGRAM_STT_LIVE_MODEL", self.deepgram_stt_live_model, "stt", "live"),
-            ("DEEPGRAM_TTS_MODEL", self.deepgram_tts_model, "tts", "batch"),
-        ]
-        for env_name, pin, kind, mode in pins:
-            if pin is None:
-                continue
-            entry = catalog.stt_model(pin) if kind == "stt" else catalog.tts_model(pin)
-            if entry is None or entry.provider != "deepgram":
-                raise ValueError(f"{env_name}={pin} is not a deepgram model in the voice catalog")
-            if mode not in entry.modes:
-                raise ValueError(f"{env_name}={pin} does not support {mode} mode in the voice catalog")
 
     def _validate_internal_auth(self) -> None:
         secret = self.internal_service_hmac_secret

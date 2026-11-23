@@ -1,10 +1,10 @@
 import { MESSAGE_MAX_CHARS } from '@karen/api-contracts';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { useTheme } from '../../theme/theme';
-import { MicGlyph, SendGlyph, StopGlyph } from './glyphs';
+import { SendGlyph, StopGlyph } from './glyphs';
 
 /**
- * Pill-shaped message input with a glowing blue action capsule (mic + send, or stop while
+ * Pill-shaped message input with a glowing blue action capsule (send, or stop while
  * KAREN is answering). Enforces the 8 000-character limit client-side too.
  */
 export function Composer({
@@ -12,7 +12,6 @@ export function Composer({
   onChange,
   onSend,
   onStop,
-  onMic,
   generating,
   disabled,
   disabledReason,
@@ -21,7 +20,6 @@ export function Composer({
   onChange: (text: string) => void;
   onSend: () => void;
   onStop: () => void;
-  onMic?: () => void;
   generating: boolean;
   disabled: boolean;
   disabledReason?: string;
@@ -54,7 +52,7 @@ export function Composer({
         <TextInput
           accessibilityLabel="Message KAREN"
           accessibilityHint={disabled ? disabledReason : undefined}
-          placeholder="Type or talk to KAREN"
+          placeholder="Message KAREN"
           placeholderTextColor={t.colors.textSecondary}
           value={value}
           onChangeText={onChange}
@@ -89,32 +87,20 @@ export function Composer({
               <StopGlyph color="#fff" />
             </Pressable>
           ) : (
-            <>
-              {onMic ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Talk to KAREN"
-                  onPress={onMic}
-                  style={({ pressed }) => ({ ...round, opacity: pressed ? 0.7 : 1 })}
-                >
-                  <MicGlyph color="#fff" />
-                </Pressable>
-              ) : null}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Send message"
-                accessibilityState={{ disabled: !canSend }}
-                disabled={!canSend}
-                onPress={onSend}
-                style={({ pressed }) => ({
-                  ...round,
-                  backgroundColor: canSend ? 'rgba(255,255,255,0.22)' : 'transparent',
-                  opacity: canSend ? (pressed ? 0.7 : 1) : 0.5,
-                })}
-              >
-                <SendGlyph color="#fff" />
-              </Pressable>
-            </>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Send message"
+              accessibilityState={{ disabled: !canSend }}
+              disabled={!canSend}
+              onPress={onSend}
+              style={({ pressed }) => ({
+                ...round,
+                backgroundColor: canSend ? 'rgba(255,255,255,0.22)' : 'transparent',
+                opacity: canSend ? (pressed ? 0.7 : 1) : 0.5,
+              })}
+            >
+              <SendGlyph color="#fff" />
+            </Pressable>
           )}
         </View>
       </View>

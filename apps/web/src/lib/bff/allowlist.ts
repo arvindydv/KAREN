@@ -13,23 +13,12 @@ type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 interface Rule {
   methods: readonly Method[];
   pattern: RegExp;
-  /** Larger request-body cap for this route only (default MAX_BODY_BYTES). */
-  maxBodyBytes?: number;
 }
 
-const rule = (methods: readonly Method[], path: string, maxBodyBytes?: number): Rule => ({
+const rule = (methods: readonly Method[], path: string): Rule => ({
   methods,
   pattern: new RegExp(`^${path}$`),
-  ...(maxBodyBytes ? { maxBodyBytes } : {}),
 });
-
-/** Live voice session IDs (`lv_` + 24–48 alphanumerics, ADR-0027). */
-const LIVE_SID = 'lv_[A-Za-z0-9]{24,48}';
-/** One live audio chunk: 32 kB decoded → ~44 kB base64 plus JSON framing. */
-export const LIVE_CHUNK_MAX_BODY_BYTES = 48_000;
-
-/** Voice messages: base64 audio up to the API's 700 kB cap plus JSON framing (ADR-0026). */
-export const VOICE_UPLOAD_MAX_BODY_BYTES = 960_000;
 
 export const PROXY_ALLOWLIST: readonly Rule[] = [
   // Sign-out (the proxy also clears the session cookie for these).
@@ -78,20 +67,7 @@ export const PROXY_ALLOWLIST: readonly Rule[] = [
   rule(['GET'], `conversations/${UUID}/messages/${UUID}`),
   rule(['POST'], `conversations/${UUID}/messages/${UUID}/(?:cancel|regenerate)`),
   rule(['POST', 'DELETE'], `conversations/${UUID}/messages/${UUID}/feedback`),
-  // Voice (ADR-0026). Spoken replies stream through their own pass-through (speech-proxy.ts).
-  rule(['POST'], 'voice/transcriptions', VOICE_UPLOAD_MAX_BODY_BYTES),
-  // Live voice conversations (ADR-0027). Events stream through their own SSE pass-through.
-  rule(['GET'], 'voice/options'),
-  rule(['POST'], 'voice/sessions'),
-  rule(['POST'], `voice/sessions/${LIVE_SID}/audio`, LIVE_CHUNK_MAX_BODY_BYTES),
-  rule(['POST'], `voice/sessions/${LIVE_SID}/close`),
 ];
-
-/** The live-voice event stream path; served by the dedicated SSE pass-through. */
-export const VOICE_EVENTS_PATH = new RegExp(`^voice/sessions/(${LIVE_SID})/events$`);
-
-/** The spoken-reply audio path; served by the dedicated streaming pass-through. */
-export const SPEECH_PATH = new RegExp(`^conversations/(${UUID})/messages/(${UUID})/speech$`);
 
 /** The one streaming (SSE) path; served by the dedicated pass-through, never buffered. */
 export const STREAM_PATH = new RegExp(`^conversations/(${UUID})/messages/(${UUID})/stream$`);
@@ -114,15 +90,6 @@ export function resolveAllowedPath(method: string, segments: readonly string[]):
     (r) => (r.methods as readonly string[]).includes(m) && r.pattern.test(path),
   );
   return allowed ? path : null;
-}
-
-/** Request-body cap for an allowlisted path (per-rule override, else the default). */
-export function maxBodyBytesFor(method: string, path: string, fallback: number): number {
-  const m = method.toUpperCase();
-  const match = PROXY_ALLOWLIST.find(
-    (r) => (r.methods as readonly string[]).includes(m) && r.pattern.test(path),
-  );
-  return match?.maxBodyBytes ?? fallback;
 }
 
 /** Paths whose successful (or failed) call ends the browser session locally. */

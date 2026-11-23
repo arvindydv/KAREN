@@ -11,27 +11,12 @@ import { Composer } from '../../../src/features/chat/composer';
 import { ConsentRequired, useAiConsent } from '../../../src/features/chat/consent-gate';
 import { ApiRequestError, NetworkError, describeError } from '../../../src/lib/api-error';
 import { useAiUsage, useChatActions, usageResetTime } from '../../../src/lib/chat-queries';
-import {
-  qk,
-  useInvalidate,
-  usePreferences,
-  useProfile,
-  useVoiceOptions,
-} from '../../../src/lib/queries';
-import { voiceSupport } from '../../../src/features/voice/native-modules';
-import {
-  VOICE_NOT_IN_BUILD,
-  useVoiceAssistant,
-} from '../../../src/features/voice/use-voice-assistant';
-import { VoiceBar } from '../../../src/features/voice/voice-bar';
-import { VoiceMode } from '../../../src/features/voice/voice-mode';
-import { useVoiceStore } from '../../../src/state/voice-store';
+import { qk, useInvalidate, useProfile } from '../../../src/lib/queries';
 import { newUuid } from '../../../src/lib/uuid';
 import { useChatDrafts } from '../../../src/state/chat-drafts';
 import { useTheme } from '../../../src/theme/theme';
 
 const DRAFT_KEY = 'new';
-const NO_MESSAGES: never[] = [];
 
 /**
  * The signed-in landing screen: a fresh chat with KAREN. No conversation is created until the
@@ -102,58 +87,6 @@ export default function NewChatScreen() {
     [actions, clearDraft, draft, invalidate, router, sending, usage],
   );
 
-  // ---- Talking to KAREN (ADR-0030). This screen only listens for "Hey KAREN" (or the mic tap);
-  // it then creates a chat and hands the conversation to the chat screen.
-  const voiceOptions = useVoiceOptions();
-  const preferences = usePreferences();
-  const voiceAllowed =
-    consent === true &&
-    (preferences.data?.voice_enabled ?? true) &&
-    voiceOptions.data?.available === true;
-  const starting = useRef(false);
-  const [voiceMode, setVoiceMode] = useState(false);
-  const startVoiceChat = useCallback(
-    async (question: string | null) => {
-      if (starting.current) return;
-      if (!voiceAllowed) {
-        setProblem({
-          tone: 'info',
-          text:
-            preferences.data?.voice_enabled === false
-              ? 'Voice is turned off. Turn it on in Settings → Preferences to talk to KAREN.'
-              : 'Talking to KAREN isn’t available right now. Please type instead.',
-        });
-        return;
-      }
-      if (!voiceSupport.talk) {
-        setProblem({ tone: 'info', text: VOICE_NOT_IN_BUILD });
-        return;
-      }
-      starting.current = true;
-      setVoiceMode(true); // the orb screen appears at once; the chat opens behind it
-      try {
-        const chat = await actions.create('standard');
-        useVoiceStore.getState().setHandoff({ conversationId: chat.id, question });
-        router.replace(`/chat/${chat.id}`);
-      } catch (err) {
-        setVoiceMode(false);
-        setProblem({ tone: 'warning', text: describeError(err) });
-      } finally {
-        starting.current = false;
-      }
-    },
-    [actions, preferences.data?.voice_enabled, router, voiceAllowed],
-  );
-  const voice = useVoiceAssistant({
-    conversationId: null,
-    messages: NO_MESSAGES,
-    allowed: voiceAllowed,
-    handoff: (question) => {
-      void startVoiceChat(question);
-      return true;
-    },
-  });
-
   return (
     <View style={{ flex: 1, backgroundColor: t.colors.background }}>
       <SpaceBackground />
@@ -168,13 +101,7 @@ export default function NewChatScreen() {
             menuLabel="More options"
             onMenu={() => setMenu(true)}
           />
-          <ChatWelcome
-            name={name}
-            compact={keyboardVisible}
-            {...(voiceAllowed && voice.supported
-              ? { onTalk: () => void startVoiceChat(null) }
-              : {})}
-          />
+          <ChatWelcome name={name} compact={keyboardVisible} />
           {consent === true ? (
             <View style={{ paddingBottom: t.spacing.sm }}>
               <SuggestionCards disabled={sending} onPick={(s) => void send(s.prompt)} />
@@ -188,16 +115,6 @@ export default function NewChatScreen() {
             }}
           >
             {problem ? <Banner tone={problem.tone}>{problem.text}</Banner> : null}
-            {voice.notice ? <Banner tone="info">{voice.notice}</Banner> : null}
-            {voiceAllowed && voice.supported ? (
-              <VoiceBar
-                state={voice.state}
-                handsFree={voice.handsFree}
-                wakeAvailable={voice.wakeAvailable}
-                onTalk={() => void startVoiceChat(null)}
-                onHandsFree={(on) => void voice.setHandsFree(on)}
-              />
-            ) : null}
             {consent === false ? (
               <ConsentRequired />
             ) : (
@@ -206,7 +123,6 @@ export default function NewChatScreen() {
                 onChange={(text) => setDraft(DRAFT_KEY, text)}
                 onSend={() => void send()}
                 onStop={() => undefined}
-                onMic={() => void startVoiceChat(null)}
                 generating={false}
                 disabled={consent !== true || sending}
                 disabledReason={consent !== true ? 'AI processing is not allowed' : 'Sending'}
@@ -223,19 +139,6 @@ export default function NewChatScreen() {
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
-      {voiceMode ? (
-        <VoiceMode
-          state={{ ...voice.state, phase: 'thinking' }}
-          name={name}
-          notice={null}
-          handsFree={voice.handsFree}
-          wakeAvailable={voice.wakeAvailable}
-          onOrb={() => undefined}
-          onClose={() => setVoiceMode(false)}
-          onSuggestion={(s) => void startVoiceChat(s.prompt)}
-          onHandsFree={(on) => void voice.setHandsFree(on)}
-        />
-      ) : null}
       <ActionSheet
         visible={menu}
         title="KAREN"

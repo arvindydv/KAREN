@@ -30,9 +30,6 @@ export interface MessageActions {
   onFeedback?: (rating: 'up' | 'down', category?: (typeof FEEDBACK_CATEGORIES)[number]) => void;
   onClearFeedback?: () => void;
   onEdit?: (content: string) => void;
-  /** Read this answer aloud / stop reading (ADR-0026). */
-  onListen?: () => void;
-  speaking?: boolean;
   notify: (text: string) => void;
 }
 
@@ -296,33 +293,6 @@ function AssistantMessage({
           <div className="flex flex-wrap items-center gap-1">
             {message.content ? (
               <CopyButtons text={message.content} notify={actions.notify} />
-            ) : null}
-            {message.content && actions.onListen ? (
-              <button
-                type="button"
-                className={actionBtn}
-                onClick={actions.onListen}
-                aria-pressed={actions.speaking ?? false}
-                aria-label={actions.speaking ? 'Stop reading aloud' : 'Read aloud'}
-              >
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  aria-hidden="true"
-                >
-                  {actions.speaking ? (
-                    <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
-                  ) : (
-                    <path d="M11 5 6 9H3v6h3l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" />
-                  )}
-                </svg>
-                <span>{actions.speaking ? 'Stop' : 'Listen'}</span>
-              </button>
             ) : null}
             {canRegenerate && actions.onRegenerate ? (
               <button

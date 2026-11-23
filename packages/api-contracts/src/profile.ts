@@ -6,14 +6,9 @@ import {
   passwordInputSchema,
   challengeHandleSchema,
 } from './auth.js';
-import {
-  REPLY_LANGUAGES,
-  VOICE_ACCENTS,
-  VOICE_GENDERS,
-  VOICE_ID_PATTERN,
-  VOICE_SPEED_PCT_MAX,
-  VOICE_SPEED_PCT_MIN,
-} from './voice.js';
+
+/** Language KAREN replies in: `auto` mirrors the language of the latest message. */
+export const REPLY_LANGUAGES = ['auto', 'en', 'hi', 'hi-Latn'] as const;
 
 /**
  * Phase 01 M4 — profile, preferences, saved places, e-mail and password change.
@@ -100,26 +95,10 @@ export const preferencesSchema = z
       .strict()
       .nullable(),
     /**
-     * Spoken-voice preferences (ADR-0026). Accent applies to English replies; Hindi and Hinglish
-     * always use Indian voices. Gender is honoured only where a voice's gender is verified.
-     */
-    voice_accent: z.enum(VOICE_ACCENTS),
-    voice_gender: z.enum(VOICE_GENDERS),
-    /** Speaking rate in percent of normal (70–150; presets slow 85 / normal 100 / fast 120). */
-    voice_speed_pct: z.number().int().min(VOICE_SPEED_PCT_MIN).max(VOICE_SPEED_PCT_MAX),
-    /** Read KAREN's replies aloud automatically after a voice message. */
-    voice_autoplay: z.boolean(),
-    /** Show voice input (microphone, live conversation). Off = text-only experience. */
-    voice_enabled: z.boolean(),
-    /** Allow KAREN's answers to be read aloud at all (listen button / autoplay). */
-    voice_replies: z.boolean(),
-    /**
-     * Language KAREN replies in (typed and spoken). `auto` = the language of your latest
+     * Language KAREN replies in. `auto` = the language of your latest
      * message, detected automatically; otherwise always this language.
      */
     reply_language: z.enum(REPLY_LANGUAGES),
-    /** Preferred catalog voice (see `GET /v1/voice/options`); null = chosen automatically. */
-    voice_id: z.string().regex(VOICE_ID_PATTERN).nullable(),
     version: z.number().int().min(0),
   })
   .strict()

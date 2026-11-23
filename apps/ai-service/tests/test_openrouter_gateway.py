@@ -205,15 +205,6 @@ async def test_provider_policy_is_configurable() -> None:
     assert recorder.body()["provider"] == {"data_collection": "allow"}
 
 
-async def test_latency_sort_only_for_requests_that_prefer_latency() -> None:
-    recorder = Recorder(httpx2.Response(200, json=completion_json()))
-    client, _ = make_client(recorder)
-    await client.complete(request())
-    assert "sort" not in recorder.body()["provider"]
-    await client.complete(dataclasses.replace(request(), prefer_latency=True))
-    assert recorder.body(1)["provider"] == {"data_collection": "deny", "zdr": True, "sort": "latency"}
-
-
 async def test_reasoning_is_disabled_only_when_requested() -> None:
     recorder = Recorder(httpx2.Response(200, json=completion_json()))
     client, _ = make_client(recorder)

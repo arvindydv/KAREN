@@ -160,6 +160,32 @@ export const sseFrame = (event: ChatStreamEvent): string =>
 
 export const SSE_HEARTBEAT = ': ping\n\n';
 
+/** The slice of a writable socket that backpressure needs. */
+export interface DrainableStream {
+  once(event: 'drain' | 'close', listener: () => void): unknown;
+  off(event: 'drain' | 'close', listener: () => void): unknown;
+}
+
+/**
+ * Waits for a full socket buffer to drain. Also settles when the socket closes or `signal`
+ * aborts: a closed socket never emits `drain`, and waiting on it alone would hang the reader
+ * forever (leaking its pub/sub subscription and database polling).
+ */
+export function waitForDrain(stream: DrainableStream, signal: AbortSignal): Promise<void> {
+  if (signal.aborted) return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    const done = () => {
+      stream.off('drain', done);
+      stream.off('close', done);
+      signal.removeEventListener('abort', done);
+      resolve();
+    };
+    stream.once('drain', done);
+    stream.once('close', done);
+    signal.addEventListener('abort', done, { once: true });
+  });
+}
+
 /** Parses a `Last-Event-ID` header / `after` query value; invalid → 0 (replay everything). */
 export function parseResumeSeq(raw: string | undefined): number {
   if (!raw || !/^\d{1,9}$/.test(raw.trim())) return 0;

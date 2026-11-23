@@ -166,20 +166,14 @@ class ModelRouter:
         requirements: RouteRequirements,
         *,
         task_kind: TaskKind | None = None,
-        task_route: TaskRoute | None = None,
     ) -> RouteDecision:
-        """``task_route`` (e.g. VOICE for spoken turns) applies only when configured for this tier."""
+        """A task-specific pin (``task_route``) applies only when configured for this tier."""
         if tier == "NO_MODEL":
             return RouteDecision(tier="NO_MODEL", primary=None)
         self._check_tier(tier)
         profile = profile_for(task_kind, tier)
         req = replace(requirements, needs_vision=requirements.needs_vision or profile.needs_vision)
-        if task_route is not None and (
-            task_route not in self._task_route_models or TASK_ROUTE_TIERS[task_route] != tier
-        ):
-            task_route = None
-        if task_route is None and task_kind is not None:
-            task_route = self.task_route_for(task_kind, tier)
+        task_route = self.task_route_for(task_kind, tier) if task_kind is not None else None
         pin = self._task_route_models[task_route] if task_route else self._pins.get(tier)
         if pin is not None:
             return self._route_pinned(tier, req, pin, task_route)

@@ -51,24 +51,19 @@ export function greeting(name: string | null, now: Date = new Date()): string {
 }
 
 /**
- * Centre of an empty chat: KAREN herself (the orb) and a personal greeting. With `onTalk` the
- * orb is the main control — tap her and just talk (ADR-0034: a companion first, a chat second).
+ * Centre of an empty chat: KAREN herself (the orb) and a personal greeting.
  * Scrolls rather than overlaps when space is short, and shrinks while the keyboard is open.
  */
 export function ChatWelcome({
   name,
   compact = false,
-  onTalk,
   now,
 }: {
   name: string | null;
   compact?: boolean;
-  /** Tap the orb to start talking (omitted when voice is unavailable). */
-  onTalk?: () => void;
   now?: Date;
 }) {
   const t = useTheme();
-  const orb = <AssistantOrb size={compact ? 72 : onTalk ? 168 : 136} />;
   return (
     <ScrollView
       style={{ flex: 1 }}
@@ -82,19 +77,7 @@ export function ChatWelcome({
         gap: compact ? t.spacing.sm : t.spacing.md,
       }}
     >
-      {onTalk ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Tap KAREN to talk"
-          accessibilityHint="Starts a voice conversation"
-          onPress={onTalk}
-          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-        >
-          {orb}
-        </Pressable>
-      ) : (
-        orb
-      )}
+      <AssistantOrb size={compact ? 72 : 136} />
       <Text
         accessibilityRole="header"
         style={{
@@ -110,9 +93,7 @@ export function ChatWelcome({
       </Text>
       {compact ? null : (
         <Text style={{ color: t.colors.textSecondary, fontSize: 14, textAlign: 'center' }}>
-          {onTalk
-            ? 'Tap me and just talk — English, हिंदी or Hinglish. Or type below.'
-            : 'Talk to me in English, हिंदी or Hinglish.'}
+          Chat with me in English, हिंदी or Hinglish.
         </Text>
       )}
     </ScrollView>

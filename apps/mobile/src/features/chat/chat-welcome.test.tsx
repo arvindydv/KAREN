@@ -13,13 +13,6 @@ describe('ChatWelcome', () => {
     await render(<ChatWelcome name={null} now={new Date(2026, 10, 22, 9, 0)} />);
     expect(screen.getByText('Good morning.')).toBeTruthy();
   });
-
-  it('the orb starts a voice conversation when voice is available', async () => {
-    const onTalk = jest.fn();
-    await render(<ChatWelcome name="Asha" now={evening} onTalk={onTalk} />);
-    await fireEvent.press(screen.getByRole('button', { name: 'Tap KAREN to talk' }));
-    expect(onTalk).toHaveBeenCalled();
-  });
 });
 
 describe('greeting', () => {

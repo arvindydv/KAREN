@@ -47,69 +47,13 @@ export const THEME_OPTIONS = [
   { value: 'dark', label: 'Dark' },
 ] as const;
 
-/** Spoken-voice options (ADR-0026). Hindi and Hinglish answers always use Indian voices. */
-export const VOICE_ACCENT_OPTIONS = [
-  { value: 'indian', label: 'Indian' },
-  { value: 'american', label: 'American' },
-  { value: 'british', label: 'British' },
-] as const;
-
-export const VOICE_GENDER_OPTIONS = [
-  { value: 'any', label: 'Any' },
-  { value: 'female', label: 'Female' },
-  { value: 'male', label: 'Male' },
-] as const;
-
-/** Speaking-speed presets (VOICE_SPEED_PRESETS). A saved custom value is shown as its own choice. */
-export const VOICE_SPEED_OPTIONS = [
-  { value: '85', label: 'Slow' },
-  { value: '100', label: 'Normal' },
-  { value: '120', label: 'Fast' },
-] as const;
-
-/** Speed choices including the saved value when it is a custom one (set on the web). */
-export function speedChoices(current: number): { value: string; label: string }[] {
-  const presets: { value: string; label: string }[] = [...VOICE_SPEED_OPTIONS];
-  return presets.some((o) => Number(o.value) === current)
-    ? presets
-    : [...presets, { value: String(current), label: `Custom (${current}%)` }];
-}
-
-/** Reply language (ADR-0027): automatic = the language you speak or type. */
+/** Reply language (ADR-0027): automatic = the language you write in. */
 export const REPLY_LANGUAGE_OPTIONS = [
   { value: 'auto', label: 'Automatic' },
   { value: 'en', label: 'English' },
   { value: 'hi', label: 'हिन्दी' },
   { value: 'hi-Latn', label: 'Hinglish' },
 ] as const;
-
-export interface VoiceChoiceSource {
-  voice_id: string;
-  language: 'en' | 'hi';
-  accent: 'indian' | 'american' | 'british';
-  gender: 'female' | 'male' | null;
-  display_name: string | null;
-}
-
-/**
- * Preferred-voice choices: "Automatic" plus the voices the server actually offers for the chosen
- * accent and gender (Hindi voices are always listed — they read Hindi answers).
- */
-export function voiceChoices(
-  voices: readonly VoiceChoiceSource[],
-  accent: string,
-  gender: string,
-): { value: string; label: string }[] {
-  return [
-    { value: '', label: 'Automatic' },
-    ...voices
-      .filter(
-        (v) =>
-          (v.language === 'hi' || v.accent === accent) && (gender === 'any' || v.gender === gender),
-      )
-      .map((v) => ({ value: v.voice_id, label: v.display_name ?? v.voice_id })),
-  ];
-}
 
 /** Language choice → locale/script the profile and preferences should carry. */
 export const languageSettings = (language: 'en' | 'hi' | 'hinglish') =>

@@ -431,14 +431,13 @@ export class ConversationService {
     threadId: string,
     content: string,
     idempotencyKey: string,
-    inputMode: 'text' | 'voice' = 'text',
   ): Promise<SendMessageResponse> {
     const { userId } = caller;
     const replay = await this.existingSend(userId, idempotencyKey, { threadId, content });
     if (replay) return replay;
     await this.rateLimit(userId);
     const reservationKey = `send:${userId}:${idempotencyKey}`;
-    await this.usage.reserve(userId, reservationKey);
+    const reserved = await this.usage.reserve(userId, reservationKey);
     let result: { thread: ConversationThread; user: MessageRow; assistant: MessageRow };
     try {
       result = await this.prisma.withUserScope(userId, async (tx) => {
@@ -454,7 +453,6 @@ export class ConversationService {
             status: 'completed',
             content,
             clientIdempotencyKey: idempotencyKey,
-            inputMode,
             completedAt: new Date(),
           },
         });
@@ -476,7 +474,8 @@ export class ConversationService {
         return { thread: updated, user: { ...user, feedback: null }, assistant };
       });
     } catch (error) {
-      await this.usage.release(userId, reservationKey);
+      // Only the request that created the reservation releases it (see UsageLimitsService).
+      if (reserved) await this.usage.release(userId, reservationKey);
       if (isUniqueViolation(error)) {
         // A concurrent retry with the same key won the race, or a generation just started.
         const again = await this.existingSend(userId, idempotencyKey, { threadId, content });
@@ -529,7 +528,7 @@ export class ConversationService {
     }
     await this.rateLimit(userId);
     const reservationKey = `regen:${userId}:${idempotencyKey}`;
-    await this.usage.reserve(userId, reservationKey);
+    const reserved = await this.usage.reserve(userId, reservationKey);
     let assistant: MessageRow;
     try {
       assistant = await this.prisma.withUserScope(userId, async (tx) => {
@@ -560,7 +559,8 @@ export class ConversationService {
         });
       });
     } catch (error) {
-      await this.usage.release(userId, reservationKey);
+      // Only the request that created the reservation releases it (see UsageLimitsService).
+      if (reserved) await this.usage.release(userId, reservationKey);
       if (isUniqueViolation(error)) {
         throw new ApiError('CONFLICT', 'This answer is already being regenerated.');
       }
@@ -594,7 +594,7 @@ export class ConversationService {
     if (replay) return replay;
     await this.rateLimit(userId);
     const reservationKey = `fork:${userId}:${idempotencyKey}`;
-    await this.usage.reserve(userId, reservationKey);
+    const reserved = await this.usage.reserve(userId, reservationKey);
     let result: { thread: ConversationThread; user: MessageRow; assistant: MessageRow };
     try {
       result = await this.prisma.withUserScope(userId, async (tx) => {
@@ -677,7 +677,8 @@ export class ConversationService {
         return { thread: updated, user: { ...user, feedback: null }, assistant };
       });
     } catch (error) {
-      await this.usage.release(userId, reservationKey);
+      // Only the request that created the reservation releases it (see UsageLimitsService).
+      if (reserved) await this.usage.release(userId, reservationKey);
       if (isUniqueViolation(error)) {
         const again = await this.existingSend(userId, idempotencyKey, { content });
         if (again) return again;

@@ -28,8 +28,6 @@ class GatewayRequest:
     # Turn off hidden reasoning (fast tiers). Without it, catalog models that reason by default
     # can spend the whole output budget on reasoning and return an empty answer (observed live).
     disable_reasoning: bool = False
-    # Spoken turns: ask the gateway for the fastest endpoint of the chosen model.
-    prefer_latency: bool = False
 
 
 @dataclass(frozen=True)

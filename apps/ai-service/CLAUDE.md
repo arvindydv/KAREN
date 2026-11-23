@@ -1,7 +1,8 @@
 # apps/ai-service — rules for agents
 
-Python 3.12 FastAPI service: KAREN ModelRouter (least-cost task routing, ADR-0026), OpenRouter text +
-speech clients (ADR-0025/0026), LangGraph agents, evals.
+Python 3.12 FastAPI service: KAREN ModelRouter (least-cost task routing, ADR-0026), OpenRouter text
+gateway client (ADR-0025), LangGraph agents, evals. Voice/speech is out of scope for this service
+(removed from Phase 02; archived on branch `archive/phase-02-voice`).
 Architecture source of truth: `/karen_architecture.md` §2 (gateway, router, spend), §10, §11.
 
 ## Hard rules
@@ -23,13 +24,6 @@ Architecture source of truth: `/karen_architecture.md` §2 (gateway, router, spe
 - Every request sends the provider data policy (`data_collection`, `zdr`); never drop it.
   Production must keep `OPENROUTER_DATA_COLLECTION=deny`.
 - Paid calls and credit purchases need the owner's explicit approval.
-- Speech (ADR-0026/0027): providers only behind `SpeechToTextProvider`/`TextToSpeechProvider`/
-  `LiveTranscriber` (mock, OpenRouter, Deepgram; STT and TTS chosen independently).
-  `DEEPGRAM_API_KEY` follows the same rules as the OpenRouter key; never mint Deepgram tokens for
-  clients. The Deepgram probe passed on 2026-11-22 (ADR-0028); re-run
-  `karen-ai-speech-probe --confirm-paid-calls` (paid; owner approval) when the catalog changes. Never log or record
-  audio or transcript text; never restart a synthesis after bytes were delivered; voice IDs live only
-  in `config/voice-catalog.*.json` and a voice's gender is never guessed from its name.
 - Automated tests must never make paid calls; `tests/conftest.py` blocks non-loopback DNS.
 
 ## Contract sync (`packages/ai-model-contracts`)

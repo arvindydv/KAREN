@@ -914,11 +914,20 @@ describe('conversations (integration)', () => {
 
   // ── Data rights cover conversations ─────────────────────────────────────────────────
 
-  it('a data export includes conversations, messages and feedback', async () => {
+  it('a data export includes conversations, messages, feedback and the reply language', async () => {
     const s = await account('conv-export');
+    await h
+      .http()
+      .patch('/v1/me/preferences')
+      .set('authorization', s.auth)
+      .set('if-match', '"0"')
+      .send({ reply_language: 'hi' })
+      .expect(200);
     const t = await createThread(s.auth, { title: 'Export me' });
     const r = await send(s.auth, t.id, 'what I said').expect(202);
     await stream(s.auth, r.body.stream_path as string);
+    // The saved reply language reaches the AI service with the request.
+    expect(stub.requests.at(-1)?.reply_language).toBe('hi');
     const req = await h
       .http()
       .post('/v1/me/data-rights/export')
@@ -932,9 +941,11 @@ describe('conversations (integration)', () => {
       .set('authorization', s.auth)
       .expect(200);
     const payload = JSON.parse(dl.text) as {
+      preferences: { reply_language: string } | null;
       conversations: { title: string; messages: { role: string; content: string }[] }[];
       ai_usage_by_day: unknown[];
     };
+    expect(payload.preferences?.reply_language).toBe('hi');
     const conv = payload.conversations.find((c) => c.title === 'Export me');
     expect(conv?.messages.map((m) => m.role)).toEqual(['user', 'assistant']);
     expect(conv?.messages[0]?.content).toBe('what I said');

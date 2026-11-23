@@ -268,16 +268,8 @@ model UserPreferences {
   notifyPush         Boolean  @default(false) @map("notify_push")
   quietHoursStart    String?  @map("quiet_hours_start") @db.VarChar(5)
   quietHoursEnd      String?  @map("quiet_hours_end") @db.VarChar(5)
-  /// Spoken-voice preferences (ADR-0026/0027); CHECK constraint user_preferences_voice_v2.
-  voiceAccent        String   @default("indian") @map("voice_accent") @db.VarChar(16)
-  voiceGender        String   @default("any") @map("voice_gender") @db.VarChar(8)
-  voiceSpeedPct      Int      @default(100) @map("voice_speed_pct") @db.SmallInt
-  voiceAutoplay      Boolean  @default(false) @map("voice_autoplay")
-  voiceEnabled       Boolean  @default(true) @map("voice_enabled")
-  voiceReplies       Boolean  @default(true) @map("voice_replies")
-  /// auto | en | hi | hi-Latn — reply language for typed and spoken messages (ADR-0027).
+  /// auto | en | hi | hi-Latn — reply language for chat replies; CHECK user_preferences_reply_language.
   replyLanguage      String   @default("auto") @map("reply_language") @db.VarChar(8)
-  voiceId            String?  @map("voice_id") @db.VarChar(128)
   version            Int      @default(0)
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
@@ -744,8 +736,6 @@ model ConversationMessage {
   status               String    @db.VarChar(16)
   content              String    @default("")
   clientIdempotencyKey String?   @map("client_idempotency_key") @db.VarChar(128)
-  /// text | voice — how a user message was entered; voice turns get spoken-style answers (ADR-0029)
-  inputMode            String    @default("text") @map("input_mode") @db.VarChar(8)
   /// AI request id (assistant) — one per generation attempt; never reused.
   requestId            String?   @map("request_id") @db.VarChar(128)
   replyToMessageId     String?   @map("reply_to_message_id") @db.Uuid

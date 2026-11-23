@@ -442,6 +442,7 @@ export class DataRightsService {
             notify_push: preferences.notifyPush,
             quiet_hours_start: preferences.quietHoursStart,
             quiet_hours_end: preferences.quietHoursEnd,
+            reply_language: preferences.replyLanguage,
           }
         : null,
       saved_places: places.map((p) => ({

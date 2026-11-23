@@ -1,6 +1,6 @@
 # 0026 — Cost-aware task routing, image input and voice (STT/TTS) with language & accent preferences
 
-- Status: Accepted · Date: 2026-11-21
+- Status: Accepted; **voice parts superseded by ADR-0035** (2026-11-23) · Date: 2026-11-21
 - Builds on: ADR-0025 (OpenRouter), ADR-0023 (usage limits), ADR-0024 (content policy), ADR-0022.
 - Plan: `docs/PHASE_03_MULTIMODAL_PLAN.md`.
 

@@ -307,9 +307,6 @@ class OpenRouterGatewayClient:
 
     def _params(self, request: GatewayRequest) -> dict[str, Any]:
         provider = self._provider.as_body()
-        if request.prefer_latency:
-            # OpenRouter provider sorting; accepted live 2026-11-22 alongside zdr/data_collection.
-            provider["sort"] = "latency"
         extra_body: dict[str, Any] = {"provider": provider}
         if request.fallback_models:
             # Priority order, primary first; OpenRouter tries the next model on any error.

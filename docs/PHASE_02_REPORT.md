@@ -153,3 +153,41 @@ route, documents → DOCUMENT_ANALYSIS route, extraction → ECONOMY, vision tie
 served. The candidate registry was generated from OpenRouter's public catalog (no key, no cost);
 every entry is `verified_at: null`, so live mode still refuses to start. Live behaviour is
 **NOT VERIFIED**.
+
+## 10. Scope correction — voice removed (2026-11-23, ADR-0035)
+
+Owner review found Phase 02 had drifted into a voice chatbot (~17k lines: Deepgram/OpenRouter
+STT/TTS, live duplex sessions, wake words, echo gate, voice mode, companion voice; ADRs
+0026–0034). KAREN's MVP is memory → goals → Responsibility Engine → approvals → reminders
+(`docs/product/instinct-reference-blueprint.md` §16); voice is Phase 06. All voice code was
+removed; the full snapshot is preserved on branch `archive/phase-02-voice` (`04ef63b`).
+
+- Kept: text chat (web + mobile), SSE streaming, usage limits, OpenRouter gateway, task routing,
+  image input contract, `reply_language` preference, `user_name` prompt hint.
+- Removed: API voice endpoints and `VOICE_*` env, ai-service `speech/` and `/internal/v1/audio/*`,
+  web/mobile voice UI, mic permissions, `vosk-browser`, `expo-audio`, `expo-speech-recognition`,
+  `expo-file-system`; Phase 02 additions to `apps/voice-agent` (back to its Phase 00 skeleton).
+- Contract: internal AI contract `2026-11-23.v4` (no speech/live schemas, no `reply_style`).
+- Database: three unmerged voice migrations replaced by `20261121120000_identity_reply_language`.
+  **Local dev databases** that applied the old ones need `pnpm db:reset` (nothing deployed).
+
+### Bugs found and fixed during the end-to-end review (each with a regression test)
+
+| Area       | Bug                                                                                          |
+| ---------- | -------------------------------------------------------------------------------------------- |
+| api        | A refused duplicate send (same Idempotency-Key) released the in-flight request's reservation |
+| api        | Usage reservation leaked when loading the conversation context threw                         |
+| api        | SSE reader hung forever (Redis subscription leak) when a slow client disconnected            |
+| api        | Data export omitted `reply_language`                                                         |
+| ai-service | Client stop/disconnect cancelled the budget settle → Redis daily budget leaked per cancel    |
+| ai-service | `locale` was interpolated into the system prompt unchecked (prompt-injection vector)         |
+| web        | Stream that gave up left the UI on "reconnecting…" forever                                   |
+| mobile     | iOS inactive→active opened a second SSE connection                                           |
+| mobile     | A stale attempt's late response aborted the newer connection                                 |
+| mobile     | Polling fallback never stopped on 401/403/404                                                |
+
+Known, not yet fixed (tracked for the next phase): reaper does not settle Redis reservations of
+crashed runners; per-user active-generation cap can be exceeded by parallel sends to different
+threads; a network error after creating a new chat can duplicate the first message on retry;
+OpenRouter stream is not explicitly closed on early exit; date/time fast path ignores
+`reply_language`.

@@ -10,7 +10,7 @@
  */
 import { bffError } from '../errors';
 import { getServerEnv, type ServerEnv } from '../env';
-import { STREAM_PATH, VOICE_EVENTS_PATH } from './allowlist';
+import { STREAM_PATH } from './allowlist';
 import { signedClientIpHeaders } from './client-ip';
 import { clearCookie, cookieModeFor, parseCookieHeader, readCookie } from './cookies';
 import { checkFetchSite } from './csrf';
@@ -34,32 +34,13 @@ export async function handleStreamProxy(
 ): Promise<Response> {
   const path = `conversations/${conversationId}/messages/${messageId}/stream`;
   if (request.method.toUpperCase() !== 'GET' || !STREAM_PATH.test(path)) return notFound();
-  return proxyEventStream(request, path, RESUME, deps);
+  return proxyEventStream(request, path, deps);
 }
 
-/** Live-voice event cursors: in-process counters or Redis stream IDs (`<ms>-<seq>`). */
-export const VOICE_RESUME = /^\d{1,20}(?:-\d{1,10})?$/;
-
-/**
- * SSE pass-through for a live voice session (ADR-0027):
- *   GET /api/v1/voice/sessions/{sid}/events[?after=<cursor>]
- * Identical protections to the chat stream; the API checks session ownership.
- */
-export async function handleVoiceEventsProxy(
-  request: Request,
-  sessionId: string,
-  deps: StreamDeps = {},
-): Promise<Response> {
-  const path = `voice/sessions/${sessionId}/events`;
-  if (request.method.toUpperCase() !== 'GET' || !VOICE_EVENTS_PATH.test(path)) return notFound();
-  return proxyEventStream(request, path, VOICE_RESUME, deps);
-}
-
-/** Shared SSE pass-through: Fetch-Metadata, cookie → bearer, unbuffered, abort on disconnect. */
+/** SSE pass-through: Fetch-Metadata, cookie → bearer, unbuffered, abort on disconnect. */
 async function proxyEventStream(
   request: Request,
   path: string,
-  resume: RegExp,
   deps: StreamDeps,
 ): Promise<Response> {
   const env = deps.env ?? getServerEnv();
@@ -83,14 +64,14 @@ async function proxyEventStream(
     'x-request-id': crypto.randomUUID(),
   });
   const lastEventId = request.headers.get('last-event-id');
-  if (lastEventId && resume.test(lastEventId)) headers.set('last-event-id', lastEventId);
+  if (lastEventId && RESUME.test(lastEventId)) headers.set('last-event-id', lastEventId);
   for (const [k, v] of Object.entries(
     await signedClientIpHeaders(env.INTERNAL_SERVICE_HMAC_SECRET, env.BFF_TRUSTED_PROXY_HOPS),
   )) {
     headers.set(k, v);
   }
   const after = new URL(request.url).searchParams.get('after');
-  const search = after && resume.test(after) ? `?after=${after}` : '';
+  const search = after && RESUME.test(after) ? `?after=${after}` : '';
   const base = env.API_INTERNAL_BASE_URL.replace(/\/+$/, '');
 
   // Abort upstream when the browser goes away; bound only the time to response headers.

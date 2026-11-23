@@ -1,6 +1,6 @@
 # 0030 — Talking to KAREN on mobile: tap-to-talk, "Hey KAREN" on-device wake word, spoken answers
 
-- Status: Accepted · Date: 2026-11-22
+- Status: **Superseded by ADR-0035** (voice removed 2026-11-23; code on `archive/phase-02-voice`) · was Accepted · Date: 2026-11-22
 - Builds on: ADR-0027 (voice), ADR-0029 (spoken style, echo guard). Dependency policy: ADR-0010.
 
 ## Context

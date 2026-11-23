@@ -1,6 +1,6 @@
 # 0027 — Deepgram as the speech provider; live voice conversations through the backend
 
-- Status: Accepted · Date: 2026-11-22
+- Status: **Superseded by ADR-0035** (voice removed 2026-11-23; code on `archive/phase-02-voice`) · was Accepted · Date: 2026-11-22
 - Builds on: ADR-0026 (provider-independent speech, voice preferences), ADR-0023 (usage limits),
   ADR-0024 (content policy), ADR-0022 (SSE streaming), ADR-0013 (fail-closed coordination).
 - Details, verified facts and setup: `docs/voice/deepgram.md`.

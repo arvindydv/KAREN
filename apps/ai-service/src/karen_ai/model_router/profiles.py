@@ -34,7 +34,7 @@ class TaskProfile:
     task_route: TaskRoute | None = None
 
 
-# Conversational turns should start speaking quickly (voice uses the same profiles).
+# Conversational turns should start answering quickly.
 _CONVERSATIONAL_TTFT_MS: Final = 4000.0
 _INTERACTIVE_TTFT_MS: Final = 3000.0
 

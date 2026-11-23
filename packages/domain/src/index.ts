@@ -7,5 +7,3 @@ export * from './idempotency.js';
 export * from './workflows.js';
 export * from './identity.js';
 export * from './share-redaction.js';
-export * from './voice-turn.js';
-export * from './voice-gate.js';

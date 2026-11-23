@@ -8,21 +8,14 @@
  * - style-src keeps 'unsafe-inline': React `style` attributes need it and inline styles cannot
  *   execute code. (Adding a nonce to style-src would make browsers ignore 'unsafe-inline'.)
  * - connect-src 'self': the browser only ever talks to the BFF.
- * - media-src 'self' blob:: spoken replies play from a same-page MediaSource / Blob object URL
- *   (lib/chat/voice.ts). Without it the browser silently refuses to play KAREN's voice.
- * - 'wasm-unsafe-eval' + worker-src 'self' blob: (ADR-0031): the on-device "Hello KAREN"
- *   recogniser compiles WebAssembly in a Web Worker the library creates from a blob URL. This
- *   allows WebAssembly compilation only — never JavaScript eval — and no remote scripts.
  */
 export function buildCsp(nonce: string, isDev: boolean): string {
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ''}`,
-    "worker-src 'self' blob:",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
-    "media-src 'self' blob:",
     `connect-src 'self'${isDev ? ' ws:' : ''}`,
     "object-src 'none'",
     "base-uri 'self'",

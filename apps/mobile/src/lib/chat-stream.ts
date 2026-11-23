@@ -1,4 +1,5 @@
 import type { ChatStreamEvent, Message } from '@karen/api-contracts';
+import { ApiRequestError } from './api-error';
 import { backoffDelay, createSseParser, isTerminalEvent, toChatEvent } from './sse';
 
 /**
@@ -9,7 +10,7 @@ import { backoffDelay, createSseParser, isTerminalEvent, toChatEvent } from './s
  * - Resumes with `Last-Event-ID: <lastSeq>` after any drop, with jittered backoff; events at
  *   or below `lastSeq` are ignored, so text is never duplicated.
  * - `pause()` (app backgrounded) closes the connection and keeps the resume point;
- *   `resume()` (foreground / network back) reconnects from it.
+ *   `resume()` (foreground again) reconnects from it.
  * - If the runtime cannot stream response bodies, it falls back to polling the message every
  *   second until it is terminal (`onSnapshot`).
  *
@@ -72,6 +73,8 @@ export class ChatStreamFollower {
     if (this.finished) return;
     this.paused = false;
     const gen = ++this.generation;
+    // Never leave an older connection open beside the new one.
+    this.controller?.abort();
     void this.run(gen);
   }
 
@@ -84,9 +87,13 @@ export class ChatStreamFollower {
     this.handlers.onConnection('paused');
   }
 
-  /** App foregrounded or network back: reconnect from the last seq. */
+  /**
+   * App foregrounded: reconnect from the last seq. A no-op unless paused — iOS reports
+   * `active` after every `inactive` blip (Control Centre, system sheets) without a background,
+   * and restarting then would open a second connection beside the live one.
+   */
   resume(): void {
-    if (this.finished) return;
+    if (this.finished || !this.paused) return;
     this.start();
   }
 
@@ -130,15 +137,17 @@ export class ChatStreamFollower {
   }
 
   private async open(gen: number, token: string | undefined): Promise<Response> {
-    this.controller = new AbortController();
+    const controller = new AbortController();
+    this.controller = controller;
     const headers: Record<string, string> = { accept: 'text/event-stream' };
     if (token) headers.authorization = `Bearer ${token}`;
     if (this.lastSeq > 0) headers['last-event-id'] = String(this.lastSeq);
     const res = await this.deps.fetch(`${this.deps.baseUrl.replace(/\/$/, '')}${this.path}`, {
       headers,
-      signal: this.controller.signal,
+      signal: controller.signal,
     });
-    if (!this.alive(gen)) this.controller.abort();
+    // Abort THIS attempt's request only: `this.controller` may already belong to a newer one.
+    if (!this.alive(gen)) controller.abort();
     return res;
   }
 
@@ -192,7 +201,21 @@ export class ChatStreamFollower {
         this.handlers.onSnapshot(m);
         if (TERMINAL.includes(m.status)) return this.finish();
         this.handlers.onConnection('polling');
-      } catch {
+      } catch (error) {
+        if (!this.alive(gen)) return;
+        // Gone / not yours / session ended: polling again can never succeed.
+        if (error instanceof ApiRequestError && [401, 403, 404].includes(error.status)) {
+          this.finished = true;
+          this.handlers.onConnection('closed');
+          this.handlers.onFatal(
+            new FatalStreamError(
+              error.status === 401
+                ? 'Your session has ended. Please sign in again.'
+                : 'This answer is no longer available.',
+            ),
+          );
+          return;
+        }
         this.handlers.onConnection('offline');
       }
       await sleep(this.deps.pollIntervalMs ?? 1_000);

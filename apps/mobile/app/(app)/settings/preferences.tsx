@@ -23,17 +23,12 @@ import {
   TEXT_SIZE_OPTIONS,
   THEME_OPTIONS,
   TIME_FORMAT_OPTIONS,
-  VOICE_ACCENT_OPTIONS,
-  VOICE_GENDER_OPTIONS,
   REPLY_LANGUAGE_OPTIONS,
-  speedChoices,
-  voiceChoices,
 } from '../../../src/features/options';
 import { describeError } from '../../../src/lib/api-error';
 import { usePatchPreferences } from '../../../src/lib/mutations';
-import { usePreferences, useVoiceOptions } from '../../../src/lib/queries';
+import { usePreferences } from '../../../src/lib/queries';
 import { useSubmit } from '../../../src/lib/use-submit';
-import { VoicePreviewButton } from '../../../src/features/voice/voice-preview-button';
 import { useTheme } from '../../../src/theme/theme';
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -64,7 +59,6 @@ function PreferencesForm({
 }) {
   const t = useTheme();
   const patch = usePatchPreferences();
-  const voiceOptions = useVoiceOptions();
   const [draft, setDraft] = useState(prefs);
   const [quiet, setQuiet] = useState(prefs.quiet_hours !== null);
   const [start, setStart] = useState(prefs.quiet_hours?.start ?? '22:00');
@@ -147,26 +141,7 @@ function PreferencesForm({
         />
       </ListCard>
 
-      <SectionTitle>Voice</SectionTitle>
-      <ListCard>
-        <ToggleRow
-          label="Use voice"
-          description="Microphone and voice conversations. Off = text only."
-          value={draft.voice_enabled}
-          onChange={set('voice_enabled')}
-        />
-        <ToggleRow
-          label="Spoken answers"
-          description="Allow KAREN's answers to be read aloud."
-          value={draft.voice_replies}
-          onChange={set('voice_replies')}
-        />
-        <ToggleRow
-          label="Read answers aloud after I speak"
-          value={draft.voice_autoplay}
-          onChange={set('voice_autoplay')}
-        />
-      </ListCard>
+      <SectionTitle>Replies</SectionTitle>
       <GlassCard style={{ gap: 18 }}>
         <ChoiceGroup
           label="Reply language"
@@ -174,57 +149,8 @@ function PreferencesForm({
           value={draft.reply_language}
           onChange={set('reply_language')}
         />
-        <Caption>Automatic replies in the language you speak or type.</Caption>
-        <ChoiceGroup
-          label="Voice accent (English)"
-          options={VOICE_ACCENT_OPTIONS}
-          value={draft.voice_accent}
-          onChange={(v) => setDraft((d) => ({ ...d, voice_accent: v, voice_id: null }))}
-        />
-        <Caption>Hindi and Hinglish answers always use an Indian voice.</Caption>
-        <ChoiceGroup
-          label="Voice type"
-          options={VOICE_GENDER_OPTIONS}
-          value={draft.voice_gender}
-          onChange={(v) => setDraft((d) => ({ ...d, voice_gender: v, voice_id: null }))}
-        />
-        {voiceOptions.data ? (
-          <ChoiceGroup
-            label="Preferred voice"
-            options={voiceChoices(voiceOptions.data.voices, draft.voice_accent, draft.voice_gender)}
-            value={draft.voice_id ?? ''}
-            onChange={(v) => setDraft((d) => ({ ...d, voice_id: v === '' ? null : v }))}
-          />
-        ) : (
-          <Caption>
-            {voiceOptions.isError
-              ? "Couldn't load voices. KAREN picks a voice automatically."
-              : 'Loading voices…'}
-          </Caption>
-        )}
-        {voiceOptions.data ? (
-          // key: choosing another voice remounts the preview, stopping the old sample.
-          <VoicePreviewButton
-            key={draft.voice_id ?? 'auto'}
-            voiceId={
-              draft.voice_id ??
-              voiceOptions.data.voices.find(
-                (v) =>
-                  (v.language === 'hi' || v.accent === draft.voice_accent) &&
-                  (draft.voice_gender === 'any' || v.gender === draft.voice_gender),
-              )?.voice_id ??
-              null
-            }
-          />
-        ) : null}
-        <ChoiceGroup
-          label="Speaking speed"
-          options={speedChoices(draft.voice_speed_pct)}
-          value={String(draft.voice_speed_pct)}
-          onChange={(v) => set('voice_speed_pct')(Number(v))}
-        />
+        <Caption>Automatic replies in the language you write in.</Caption>
       </GlassCard>
-      <Caption>These voice settings apply on the phone and on the web.</Caption>
 
       <SectionTitle>Notifications</SectionTitle>
       <ListCard>

@@ -6,6 +6,7 @@ daily budget) runs before the gateway is called. NO_MODEL requests never reach t
 
 from __future__ import annotations
 
+import asyncio
 import datetime as dt
 import logging
 import uuid
@@ -113,6 +114,8 @@ class CompletionService:
         self._sink = sink
         self._limits = limits
         self._clock = clock
+        # Strong references to shielded clean-up tasks (the event loop only keeps weak ones).
+        self._cleanups: set[asyncio.Task[None]] = set()
 
     # ------------------------------------------------------------------ preparation
 
@@ -128,7 +131,6 @@ class CompletionService:
                 today=today,
                 timezone=zone,
                 reply_language=request.reply_language,
-                spoken=request.reply_style == "spoken",
                 user_name=request.user_name,
             ),
         )
@@ -164,13 +166,7 @@ class CompletionService:
             needs_vision=any(m.images for m in request.messages),
         )
         try:
-            decision = self.router.route(
-                tier,
-                requirements,
-                task_kind=request.task_kind,
-                # ADR-0031: a spoken turn goes to the low-latency voice model when one is set.
-                task_route="VOICE" if request.reply_style == "spoken" else None,
-            )
+            decision = self.router.route(tier, requirements, task_kind=request.task_kind)
         except KarenAIError as exc:
             if exc.code == "BUDGET_EXCEEDED":
                 _logger.warning("budget_rejected", extra=log_fields(route_tier=tier, stage="routing"))
@@ -201,7 +197,6 @@ class CompletionService:
             max_output_tokens=max_output,
             fallback_models=tuple(m.model_id for m in decision.fallbacks),
             disable_reasoning=tier in REASONING_OFF_TIERS,
-            prefer_latency=request.reply_style == "spoken",
         )
         return PreparedCompletion(request, decision, gateway_request, estimate, reservation)
 
@@ -322,7 +317,7 @@ class CompletionService:
             outcome.status, outcome.error_class = "failed", "INTERNAL_ERROR"
             yield ErrorEvent(event="error", code="INTERNAL_ERROR", message="Internal error.", retryable=False)
         finally:
-            await self._finish(prepared, started, outcome)
+            await self._finish_shielded(prepared, started, outcome)
 
     # ------------------------------------------------------------------ helpers
 
@@ -350,6 +345,20 @@ class CompletionService:
             estimated_cost_usd=0.0,
             is_mock=False,
         )
+
+    async def _finish_shielded(
+        self, prepared: PreparedCompletion, started: dt.datetime, outcome: _Outcome
+    ) -> None:
+        """Settle + record even when the stream is being cancelled.
+
+        On client disconnect Starlette cancels the response task's anyio cancel scope, which
+        re-cancels every later ``await`` in that task; without the shield a Redis settle would be
+        cancelled, leaking the reservation for the day and dropping the invocation record.
+        """
+        task = asyncio.ensure_future(self._finish(prepared, started, outcome))
+        self._cleanups.add(task)
+        task.add_done_callback(self._cleanups.discard)
+        await asyncio.shield(task)
 
     async def _finish(self, prepared: PreparedCompletion, started: dt.datetime, outcome: _Outcome) -> None:
         if prepared.reservation is not None:

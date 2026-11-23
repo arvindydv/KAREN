@@ -50,7 +50,7 @@ import {
   ZodQuery,
 } from '../common/zod.js';
 import { RequireConsent } from '../consent/consent.guard.js';
-import { parseResumeSeq, SSE_HEARTBEAT, sseFrame } from './chat-policy.js';
+import { parseResumeSeq, SSE_HEARTBEAT, sseFrame, waitForDrain } from './chat-policy.js';
 import { ConversationService, requireIdempotencyKey } from './conversation.service.js';
 import { HEARTBEAT, StreamReaderService } from './stream-reader.service.js';
 import { UsageLimitsService } from './usage-limits.service.js';
@@ -162,13 +162,7 @@ export class ConversationController {
     @Headers('idempotency-key') key: string | undefined,
     @ZodBody(sendMessageRequestSchema) body: z.infer<typeof sendMessageRequestSchema>,
   ): Promise<SendMessageResponse> {
-    return this.conversations.send(
-      caller(p),
-      id,
-      body.content,
-      requireIdempotencyKey(key),
-      body.input_mode ?? 'text',
-    );
+    return this.conversations.send(caller(p), id, body.content, requireIdempotencyKey(key));
   }
 
   @Post(':id/fork')
@@ -240,7 +234,7 @@ export class ConversationController {
       for await (const item of this.reader.events(p.userId, messageId, resume, abort.signal)) {
         // Backpressure: wait for the socket to drain before producing more.
         const ok = raw.write(item === HEARTBEAT ? SSE_HEARTBEAT : sseFrame(item));
-        if (!ok) await new Promise((r) => raw.once('drain', r));
+        if (!ok) await waitForDrain(raw, abort.signal);
         if (abort.signal.aborted) break;
       }
     } catch (error) {

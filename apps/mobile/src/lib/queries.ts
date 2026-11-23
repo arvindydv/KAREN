@@ -15,7 +15,6 @@ export const qk = {
   legal: ['me', 'legal'] as const,
   dataRights: ['me', 'data-rights'] as const,
   purposes: ['consent', 'purposes'] as const,
-  voiceOptions: ['voice', 'options'] as const,
   notices: ['consent', 'notices'] as const,
   notice: (kind: string, version: string) => ['consent', 'notice', kind, version] as const,
 };
@@ -36,16 +35,6 @@ export function usePreferences() {
   return useQuery({
     queryKey: qk.preferences,
     queryFn: () => unwrap(api.GET('/v1/me/preferences')),
-  });
-}
-
-/** What voice this deployment offers (voices, live availability) — ADR-0027. */
-export function useVoiceOptions() {
-  const api = useApi();
-  return useQuery({
-    queryKey: qk.voiceOptions,
-    queryFn: () => unwrap(api.GET('/v1/voice/options')),
-    staleTime: 10 * 60_000,
   });
 }
 

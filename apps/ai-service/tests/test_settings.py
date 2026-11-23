@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from karen_ai.core.settings import MOCK_REGISTRY_PATH, SERVICE_ROOT, Settings
+from karen_ai.core.settings import MOCK_REGISTRY_PATH, Settings
 from tests.conftest import (
     TEST_GATEWAY_KEY,
     TEST_HMAC_SECRET,
@@ -227,7 +227,6 @@ def test_tier_fallbacks_are_exposed(make_settings: SettingsFactory, tmp_path: Pa
     [
         ("karen_model_coding", "REASONING"),
         ("karen_model_document_analysis", "BALANCED"),
-        ("karen_model_voice", "BALANCED"),
     ],
 )
 def test_task_route_model_must_list_its_tier(make_settings: SettingsFactory, setting: str, tier: str) -> None:
@@ -340,45 +339,3 @@ def test_previous_hmac_secret_needs_current_and_length(make_settings: SettingsFa
         make_settings(
             internal_service_hmac_secret=TEST_HMAC_SECRET, internal_service_hmac_secret_previous="short"
         )
-
-
-# ------------------------------------------------------------------------------------- voice
-
-
-def test_voice_is_off_by_default_and_mock_catalog_loads(make_settings: SettingsFactory) -> None:
-    settings = make_settings()
-    assert not settings.karen_feature_voice_enabled
-    assert settings.voice_catalog.catalog_version.endswith(".mock")
-
-
-def test_live_voice_refuses_the_mock_catalog(make_settings: SettingsFactory, tmp_path: Path) -> None:
-    registry = write_registry(tmp_path / "r.json", verified=True)
-    with pytest.raises(ValidationError, match="points at the mock catalog"):
-        _live(make_settings, registry, karen_feature_voice_enabled=True)
-
-
-def test_live_voice_refuses_an_unverified_catalog(make_settings: SettingsFactory, tmp_path: Path) -> None:
-    registry = write_registry(tmp_path / "r.json", verified=True)
-    live_catalog = SERVICE_ROOT / "config" / "voice-catalog.live.json"
-    with pytest.raises(ValidationError, match="speech-to-text model with verified_at"):
-        _live(
-            make_settings, registry, karen_feature_voice_enabled=True, karen_voice_catalog_path=live_catalog
-        )
-
-
-def test_live_voice_with_a_verified_catalog_starts(make_settings: SettingsFactory, tmp_path: Path) -> None:
-    data = json.loads((SERVICE_ROOT / "config" / "voice-catalog.live.json").read_text())
-    for model in [*data["stt_models"], *data["tts_models"], *data["voices"]]:
-        model["verified_at"] = "2026-11-21"
-    catalog = tmp_path / "voices.json"
-    catalog.write_text(json.dumps(data))
-    registry = write_registry(tmp_path / "r.json", verified=True)
-    settings = _live(
-        make_settings, registry, karen_feature_voice_enabled=True, karen_voice_catalog_path=catalog
-    )
-    assert settings.karen_feature_voice_enabled
-
-
-def test_voice_catalog_path_must_exist(make_settings: SettingsFactory, tmp_path: Path) -> None:
-    with pytest.raises(ValidationError, match="KAREN_VOICE_CATALOG_PATH"):
-        make_settings(karen_voice_catalog_path=tmp_path / "missing.json")

@@ -135,6 +135,9 @@ export class UsageLimitsService {
 
   /**
    * Reserves the worst-case cost of one generation. Idempotent per `reservationKey`.
+   * Returns true when THIS call created the reservation and false when a concurrent request
+   * with the same key already holds it — only the creator may `release` it on failure, or a
+   * losing duplicate would free the winner's in-flight reservation.
    * Throws USAGE_LIMIT_REACHED (with reset times) or DEPENDENCY_UNAVAILABLE.
    */
   async reserve(
@@ -142,7 +145,7 @@ export class UsageLimitsService {
     reservationKey: string,
     now = new Date(),
     amountMicro: number = this.reserveMicro,
-  ): Promise<void> {
+  ): Promise<boolean> {
     let result: unknown;
     let k: ReturnType<UsageLimitsService['keys']>;
     try {
@@ -176,6 +179,7 @@ export class UsageLimitsService {
         },
       );
     }
+    return result === 1;
   }
 
   /** Releases a reservation that never led to an AI call (e.g. the transaction failed). */

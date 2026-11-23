@@ -11,8 +11,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:e2e": "playwright test",
-    "wake-model:fetch": "node scripts/fetch-wake-model.mjs"
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@karen/api-contracts": "workspace:*",
@@ -23,7 +22,6 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "0.0.1",
-    "vosk-browser": "0.0.8",
     "zod": "4.6.7"
   },
   "devDependencies": {

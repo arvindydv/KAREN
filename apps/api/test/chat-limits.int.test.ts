@@ -120,6 +120,36 @@ describe('chat limits (integration)', () => {
     expect(usage.body.daily.used_ratio).toBe(0);
   });
 
+  it('a refused duplicate never releases the reservation another request with the same key holds', async () => {
+    const s = await account('limit-dup-key');
+    const running = await send(s.auth, s.cid, 'busy [[stub:hang]]').expect(202);
+    // A concurrent request with key K holds its reservation (reserved, transaction not yet done).
+    const key = randomUUID();
+    const { UsageLimitsService } = await import('../src/conversation/usage-limits.service.js');
+    const usage = app.get(UsageLimitsService);
+    // (small amount: the running answer already reserved $0.10 of the $0.15 daily limit)
+    expect(await usage.reserve(s.userId, `send:${s.userId}:${key}`, new Date(), 10_000)).toBe(true);
+    // A duplicate with the same key is refused (an answer is already running in this thread)…
+    await h
+      .http()
+      .post(`/v1/conversations/${s.cid}/messages`)
+      .set('authorization', s.auth)
+      .set('idempotency-key', key)
+      .send({ content: 'dup' })
+      .expect(409);
+    // …and must leave the holder's reservation in place.
+    const redis = app.get(RedisService).client;
+    expect(await redis.exists(`karen:ai:usage:r:send:${s.userId}:${key}`)).toBe(1);
+    await usage.release(s.userId, `send:${s.userId}:${key}`);
+    await h
+      .http()
+      .post(
+        `/v1/conversations/${s.cid}/messages/${running.body.assistant_message.id as string}/cancel`,
+      )
+      .set('authorization', s.auth)
+      .expect(200);
+  });
+
   it('limits message rate per user', async () => {
     const s = await account('limit-rate');
     const statuses: number[] = [];
