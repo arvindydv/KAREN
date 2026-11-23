@@ -1,5 +1,11 @@
 # Multimodal assistant — architecture and implementation plan
 
+> **Not roadmap Phase 03.** This plan was previously named `docs/PHASE_03_MULTIMODAL_PLAN.md`; it
+> was renamed on 2026-11-23 under owner decision D2 (Option C). Roadmap Phase 03 is "Personal memory
+> and intelligent continuity" (`karen_phases.md`; design in `docs/phase-03/`). The task-routing and
+> image-input content below remains in force (ADR-0026, ADR-0035); the voice parts are superseded by
+> ADR-0035.
+
 - **Date:** 2026-11-21. **Status:** voice parts **superseded by ADR-0035** (2026-11-23) — voice moved back to Phase 06; image input and task routing remain. Decision record: ADR-0026.
 - **Builds on:** Phase 02 chat (ADR-0021/0022/0023), OpenRouter gateway (ADR-0025), content policy (ADR-0024).
 - **Hard constraints kept:** mock mode is the default and the only mode tests use; no paid call without the
