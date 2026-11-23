@@ -1,7 +1,7 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import WelcomeScreen from '../app/(auth)/index';
-import { parseMobileEnv } from './lib/env';
+import { parseMobileEnv, resolveDevApiBaseUrl } from './lib/env';
 import { describeError, passwordReasonText, toApiError } from './lib/api-error';
 import { createInMemoryCredentialStore } from './lib/secure-storage';
 import { passwordProblem } from './lib/validation';
@@ -64,6 +64,22 @@ describe('mobile foundation', () => {
       }),
     ).toThrow(/https/);
     expect(() => parseMobileEnv({ EXPO_PUBLIC_API_BASE_URL: 'not a url' })).toThrow();
+  });
+
+  it('local dev follows the Metro host so a changed Wi-Fi IP still reaches the API', () => {
+    const local = parseMobileEnv({ EXPO_PUBLIC_API_BASE_URL: 'http://10.109.57.35:4100' });
+    expect(resolveDevApiBaseUrl(local, '192.168.1.19:8081').EXPO_PUBLIC_API_BASE_URL).toBe(
+      'http://192.168.1.19:4100',
+    );
+    // No Metro host, or a tunnel host: keep the configured URL.
+    expect(resolveDevApiBaseUrl(local, undefined)).toBe(local);
+    expect(resolveDevApiBaseUrl(local, 'abc.exp.direct:80')).toBe(local);
+    // Never rewritten outside local development.
+    const staging = parseMobileEnv({
+      EXPO_PUBLIC_APP_ENV: 'staging',
+      EXPO_PUBLIC_API_BASE_URL: 'https://api.example.com',
+    });
+    expect(resolveDevApiBaseUrl(staging, '192.168.1.19:8081')).toBe(staging);
   });
 
   it('credential store abstraction round-trips and deletes', async () => {

@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { z } from 'zod';
 
 /**
@@ -30,7 +31,31 @@ export function parseMobileEnv(source: Record<string, string | undefined>): Mobi
 const asString = (value: unknown): string | undefined =>
   typeof value === 'string' ? value : undefined;
 
-export const mobileEnv = parseMobileEnv({
-  EXPO_PUBLIC_APP_ENV: asString(process.env.EXPO_PUBLIC_APP_ENV),
-  EXPO_PUBLIC_API_BASE_URL: asString(process.env.EXPO_PUBLIC_API_BASE_URL),
-});
+const IPV4 = /^(\d{1,3}\.){3}\d{1,3}$/;
+
+/**
+ * Local development on a physical phone: the API runs on the same machine as Metro, so point the
+ * API URL at the host the phone already reached Metro on (`hostUri`, e.g. `192.168.1.19:8081`).
+ * This keeps working when the laptop's Wi-Fi IP changes, without editing `.env`. Only for
+ * APP_ENV=local and only when Metro is reached by IPv4 (a tunnel host cannot reach the API).
+ */
+export function resolveDevApiBaseUrl(
+  env: MobileEnv,
+  hostUri: string | null | undefined,
+): MobileEnv {
+  if (env.EXPO_PUBLIC_APP_ENV !== 'local' || !hostUri) return env;
+  const host = hostUri.split(':')[0] ?? '';
+  if (!IPV4.test(host)) return env;
+  const url = new URL(env.EXPO_PUBLIC_API_BASE_URL);
+  if (url.hostname === host) return env;
+  url.hostname = host;
+  return { ...env, EXPO_PUBLIC_API_BASE_URL: url.toString().replace(/\/$/, '') };
+}
+
+export const mobileEnv = resolveDevApiBaseUrl(
+  parseMobileEnv({
+    EXPO_PUBLIC_APP_ENV: asString(process.env.EXPO_PUBLIC_APP_ENV),
+    EXPO_PUBLIC_API_BASE_URL: asString(process.env.EXPO_PUBLIC_API_BASE_URL),
+  }),
+  Constants.expoConfig?.hostUri,
+);
