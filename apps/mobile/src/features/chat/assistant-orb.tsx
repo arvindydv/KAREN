@@ -5,9 +5,8 @@ import { useReducedMotion, usePulse } from '../../components/motion';
 import KarenOrbDom from './karen-orb.dom';
 
 /**
- * OFF until `react-dom` + `react-native-web` are added to apps/mobile (JS-only packages the DOM
- * component bundle needs; awaiting approval to add dependencies). While off, the native
- * approximation below is shown so the screen never breaks.
+ * The DOM orb needs `react-dom` + `react-native-web` (both installed). Set false to always use the
+ * native approximation below; it is also used automatically when the DOM WebView is missing.
  */
 const WEB_ORB_ENABLED = true;
 
