@@ -281,6 +281,9 @@ describe('Conversation', () => {
     });
     const allow = await screen.findByRole('button', { name: 'Allow AI processing' });
     expect(screen.queryByLabelText('Message KAREN')).toBeNull();
+    // The button renders disabled until the privacy notice query resolves; pressing it before
+    // then is a no-op (no PUT), which made this test flaky under CI load.
+    await waitFor(() => expect(allow).toBeEnabled());
     await fireEvent.press(allow);
     await waitFor(() => expect(screen.getByLabelText('Message KAREN')).toBeTruthy());
     const put = calls.find((c) => c.method === 'PUT')!;
