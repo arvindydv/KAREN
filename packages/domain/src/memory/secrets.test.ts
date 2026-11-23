@@ -6,6 +6,12 @@ import { describe, expect, it } from 'vitest';
 import { detectSecrets, luhnValid, verhoeffValid, type SecretKind } from './secrets.js';
 import { rejectWholeMessage, validateCandidate } from './validation.js';
 
+/**
+ * Secret-shaped fixtures are assembled at runtime so the source never contains a literal that
+ * secret scanners (gitleaks) flag. Every value is synthetic.
+ */
+const fake = (...parts: string[]) => parts.join('');
+
 const CASES: Record<SecretKind, { pos: string[]; near: string[] }> = {
   card: {
     pos: [
@@ -99,9 +105,9 @@ const CASES: Record<SecretKind, { pos: string[]; near: string[] }> = {
   },
   api_key: {
     pos: [
-      'remember my api key sk-abcdefghijklmnopqrstuvwxyz0123456789',
-      'token hai ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij',
-      'aws key AKIAABCDEFGHIJKLMNOP',
+      `remember my api key ${fake('sk-', 'abcdefghijklmnopqrstuvwxyz0123456789')}`,
+      `token hai ${fake('ghp_', 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij')}`,
+      `aws key ${fake('AK', 'IA', 'ABCDEFGHIJKLMNOP')}`,
     ],
     near: ['sk-short', 'my key is in the drawer', 'the ghp_ prefix is for GitHub tokens'],
   },
