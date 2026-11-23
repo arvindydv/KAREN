@@ -1,28 +1,53 @@
 /**
  * The ONE shared character policy for memory text (M-01; arch §2.4, §4.3, §7.3 V4).
  *
- * Disallowed: every \p{Cc} (C0/C1 controls incl. \t \r \n and U+0085), \p{Zl} (U+2028),
- * \p{Zp} (U+2029), every \p{Cf} format character EXCEPT U+200C ZWNJ and U+200D ZWJ (needed in
- * Devanagari conjuncts) — i.e. bidi overrides/isolates, zero-width space, word joiner, BOM, soft
- * hyphen — plus the delimiter set < > ` { }. Lone surrogates are also rejected (they cannot be
- * stored as UTF-8 text). The same policy is emitted as an explicit code-point class for the
- * database CHECK (`memoryTextSqlCharClass`) and mirrored in Python (M4a); parity is tested.
+ * Disallowed: every Cc (C0/C1 controls incl. \t \r \n and U+0085), Zl (U+2028), Zp (U+2029),
+ * every Cf format character EXCEPT U+200C ZWNJ and U+200D ZWJ (needed in Devanagari conjuncts) —
+ * i.e. bidi overrides/isolates, zero-width space, word joiner, BOM, soft hyphen — plus the
+ * delimiter set < > ` { }. Lone surrogates are also rejected (they cannot be stored as UTF-8).
+ *
+ * The categories come from PINNED tables (`unicode-tables.ts`, Unicode MEMORY_UNICODE_VERSION),
+ * not from the runtime's `\p{…}` support, so the TS policy, the generated PostgreSQL classes and
+ * the reviewed migration agree on every Node/ICU version. Parity is tested over every BMP code point.
  */
+import { LABEL_FIRST_RANGES, LABEL_REST_RANGES, TEXT_DISALLOWED_RANGES } from './unicode-tables.js';
 
 export const MEMORY_TEXT_MAX_CHARS = 280;
 export const MEMORY_LABEL_MAX_CHARS = 40;
 
-const ZWNJ = 0x200c;
-const ZWJ = 0x200d;
-const DELIMITERS = new Set([0x3c, 0x3e, 0x60, 0x7b, 0x7d]); // < > ` { }
-const CONTROL_OR_FORMAT = /^[\p{Cc}\p{Cf}\p{Zl}\p{Zp}\p{Cs}]$/u;
+type Ranges = ReadonlyArray<readonly [number, number]>;
+
+function decode(table: string): Ranges {
+  return table.split(',').map((part) => {
+    const [a, b] = part.split('-');
+    const lo = parseInt(a!, 16);
+    return [lo, b === undefined ? lo : parseInt(b, 16)] as const;
+  });
+}
+
+const TEXT_DISALLOWED = decode(TEXT_DISALLOWED_RANGES);
+const LABEL_FIRST = decode(LABEL_FIRST_RANGES);
+const LABEL_REST = decode(LABEL_REST_RANGES);
+
+/** Binary search over sorted, non-overlapping inclusive ranges. */
+function inRanges(ranges: Ranges, cp: number): boolean {
+  let lo = 0;
+  let hi = ranges.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const [a, b] = ranges[mid]!;
+    if (cp < a) hi = mid - 1;
+    else if (cp > b) lo = mid + 1;
+    else return true;
+  }
+  return false;
+}
 
 /** True when a single code point is allowed in memory text. */
 export function isMemoryCodePointAllowed(cp: number): boolean {
-  if (cp === ZWNJ || cp === ZWJ) return true;
-  if (DELIMITERS.has(cp)) return false;
   if (cp >= 0xd800 && cp <= 0xdfff) return false; // surrogates
-  return !CONTROL_OR_FORMAT.test(String.fromCodePoint(cp));
+  if (cp === 0) return false;
+  return !inRanges(TEXT_DISALLOWED, cp);
 }
 
 /** Length in code points (matches PostgreSQL `char_length`). */
@@ -53,32 +78,16 @@ export function isMemoryTextAllowed(text: string): boolean {
  * Subject label rule (arch §2.4, §4.3): starts with a letter; letters, marks, space, apostrophe
  * (' and ’), period, hyphen; 1–40 characters.
  */
-const LABEL_RE = /^\p{L}[\p{L}\p{M} '’.-]{0,39}$/u;
 export function isMemoryLabelAllowed(label: string): boolean {
-  return LABEL_RE.test(label);
+  const cps = [...label].map((c) => c.codePointAt(0)!);
+  if (cps.length < 1 || cps.length > MEMORY_LABEL_MAX_CHARS) return false;
+  if (!inRanges(LABEL_FIRST, cps[0]!)) return false;
+  return cps.slice(1).every((cp) => inRanges(LABEL_REST, cp));
 }
 
 /** Inclusive code-point ranges that are DISALLOWED, over U+0001…U+10FFFF (surrogates excluded). */
 export function disallowedCodePointRanges(): Array<[number, number]> {
-  const ranges: Array<[number, number]> = [];
-  let start = -1;
-  for (let cp = 1; cp <= 0x10ffff; cp++) {
-    if (cp === 0xd800) {
-      // PostgreSQL text cannot contain surrogates; close any open range and skip the block.
-      if (start !== -1) ranges.push([start, cp - 1]);
-      start = -1;
-      cp = 0xdfff;
-      continue;
-    }
-    const bad = !isMemoryCodePointAllowed(cp);
-    if (bad && start === -1) start = cp;
-    if (!bad && start !== -1) {
-      ranges.push([start, cp - 1]);
-      start = -1;
-    }
-  }
-  if (start !== -1) ranges.push([start, 0x10ffff]);
-  return ranges;
+  return TEXT_DISALLOWED.map(([a, b]) => [a, b]);
 }
 
 function pgEscape(cp: number): string {
@@ -87,15 +96,16 @@ function pgEscape(cp: number): string {
     : `\\U${cp.toString(16).padStart(8, '0')}`;
 }
 
+function pgClass(ranges: Ranges): string {
+  return `[${ranges.map(([a, b]) => (a === b ? pgEscape(a) : `${pgEscape(a)}-${pgEscape(b)}`)).join('')}]`;
+}
+
 /**
  * PostgreSQL ARE bracket expression matching any disallowed code point. Used by the M2a
- * migration as `CHECK (col !~ '<class>')`. Generated, never hand-edited; parity-tested.
+ * migration (`memory.text_allowed`). Generated, never hand-edited; parity-tested.
  */
 export function memoryTextSqlCharClass(): string {
-  const parts = disallowedCodePointRanges().map(([a, b]) =>
-    a === b ? pgEscape(a) : `${pgEscape(a)}-${pgEscape(b)}`,
-  );
-  return `[${parts.join('')}]`;
+  return pgClass(TEXT_DISALLOWED);
 }
 
 /** Full SQL CHECK expression for a text column (length in code points + character class). */
@@ -107,46 +117,10 @@ export function memoryTextSqlCheck(column: string): string {
   );
 }
 
-const LETTER = /^\p{L}$/u;
-const MARK = /^\p{M}$/u;
-const LABEL_EXTRA = new Set([0x20, 0x27, 0x2019, 0x2e, 0x2d]); // space ' ’ . -
-
-function rangesWhere(pred: (cp: number) => boolean): Array<[number, number]> {
-  const ranges: Array<[number, number]> = [];
-  let start = -1;
-  for (let cp = 1; cp <= 0x10ffff; cp++) {
-    if (cp === 0xd800) {
-      if (start !== -1) ranges.push([start, cp - 1]);
-      start = -1;
-      cp = 0xdfff;
-      continue;
-    }
-    const ok = pred(cp);
-    if (ok && start === -1) start = cp;
-    if (!ok && start !== -1) {
-      ranges.push([start, cp - 1]);
-      start = -1;
-    }
-  }
-  if (start !== -1) ranges.push([start, 0x10ffff]);
-  return ranges;
-}
-
-function pgClass(ranges: Array<[number, number]>): string {
-  return `[${ranges.map(([a, b]) => (a === b ? pgEscape(a) : `${pgEscape(a)}-${pgEscape(b)}`)).join('')}]`;
-}
-
 /**
  * PostgreSQL ARE anchored pattern equivalent to `isMemoryLabelAllowed` (PostgreSQL regexes have no
- * \p{L}, so letters and marks are emitted as explicit code-point classes). Generated; parity-tested.
+ * \p{L}, so letters and marks are explicit code-point classes). Generated; parity-tested.
  */
 export function memoryLabelSqlPattern(): string {
-  const letter = pgClass(rangesWhere((cp) => LETTER.test(String.fromCodePoint(cp))));
-  const rest = pgClass(
-    rangesWhere((cp) => {
-      const s = String.fromCodePoint(cp);
-      return LETTER.test(s) || MARK.test(s) || LABEL_EXTRA.has(cp);
-    }),
-  );
-  return `^${letter}${rest}{0,39}$`;
+  return `^${pgClass(LABEL_FIRST)}${pgClass(LABEL_REST)}{0,39}$`;
 }

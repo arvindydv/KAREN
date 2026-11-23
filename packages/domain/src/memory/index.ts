@@ -5,6 +5,7 @@
 export * from './vocabulary.js';
 export * from './status.js';
 export * from './charset.js';
+export { MEMORY_UNICODE_VERSION } from './unicode-tables.js';
 export * from './normalise.js';
 export * from './lexicons.js';
 export * from './secrets.js';
