@@ -34,6 +34,7 @@ const FAILURE_TEXT: Record<string, string> = {
   GENERATION_TIMEOUT: 'The answer took too long. You can try again.',
   AI_BUSY: 'KAREN is very busy right now. Please try again in a moment.',
   AI_UNAVAILABLE: 'KAREN couldn’t answer just now. Please try again.',
+  CONSENT_REQUIRED: 'AI assistance is turned off. Turn it on in Settings › Privacy.',
   SERVICE_LIMIT_REACHED: 'KAREN has reached its AI usage limit for now. Please try again later.',
 };
 

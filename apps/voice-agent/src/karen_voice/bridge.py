@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, SecretStr
 from karen_voice.internal_auth import sign_request
 from karen_voice.pipeline import Transcript
 
-CONTRACT_VERSION: Final = "2026-11-23.v4"
+CONTRACT_VERSION: Final = "2026-11-24.v5"
 COMPLETIONS_PATH: Final = "/internal/v1/completions"
 CALLER: Final = "voice-agent"
 
@@ -34,7 +34,7 @@ class _CompletionSubset(BaseModel):
 
     model_config = ConfigDict(extra="ignore", frozen=True)
 
-    contract_version: Literal["2026-11-23.v4"]
+    contract_version: Literal["2026-11-24.v5"]
     output_text: str
     is_mock: bool
 

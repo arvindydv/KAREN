@@ -1,0 +1,184 @@
+{
+  "contract_version": "2026-11-24.v5",
+  "request_id": "req_01JD3Q8Z6M4T9",
+  "task_kind": "CHAT",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Kal dinner ke liye kya banau?"
+    }
+  ],
+  "user_ref": "usr_hmac_4f1c2a9b7d",
+  "locale": "hi-IN",
+  "memory_status": "on",
+  "memory_context": [
+    {
+      "ref": "m0",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m1",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m2",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m3",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m4",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m5",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m6",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m7",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m8",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m9",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m10",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m11",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m12",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m13",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m14",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m15",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m16",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m17",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m18",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m19",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m20",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "contract_version": "2026-11-24.v5",
+  "request_id": "memx_8f8f1c2e-0000-4000-8000-000000000001_1",
+  "candidates": [
+    {
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "source_span": "Yaad rakhna main vegetarian hoon",
+      "value_text": "main vegetarian hoon",
+      "explicit_request": true,
+      "trigger_text": "yaad rakhna",
+      "sensitivity": "none"
+    },
+    {
+      "kind": "preference",
+      "slot": "cuisine_dislike",
+      "subject": "self",
+      "source_span": "I hate cilantro",
+      "value_text": "I hate cilantro",
+      "explicit_request": false,
+      "sensitivity": "none"
+    }
+  ],
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null,
+    "cached_tokens": null,
+    "reasoning_tokens": null
+  },
+  "estimated_cost_usd": 0,
+  "requested_model": null,
+  "served_model": null,
+  "is_mock": true,
+  "prompt_version": "memory_extract.v1"
+}

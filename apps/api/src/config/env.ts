@@ -160,6 +160,8 @@ export const apiEnvShape = {
   CHAT_GENERATION_TIMEOUT_SECONDS: z.coerce.number().int().min(5).max(600).default(120),
   /** A runner renews its lease; an expired lease means it died and the reaper closes it. */
   CHAT_GENERATION_LEASE_SECONDS: z.coerce.number().int().min(5).max(300).default(30),
+  /** While an answer streams, AI_PROCESSING is re-checked this often (M4a; residual window). */
+  CHAT_CONSENT_RECHECK_SECONDS: z.coerce.number().int().min(1).max(60).default(5),
   CHAT_STREAM_HEARTBEAT_SECONDS: z.coerce.number().int().min(1).max(60).default(15),
   /** Stream events of finished messages are kept this long (resume/audit), then purged. */
   CHAT_EVENT_RETENTION_HOURS: z.coerce

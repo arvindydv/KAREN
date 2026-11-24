@@ -1,0 +1,9 @@
+{
+  "contract_version": "2026-11-24.v5",
+  "request_id": "memx_8f8f1c2e-0000-4000-8000-000000000001_1",
+  "user_ref": "usr_hmac_4f1c2a9b7d",
+  "message_text": "Yaad rakhna main vegetarian hoon. Also I hate cilantro.",
+  "locale": "en-IN",
+  "max_candidates": 5,
+  "max_cost_usd": 0.01
+}

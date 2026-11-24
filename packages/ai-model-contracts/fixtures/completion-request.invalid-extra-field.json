@@ -1,5 +1,5 @@
 {
-  "contract_version": "2026-11-23.v4",
+  "contract_version": "2026-11-24.v5",
   "request_id": "req_01JD3Q8Z6M4T1",
   "task_kind": "CHAT",
   "messages": [{ "role": "user", "content": "hi" }],

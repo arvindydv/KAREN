@@ -62,15 +62,15 @@ Columns: **Where** = arch section · **M** = implementing milestone · **Proof**
 
 ### A4. Consent race conditions
 
-| ID        | Control                                                                                                                           | Where      | M       | Proof                           | Env | State                                                   |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------------------------------- | --- | ------------------------------------------------------- |
-| SR-CON-01 | Suspension trigger fires in the revoke transaction, for explicit revokes and the `AI_PROCESSING` cascade, through the upsert path | §3.2       | M2a     | T-CON-01, T-CON-02              | L   | [ ]                                                     |
-| SR-CON-02 | Trigger refuses unscoped changes (no silent 0-row suspension)                                                                     | §3.2       | M2a     | T-CON-03                        | L   | [ ]                                                     |
-| SR-CON-03 | Re-grant never restores; restore is explicit and consent-gated                                                                    | §3.3       | M2a, M3 | T-RACE-08, T-API-06             | L   | [x] L — M3 `memory-api.int.test.ts` (both owner models) |
-| SR-CON-04 | Run step re-checks consent in TX-A, immediately before the AI call, and in TX-B under the user lock                               | §8.4       | M5b     | T-RACE-01, T-RACE-03, T-RACE-18 | L   | [ ]                                                     |
-| SR-CON-05 | Generation runner re-checks `AI_PROCESSING` in `load()` (S2)                                                                      | §2.3, §9.1 | M4a     | T-STR-01                        | L   | [ ]                                                     |
-| SR-CON-06 | Streaming answer after revoke finishes with context loaded before the revoke (definition pending OD-03)                           | §3.2.1     | M4b     | T-STR-02, T-STR-03              | L   | [ ] (owner acknowledgement OD-03)                       |
-| SR-CON-07 | Grants count only if `policy_version` is eligible (re-confirmation, D5)                                                           | §3.1       | M3      | T-API-03                        | L   | [ ] (notice text Q5 legal)                              |
+| ID        | Control                                                                                                                           | Where      | M       | Proof                           | Env | State                                                                 |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------------------------------- | --- | --------------------------------------------------------------------- |
+| SR-CON-01 | Suspension trigger fires in the revoke transaction, for explicit revokes and the `AI_PROCESSING` cascade, through the upsert path | §3.2       | M2a     | T-CON-01, T-CON-02              | L   | [ ]                                                                   |
+| SR-CON-02 | Trigger refuses unscoped changes (no silent 0-row suspension)                                                                     | §3.2       | M2a     | T-CON-03                        | L   | [ ]                                                                   |
+| SR-CON-03 | Re-grant never restores; restore is explicit and consent-gated                                                                    | §3.3       | M2a, M3 | T-RACE-08, T-API-06             | L   | [x] L — M3 `memory-api.int.test.ts` (both owner models)               |
+| SR-CON-04 | Run step re-checks consent in TX-A, immediately before the AI call, and in TX-B under the user lock                               | §8.4       | M5b     | T-RACE-01, T-RACE-03, T-RACE-18 | L   | [ ]                                                                   |
+| SR-CON-05 | Generation runner re-checks `AI_PROCESSING` in `load()` (S2)                                                                      | §2.3, §9.1 | M4a     | T-STR-01                        | L   | [x] L — M4a `consent-recheck.int.test.ts` (T-STR-01 + mid-reply stop) |
+| SR-CON-06 | Streaming answer after revoke finishes with context loaded before the revoke (definition pending OD-03)                           | §3.2.1     | M4b     | T-STR-02, T-STR-03              | L   | [ ] (owner acknowledgement OD-03)                                     |
+| SR-CON-07 | Grants count only if `policy_version` is eligible (re-confirmation, D5)                                                           | §3.1       | M3      | T-API-03                        | L   | [ ] (notice text Q5 legal)                                            |
 
 ### A5. Deletion guarantees, export and account erasure
 
@@ -110,15 +110,15 @@ Columns: **Where** = arch section · **M** = implementing milestone · **Proof**
 
 ### A8. AI boundary and prompt injection
 
-| ID       | Control                                                                                 | Where       | M            | Proof               | Env | State                    |
-| -------- | --------------------------------------------------------------------------------------- | ----------- | ------------ | ------------------- | --- | ------------------------ |
-| SR-AI-01 | Memory only in `memory_context`; the API never sends a `system` message                 | §2.4, §9.3  | M4a          | T-CTR-03            | L   | [ ]                      |
-| SR-AI-02 | One shared character policy (TS, Python, SQL) incl. bidi/format bans except ZWNJ/ZWJ    | §2.4        | M1, M2a, M4a | T-UNIT-03, T-CTR-02 | L   | [ ]                      |
-| SR-AI-03 | Per-item wire validation at retrieval; invalid items dropped and counted                | §2.4        | M4b          | T-RET-08            | L   | [ ]                      |
-| SR-AI-04 | Delimited data block; injection golden cases pass on the mock                           | §9.3, §13.5 | M4a          | T-INJ-01…03         | L   | [ ] (live NOT EVALUATED) |
-| SR-AI-05 | Verbatim-substring rule (V2/V3): the model cannot author memory text                    | §7.3        | M1, M5b      | T-UNIT-04, T-EXT-05 | L   | [ ]                      |
-| SR-AI-06 | Deterministic SECRET/SENSITIVE/minor detection authoritative; model label escalate-only | §7.3        | M1, M5b      | T-EXT-01…03         | L   | [ ]                      |
-| SR-AI-07 | Live extraction switch off; mock gateway only; no gateway JSON-schema work              | §1.2, §7.2  | M5a          | config test         | L   | [ ]                      |
+| ID       | Control                                                                                 | Where       | M            | Proof               | Env | State                                                                                           |
+| -------- | --------------------------------------------------------------------------------------- | ----------- | ------------ | ------------------- | --- | ----------------------------------------------------------------------------------------------- |
+| SR-AI-01 | Memory only in `memory_context`; the API never sends a `system` message                 | §2.4, §9.3  | M4a          | T-CTR-03            | L   | [x] L — M4a contract v5 fixtures (TS+Python), chat.v5 tests, golden `memory-injection-*` (mock) |
+| SR-AI-02 | One shared character policy (TS, Python, SQL) incl. bidi/format bans except ZWNJ/ZWJ    | §2.4        | M1, M2a, M4a | T-UNIT-03, T-CTR-02 | L   | [x] L — M4a contract v5 fixtures (TS+Python), chat.v5 tests, golden `memory-injection-*` (mock) |
+| SR-AI-03 | Per-item wire validation at retrieval; invalid items dropped and counted                | §2.4        | M4b          | T-RET-08            | L   | [ ] (M4b retrieval; the contract side exists in M4a)                                            |
+| SR-AI-04 | Delimited data block; injection golden cases pass on the mock                           | §9.3, §13.5 | M4a          | T-INJ-01…03         | L   | [ ] (live NOT EVALUATED)                                                                        |
+| SR-AI-05 | Verbatim-substring rule (V2/V3): the model cannot author memory text                    | §7.3        | M1, M5b      | T-UNIT-04, T-EXT-05 | L   | [ ]                                                                                             |
+| SR-AI-06 | Deterministic SECRET/SENSITIVE/minor detection authoritative; model label escalate-only | §7.3        | M1, M5b      | T-EXT-01…03         | L   | [ ]                                                                                             |
+| SR-AI-07 | Live extraction switch off; mock gateway only; no gateway JSON-schema work              | §1.2, §7.2  | M5a          | config test         | L   | [ ]                                                                                             |
 
 ### A9. Secrets and key management
 

@@ -9,7 +9,7 @@ from typing import Any, Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from karen_ai.contracts import ChatMessage, RouteTier, TaskKind
+from karen_ai.contracts import ChatMessage, MemoryContextItem, MemoryWireStatus, RouteTier, TaskKind
 from karen_ai.policies.capabilities import ProviderAction
 
 
@@ -20,6 +20,9 @@ class _Closed(BaseModel):
 class CaseRequest(_Closed):
     task_kind: TaskKind
     messages: list[ChatMessage] = Field(min_length=1)
+    # Phase 03 (contract v5): memory sent as DATA with the request.
+    memory_status: MemoryWireStatus | None = None
+    memory_context: list[MemoryContextItem] | None = None
 
 
 class AttemptedTool(_Closed):
@@ -45,6 +48,9 @@ class Expectations(_Closed):
     behaviour: str | None = None
     # Phase 02: language/script of the reply (graded by karen_ai.evaluation.language when live).
     reply_language: Literal["en", "hi", "hi-Latn"] | None = None
+    # Phase 03 (arch §9.3, §13.5): every memory reaches the model only as one JSON-quoted line inside
+    # the single delimited DATA block of the system prompt — never as a message or free text.
+    memory_contained: bool | None = None
 
 
 class GoldenCase(_Closed):

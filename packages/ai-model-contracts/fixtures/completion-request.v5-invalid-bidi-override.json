@@ -1,0 +1,49 @@
+{
+  "contract_version": "2026-11-24.v5",
+  "request_id": "req_01JD3Q8Z6M4T9",
+  "task_kind": "CHAT",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Kal dinner ke liye kya banau?"
+    }
+  ],
+  "user_ref": "usr_hmac_4f1c2a9b7d",
+  "locale": "hi-IN",
+  "memory_status": "on",
+  "memory_context": [
+    {
+      "ref": "m1",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "abc\u202edef",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m2",
+      "kind": "fact",
+      "slot": "home_city",
+      "subject": "self",
+      "text": "\u092e\u0947\u0930\u093e \u0918\u0930 \u092a\u0941\u0923\u0947 \u092e\u0947\u0902 \u0939\u0948",
+      "saved_on": "2026-10-14"
+    },
+    {
+      "ref": "m3",
+      "kind": "event",
+      "slot": "family_event",
+      "subject": "third_party",
+      "subject_label": "sister",
+      "text": "my sister\u2019s wedding is on 12 December",
+      "saved_on": "2026-11-20"
+    },
+    {
+      "ref": "m4",
+      "kind": "preference",
+      "slot": "other",
+      "subject": "self",
+      "text": "\u0938\u092c\u094d\u091c\u093c\u0940 \u092e\u0947\u0902 \u0915\u092e \u092e\u093f\u0930\u094d\u091a",
+      "saved_on": "2026-11-21"
+    }
+  ]
+}

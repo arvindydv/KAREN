@@ -15,7 +15,7 @@ import sys
 from collections import Counter
 from dataclasses import asdict
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 from karen_ai.api.app import build_completion_service
 from karen_ai.contracts import CONTRACT_VERSION, CompletionRequest
@@ -44,20 +44,32 @@ def _mock_settings() -> Settings:
 async def run_case(case: GoldenCase) -> tuple[GoldenCase, list[GradeResult]]:
     gateway = MockGatewayClient()
     service = build_completion_service(_mock_settings(), gateway=gateway, sink=InMemoryInvocationSink())
-    request = CompletionRequest(
-        contract_version=CONTRACT_VERSION,
-        request_id=f"eval-{case.id}"[:128],
-        task_kind=case.request.task_kind,
-        messages=case.request.messages,
-        user_ref="eval-harness-user",
-        prompt_version="eval.v0",
-    )
+    payload: dict[str, Any] = {
+        "contract_version": CONTRACT_VERSION,
+        "request_id": f"eval-{case.id}"[:128],
+        "task_kind": case.request.task_kind,
+        "messages": [m.model_dump(exclude_none=True) for m in case.request.messages],
+        "user_ref": "eval-harness-user",
+        "prompt_version": "eval.v0",
+    }
+    # Optional keys are omitted (never null) when a case has no memory.
+    if case.request.memory_status is not None:
+        payload["memory_status"] = case.request.memory_status
+    if case.request.memory_context is not None:
+        payload["memory_context"] = [m.model_dump(exclude_none=True) for m in case.request.memory_context]
+    request = CompletionRequest.model_validate(payload)
     try:
         response = await service.complete(request)
     except KarenAIError as exc:
         return case, [GradeResult("completion", "FAIL", f"{exc.code}: {exc.message}")]
     return case, await grade_case(
-        case, CaseRun(response=response, gateway_calls=len(gateway.calls), is_mock=True)
+        case,
+        CaseRun(
+            response=response,
+            gateway_calls=len(gateway.calls),
+            is_mock=True,
+            sent_messages=gateway.calls[0].messages if gateway.calls else (),
+        ),
     )
 
 

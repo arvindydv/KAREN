@@ -9,9 +9,18 @@
  *
  * Wire format is snake_case JSON (ADR-0006).
  */
+import {
+  MEMORY_KINDS,
+  MEMORY_MODEL_SENSITIVITY,
+  MEMORY_SUBJECTS,
+  MEMORY_TEXT_MAX_CHARS,
+  MEMORY_WIRE_STATUSES,
+  isMemoryLabelAllowed,
+  isMemoryTextAllowed,
+} from '@karen/domain/memory';
 import { z } from 'zod';
 
-export const CONTRACT_VERSION = '2026-11-23.v4';
+export const CONTRACT_VERSION = '2026-11-24.v5';
 
 /** KAREN ModelRouter tiers (architecture §2.4). */
 export const ROUTE_TIERS = [
@@ -111,6 +120,43 @@ export const chatMessageSchema = z
     path: ['images'],
   });
 
+// ── v5: personal memory (Phase 03, ADR-0036 §2.4) ──────────────────────────────────────────
+
+/**
+ * WIRE memory statuses. `off_feature` is deliberately not one: with the feature off the API omits
+ * both memory fields (Phase 02 behaviour). The public DTO enum lives in @karen/api-contracts (L-01).
+ */
+export const MEMORY_STATUSES = MEMORY_WIRE_STATUSES;
+export const memoryStatusWireSchema = z.enum(MEMORY_STATUSES);
+/** Wire ceiling; the API's per-turn budget is lower (MEMORY_CONTEXT_BUDGET_ITEMS). */
+export const MEMORY_CONTEXT_WIRE_MAX_ITEMS = 20;
+export { MEMORY_TEXT_MAX_CHARS };
+
+/**
+ * Memory text on the wire: the ONE shared character policy (M-01) from @karen/domain/memory — no
+ * controls, line/paragraph separators, bidi/format characters (except ZWNJ/ZWJ) and none of
+ * < > ` { } — 1–280 code points. Mirrored in Python (`karen_ai.memory.charset`, parity-tested
+ * against fixtures/memory-charset.v1.json).
+ */
+const memoryWireText = z
+  .string()
+  .min(1)
+  .refine(isMemoryTextAllowed, 'memory text violates the character policy');
+
+export const memoryContextItemSchema = z
+  .object({
+    /** Opaque per-request reference — never a database id. */
+    ref: z.string().regex(/^m[0-9]{1,2}$/),
+    kind: z.enum(MEMORY_KINDS),
+    slot: z.string().regex(/^[a-z][a-z0-9_]{1,47}$/),
+    subject: z.enum(MEMORY_SUBJECTS),
+    subject_label: z.string().refine(isMemoryLabelAllowed, 'invalid subject label').optional(),
+    text: memoryWireText,
+    saved_on: z.iso.date(),
+  })
+  .strict();
+export type MemoryContextItem = z.infer<typeof memoryContextItemSchema>;
+
 /** POST /internal/v1/completions and /internal/v1/completions/stream request body. */
 export const completionRequestSchema = z
   .object({
@@ -149,8 +195,42 @@ export const completionRequestSchema = z
       .max(40)
       .regex(/^[\p{L}\p{M}][\p{L}\p{M} .'-]*$/u)
       .optional(),
+    /**
+     * v5 (Phase 03): memory status for this turn and the memories the API selected (bounded,
+     * character-policy-checked, opaque refs). Both omitted = Phase 02 behaviour (feature off).
+     * `memory_context` is DATA rendered into a delimited block — never messages or instructions.
+     */
+    memory_status: memoryStatusWireSchema.optional(),
+    memory_context: z.array(memoryContextItemSchema).max(MEMORY_CONTEXT_WIRE_MAX_ITEMS).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((r, ctx) => {
+    if (r.memory_context === undefined) return;
+    if (r.memory_status !== 'on') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['memory_context'],
+        message: "memory_context requires memory_status 'on'",
+      });
+    }
+    if (r.task_kind !== 'CHAT') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['memory_context'],
+        message: 'memory_context is only allowed for CHAT',
+      });
+    }
+    if (r.messages.some((m) => m.role === 'system')) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['messages'],
+        message: 'memory_context cannot be combined with a caller system message',
+      });
+    }
+    if (new Set(r.memory_context.map((m) => m.ref)).size !== r.memory_context.length) {
+      ctx.addIssue({ code: 'custom', path: ['memory_context'], message: 'duplicate ref' });
+    }
+  });
 export type CompletionRequest = z.infer<typeof completionRequestSchema>;
 
 export const usageSchema = z
@@ -161,6 +241,61 @@ export const usageSchema = z
     reasoning_tokens: z.number().int().nonnegative().nullable(),
   })
   .strict();
+
+// ── v5: memory extraction (POST /internal/v1/memory/extract, non-streaming, signed) ──────────
+
+export const MEMORY_EXTRACT_MAX_CANDIDATES = 5;
+export const MEMORY_EXTRACT_MESSAGE_MAX_CHARS = 4_000;
+
+export const memoryExtractRequestSchema = z
+  .object({
+    contract_version: z.literal(CONTRACT_VERSION),
+    /** `memx_<job id>_<attempt>` — unique per attempt. */
+    request_id: z.string().min(8).max(128),
+    user_ref: z.string().min(8).max(128),
+    /** ONE user message; never assistant text, never existing memories (data minimisation). */
+    message_text: z.string().min(1).max(MEMORY_EXTRACT_MESSAGE_MAX_CHARS),
+    locale: z.string().min(2).max(35).optional(),
+    max_candidates: z.number().int().min(1).max(MEMORY_EXTRACT_MAX_CANDIDATES),
+    max_cost_usd: z.number().positive().max(1),
+  })
+  .strict();
+export type MemoryExtractRequest = z.infer<typeof memoryExtractRequestSchema>;
+
+/** A model/extractor PROPOSAL. Untrusted: the API re-validates every field (V1–V12). */
+export const memoryCandidateSchema = z
+  .object({
+    kind: z.enum(MEMORY_KINDS),
+    slot: z.string().regex(/^[a-z][a-z0-9_]{1,47}$/),
+    subject: z.enum(MEMORY_SUBJECTS),
+    subject_label: z.string().max(40).optional(),
+    source_span: z.string().min(1).max(MEMORY_TEXT_MAX_CHARS),
+    value_text: z.string().min(1).max(MEMORY_TEXT_MAX_CHARS),
+    /** Advisory only; never sufficient for tier 1 (H1). */
+    explicit_request: z.boolean(),
+    trigger_text: z.string().max(40).optional(),
+    /** Advisory, escalate-only (V8). */
+    sensitivity: z.enum(MEMORY_MODEL_SENSITIVITY),
+    valid_until: z.iso.date().optional(),
+  })
+  .strict();
+export type MemoryCandidate = z.infer<typeof memoryCandidateSchema>;
+
+export const memoryExtractResponseSchema = z
+  .object({
+    contract_version: z.literal(CONTRACT_VERSION),
+    request_id: z.string(),
+    candidates: z.array(memoryCandidateSchema).max(MEMORY_EXTRACT_MAX_CANDIDATES),
+    usage: usageSchema,
+    estimated_cost_usd: z.number().nonnegative().nullable(),
+    requested_model: z.string().nullable(),
+    served_model: z.string().nullable(),
+    /** Mock extractor output is never presented as model quality (D1). */
+    is_mock: z.boolean(),
+    prompt_version: z.string().max(64),
+  })
+  .strict();
+export type MemoryExtractResponse = z.infer<typeof memoryExtractResponseSchema>;
 
 export const completionResponseSchema = z
   .object({

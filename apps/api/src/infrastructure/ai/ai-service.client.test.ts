@@ -4,6 +4,7 @@ import { internalRequestSigningString, signTimestamped } from '@karen/domain/nod
 import { internalSignatureVectors } from '@karen/test-fixtures';
 import { describe, expect, it } from 'vitest';
 import { loadApiEnv } from '../../config/env.js';
+import { CONTRACT_VERSION } from '@karen/ai-model-contracts';
 import { AiServiceClient, AiServiceError } from './ai-service.client.js';
 
 const require = createRequire(import.meta.url);
@@ -47,7 +48,7 @@ describe('AiServiceClient', () => {
     expect(headers['x-karen-signature']).toMatch(/^t=\d+,v1=[0-9a-f]{64}$/);
     expect(headers['x-karen-caller']).toBe('karen-api');
     expect(JSON.parse(captured?.init.body as string)).toMatchObject({
-      contract_version: '2026-11-23.v4',
+      contract_version: CONTRACT_VERSION,
     });
   });
 
@@ -158,4 +159,41 @@ describe('AiServiceClient.stream', () => {
     await expect(collect(client)).rejects.toBeInstanceOf(AiServiceError);
     await expect(collect(client)).rejects.toMatchObject({ code: 'AI_SERVICE_UNREACHABLE' });
   });
+});
+
+describe('AiServiceClient — contract v5 outbound validation (M4a)', () => {
+  const failingFetch = (async () => {
+    throw new Error('must not be called');
+  }) as unknown as typeof fetch;
+
+  it('sends a valid v5 memory request unchanged', async () => {
+    let sent: Record<string, unknown> | undefined;
+    const client = new AiServiceClient(env, (async (_url: string, init: RequestInit) => {
+      sent = JSON.parse(init.body as string) as Record<string, unknown>;
+      return new Response(JSON.stringify(fixture('completion-response.mock.json')), {
+        status: 200,
+      });
+    }) as typeof fetch);
+    const { contract_version: _cv, ...input } = fixture(
+      'completion-request.v5-memory.valid.json',
+    ) as Record<string, unknown>;
+    await client.complete(input as never);
+    expect(sent?.memory_status).toBe('on');
+    expect((sent?.memory_context as unknown[]).length).toBe(4);
+  });
+
+  it.each(['context-without-on', 'delimiter', 'system-with-memory', '21-items'])(
+    'refuses %s locally: no network call, no content in the error',
+    async (name) => {
+      const client = new AiServiceClient(env, failingFetch);
+      const { contract_version: _cv, ...input } = fixture(
+        `completion-request.v5-invalid-${name}.json`,
+      ) as Record<string, unknown>;
+      const err = await client.complete(input as never).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(AiServiceError);
+      expect((err as AiServiceError).code).toBe('VALIDATION_ERROR');
+      expect((err as AiServiceError).retryable).toBe(false);
+      expect((err as Error).message).not.toMatch(/vegetarian|system>|पुणे/);
+    },
+  );
 });
