@@ -195,3 +195,81 @@ export function validateCandidate(
     ? { ...base, tier: 1 }
     : { ...base, tier: 2, tier2Reason: decision.failure };
 }
+
+// ── User-authored memory text (manual create, edit, confirm-with-edit; arch §3.6, §7.3) ──────
+
+export interface UserAuthoredMemoryInput {
+  kind: string;
+  slot: string;
+  subject: string;
+  subjectLabel?: string | null;
+  text: string;
+}
+
+export type UserAuthoredDecision =
+  | {
+      accepted: false;
+      class: MemoryRejectionClass;
+      /** Which rule failed (content-free; safe for responses and metrics). */
+      check: 'V1' | 'V4' | 'V5' | 'V6' | 'V7';
+      /** Machine-readable field the client should highlight. */
+      field: 'kind' | 'subject' | 'subject_label' | 'text';
+    }
+  | {
+      accepted: true;
+      kind: MemoryKind;
+      slot: MemorySlot;
+      subject: MemorySubject;
+      subjectLabel: string | null;
+      /** NFC + whitespace-normalised text that will be stored. */
+      text: string;
+      expires: boolean;
+    };
+
+/**
+ * Validation for text the USER typed into a memory (not model output). V2/V3 (verbatim substring)
+ * do not apply — the user is the author, so provenance says "added/edited by you" — but V4–V7 do:
+ * the character policy, SECRET, minors and SENSITIVE rules are the same as for extracted
+ * candidates (D9 applies to every stored memory, whoever typed it). V9 coerces the slot.
+ */
+export function validateUserAuthoredMemory(input: UserAuthoredMemoryInput): UserAuthoredDecision {
+  if (!(MEMORY_KINDS as readonly string[]).includes(input.kind)) {
+    return { accepted: false, class: 'invalid', check: 'V1', field: 'kind' };
+  }
+  if (!(MEMORY_SUBJECTS as readonly string[]).includes(input.subject)) {
+    return { accepted: false, class: 'invalid', check: 'V1', field: 'subject' };
+  }
+  const kind = input.kind as MemoryKind;
+  const subject = input.subject as MemorySubject;
+  const text = normaliseWhitespace(input.text);
+  if (!textOk(text)) return { accepted: false, class: 'invalid', check: 'V4', field: 'text' };
+  let subjectLabel: string | null = null;
+  if (subject === 'third_party') {
+    const raw = input.subjectLabel?.trim() ?? '';
+    if (!raw || !isMemoryLabelAllowed(raw)) {
+      return { accepted: false, class: 'invalid', check: 'V4', field: 'subject_label' };
+    }
+    subjectLabel = raw;
+  } else if (input.subjectLabel) {
+    return { accepted: false, class: 'invalid', check: 'V1', field: 'subject_label' };
+  }
+  if (detectSecrets(text).length > 0 || (subjectLabel && detectSecrets(subjectLabel).length > 0)) {
+    return { accepted: false, class: 'secret', check: 'V5', field: 'text' };
+  }
+  if (selfStatesMinor(text)) return { accepted: false, class: 'minor', check: 'V6', field: 'text' };
+  if (subject === 'third_party' && mentionsChild(text, subjectLabel)) {
+    return { accepted: false, class: 'minor', check: 'V6', field: 'subject_label' };
+  }
+  if (detectSensitive(text).length > 0) {
+    return { accepted: false, class: 'sensitive', check: 'V7', field: 'text' };
+  }
+  return {
+    accepted: true,
+    kind,
+    slot: coerceSlot(input.slot, kind),
+    subject,
+    subjectLabel,
+    text,
+    expires: kindExpires(kind),
+  };
+}

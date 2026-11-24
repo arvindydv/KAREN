@@ -28,6 +28,17 @@ export const REDACT_PATHS = [
   '*.content',
   '*.email',
   '*.phone',
+  // Phase 03 memory content (ADR-0036 §12.2): never in logs, whatever the object nesting.
+  '*.value_text',
+  '*.valueText',
+  '*.source_excerpt',
+  '*.sourceExcerpt',
+  '*.source_span',
+  '*.trigger_text',
+  '*.memory_context',
+  '*.message_text',
+  '*.subject_label',
+  '*.text',
 ] as const;
 
 const PATTERNS: Array<[RegExp, string]> = [

@@ -34,6 +34,9 @@ import {
 } from './chat-policy.js';
 import { GenerationService } from './generation.service.js';
 import { StreamHub } from './stream-hub.js';
+import { defaultThreadMemoryEnabled, effectiveMemoryStatus } from '@karen/domain/memory';
+import { MemoryConsentService } from '../memory/memory-consent.js';
+import { MemoryDeletionService } from '../memory/memory-deletion.service.js';
 import { toConversation, toMessage, type MessageRow } from './mappers.js';
 import { UsageLimitsService } from './usage-limits.service.js';
 
@@ -78,8 +81,46 @@ export class ConversationService {
     private readonly hub: StreamHub,
     private readonly usage: UsageLimitsService,
     private readonly audit: AuditService,
+    private readonly memoryConsent: MemoryConsentService,
+    private readonly memoryDeletion: MemoryDeletionService,
     @Inject(API_ENV) private readonly env: ApiEnv,
   ) {}
+
+  /**
+   * Per-thread memory switch (D8, arch §3.4), decided inside the caller's transaction.
+   *  - feature off → the field is ignored and stored false (L-11);
+   *  - ephemeral + true → 400 (the DB CHECK would also refuse);
+   *  - true without eligible MEMORY_STORAGE → 403 CONSENT_REQUIRED;
+   *  - omitted on create → on iff standard ∧ eligible.
+   */
+  private async resolveMemoryEnabled(
+    tx: TransactionClient,
+    userId: string,
+    mode: Conversation['mode'],
+    requested: boolean | undefined,
+  ): Promise<boolean> {
+    if (!this.env.MEMORY_FEATURE_ENABLED) return false;
+    if (requested === false) return false;
+    if (requested === true && mode === 'ephemeral') {
+      throw new ApiError('VALIDATION_FAILED', 'Temporary chats can’t use memory.', {
+        details: [{ path: 'memory_enabled', message: 'not allowed for ephemeral conversations' }],
+      });
+    }
+    const consentEligible = await this.memoryConsent.isEligibleInTx(tx, userId);
+    if (requested === true) {
+      if (!consentEligible) {
+        throw new ApiError('CONSENT_REQUIRED', 'Turn on “Remember things about me” first.', {
+          nextOptions: ['GRANT_CONSENT:MEMORY_STORAGE'],
+        });
+      }
+      return true;
+    }
+    return defaultThreadMemoryEnabled({
+      featureEnabled: true,
+      threadMode: mode,
+      consentEligible,
+    });
+  }
 
   private streamPath = (conversationId: string, messageId: string) =>
     `/v1/conversations/${conversationId}/messages/${messageId}/stream`;
@@ -88,9 +129,20 @@ export class ConversationService {
 
   async create(
     userId: string,
-    input: { title?: string | undefined; locale?: string | undefined; mode: Conversation['mode'] },
+    input: {
+      title?: string | undefined;
+      locale?: string | undefined;
+      mode: Conversation['mode'];
+      memory_enabled?: boolean | undefined;
+    },
   ): Promise<Conversation> {
     const row = await this.prisma.withUserScope(userId, async (tx) => {
+      const memoryEnabled = await this.resolveMemoryEnabled(
+        tx,
+        userId,
+        input.mode,
+        input.memory_enabled,
+      );
       const locale =
         input.locale ??
         (await tx.user.findUnique({ where: { id: userId }, select: { locale: true } }))?.locale ??
@@ -102,6 +154,7 @@ export class ConversationService {
           titleSource: input.title ? 'user' : 'auto',
           locale,
           mode: input.mode,
+          memoryEnabled,
           expiresAt:
             input.mode === 'ephemeral'
               ? new Date(Date.now() + EPHEMERAL_RETENTION_HOURS * 3_600_000)
@@ -181,10 +234,26 @@ export class ConversationService {
     return thread;
   }
 
+  /** Detail view: includes the effective `memory_status` the chat header shows (§3.5). */
   async get(userId: string, id: string): Promise<Conversation> {
-    return toConversation(
-      await this.prisma.withUserScope(userId, (tx) => this.ownedThread(tx, userId, id)),
-    );
+    return this.prisma.withUserScope(userId, async (tx) => {
+      const thread = await this.ownedThread(tx, userId, id);
+      return { ...toConversation(thread), memory_status: await this.memoryStatusOf(tx, thread) };
+    });
+  }
+
+  private async memoryStatusOf(tx: TransactionClient, t: ConversationThread) {
+    const featureEnabled = this.env.MEMORY_FEATURE_ENABLED;
+    return effectiveMemoryStatus({
+      featureEnabled,
+      threadMode: t.mode as Conversation['mode'],
+      threadMemoryEnabled: t.memoryEnabled,
+      // Only queried when it can change the answer.
+      consentEligible:
+        featureEnabled && t.mode === 'standard' && t.memoryEnabled
+          ? await this.memoryConsent.isEligibleInTx(tx, t.userId)
+          : false,
+    });
   }
 
   async update(
@@ -206,6 +275,26 @@ export class ConversationService {
       if (patch.archived !== undefined) {
         data.archivedAt = patch.archived ? (current.archivedAt ?? new Date()) : null;
       }
+      let memoryChanged = false;
+      if (patch.memory_enabled !== undefined && this.env.MEMORY_FEATURE_ENABLED) {
+        const next =
+          patch.memory_enabled === false
+            ? false
+            : await this.resolveMemoryEnabled(
+                tx,
+                userId,
+                current.mode as Conversation['mode'],
+                true,
+              );
+        memoryChanged = next !== current.memoryEnabled;
+        data.memoryEnabled = next;
+      } else if (
+        patch.memory_enabled !== undefined &&
+        Object.keys(patch).every((k) => k === 'memory_enabled')
+      ) {
+        // Feature off and nothing else to change: a no-op returning the current state (L-11).
+        return current;
+      }
       const { count } = await tx.conversationThread.updateMany({
         where: { id, userId, version: expectedVersion },
         data,
@@ -213,20 +302,59 @@ export class ConversationService {
       if (count !== 1) {
         throw new ApiError('PRECONDITION_FAILED', 'This conversation was changed elsewhere.');
       }
+      if (memoryChanged) {
+        await this.audit.record(
+          {
+            actorType: 'USER',
+            actorRef: userId,
+            action: 'memory.thread_flag.changed',
+            subjectType: 'conversation',
+            subjectId: id,
+            outcome: 'SUCCESS',
+            metadata: { memory_enabled: data.memoryEnabled === true },
+          },
+          tx,
+        );
+      }
       return tx.conversationThread.findUniqueOrThrow({ where: { id } });
     });
     return toConversation(row);
   }
 
-  /** Hard delete (user content; cascades to messages, events, feedback). Stops a running answer. */
-  async remove(userId: string, id: string): Promise<void> {
+  /**
+   * Hard delete (user content; cascades to messages, events, feedback). Stops a running answer.
+   * Memories saved from it are KEPT (source links become NULL) unless `deleteMemories` — then
+   * they are cleared in the same transaction, BEFORE the thread row goes (M-05; default per Q12).
+   */
+  async remove(userId: string, id: string, deleteMemories = false): Promise<void> {
     const active = await this.prisma.withUserScope(userId, async (tx) => {
       await this.ownedThread(tx, userId, id, true);
       const running = await tx.conversationMessage.findMany({
         where: { threadId: id, userId, status: { in: ACTIVE } },
         select: { id: true },
       });
+      const cleared = deleteMemories
+        ? await this.memoryDeletion.clearThreadInTx(tx, userId, id)
+        : null;
       await tx.conversationThread.delete({ where: { id } });
+      if (cleared) {
+        await this.audit.record(
+          {
+            actorType: 'USER',
+            actorRef: userId,
+            action: 'memory.cleared',
+            subjectType: 'memory',
+            outcome: 'SUCCESS',
+            metadata: {
+              scope: 'conversation_delete',
+              items_deleted: cleared.items_deleted,
+              suggestions_deleted: cleared.suggestions_deleted,
+              pending_saves_canceled: cleared.pending_saves_canceled,
+            },
+          },
+          tx,
+        );
+      }
       await this.audit.record(
         {
           actorType: 'USER',
@@ -622,6 +750,8 @@ export class ConversationService {
             titleSource: 'auto',
             locale: source.locale,
             mode: source.mode,
+            // D8 / §3.4: the fork inherits the switch; copied messages are never memory sources.
+            memoryEnabled: this.env.MEMORY_FEATURE_ENABLED && source.memoryEnabled,
             expiresAt: source.expiresAt,
             nextSeq: 1,
             lastMessageAt: new Date(),

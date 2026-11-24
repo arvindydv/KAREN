@@ -45,6 +45,26 @@ describe('logger', () => {
   });
 });
 
+describe('memory content redaction (Phase 03, T-LOG)', () => {
+  it('never logs memory text, spans, labels or memory context', () => {
+    const { lines, destination } = capture();
+    const log = createLogger({ service: 'test', environment: 'test', destination });
+    log.warn(
+      {
+        item: { value_text: 'SECRET-A', valueText: 'SECRET-B', source_excerpt: 'SECRET-C' },
+        candidate: { source_span: 'SECRET-D', trigger_text: 'SECRET-E', subject_label: 'SECRET-F' },
+        request: { memory_context: [{ text: 'SECRET-G' }], message_text: 'SECRET-H' },
+        dto: { text: 'SECRET-I', sourceExcerpt: 'SECRET-J' },
+        job_id: 'job-1',
+      },
+      'memory event',
+    );
+    const line = JSON.stringify(lines[0]);
+    for (const c of 'ABCDEFGHIJ') expect(line).not.toContain(`SECRET-${c}`);
+    expect(line).toContain('job-1');
+  });
+});
+
 describe('redaction helpers', () => {
   it('scrubs bearer tokens, keys, emails, phones and long numbers', () => {
     const out = redactText(

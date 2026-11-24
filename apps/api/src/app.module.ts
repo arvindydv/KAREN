@@ -17,6 +17,7 @@ import { IdentityModule } from './identity/identity.module.js';
 import { AiModule } from './infrastructure/ai/ai.module.js';
 import { DatabaseModule } from './infrastructure/database/database.module.js';
 import { MailModule } from './infrastructure/mail/mail.module.js';
+import { MemoryModule } from './memory/memory.module.js';
 import { RedisThrottlerStorage } from './infrastructure/redis/redis-throttler.storage.js';
 import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { DataRightsModule } from './data-rights/data-rights.module.js';
@@ -88,6 +89,7 @@ export class AppModule {
         OnboardingModule,
         TemporalModule,
         DataRightsModule,
+        MemoryModule,
         ConversationModule,
         PolicyModule,
         AuthModule.forRoot(env),
