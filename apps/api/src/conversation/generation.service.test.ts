@@ -1,3 +1,5 @@
+import type { MemoryRetrievalService } from '../memory/memory-retrieval.service.js';
+import type { MemoryTurnService } from '../memory/memory-turn.service.js';
 import { describe, expect, it, vi } from 'vitest';
 import { loadApiEnv } from '../config/env.js';
 import type { AiServiceClient } from '../infrastructure/ai/ai-service.client.js';
@@ -37,6 +39,8 @@ describe('GenerationService runner', () => {
       { stream } as unknown as AiServiceClient,
       {} as StreamHub,
       { settleCounters } as unknown as UsageLimitsService,
+      {} as MemoryRetrievalService,
+      {} as MemoryTurnService,
       env,
     );
     service.start(job);
@@ -52,6 +56,8 @@ describe('GenerationService runner', () => {
       { stream: vi.fn() } as unknown as AiServiceClient,
       {} as StreamHub,
       { settleCounters } as unknown as UsageLimitsService,
+      {} as MemoryRetrievalService,
+      {} as MemoryTurnService,
       env,
     );
     service.start(job);

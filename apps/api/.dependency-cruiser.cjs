@@ -43,7 +43,7 @@ module.exports = {
       to: {
         path: '^src/memory/',
         pathNot:
-          '^src/memory/(memory\\.module|memory-consent|memory-deletion\\.service|memory-export\\.service)\\.ts$',
+          '^src/memory/(memory\\.module|memory-consent|memory-deletion\\.service|memory-export\\.service|memory-retrieval\\.service|memory-turn\\.service)\\.ts$',
       },
     },
     {

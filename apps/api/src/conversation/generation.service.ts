@@ -22,6 +22,8 @@ import {
   usdToMicro,
 } from './chat-policy.js';
 import { StreamHub } from './stream-hub.js';
+import { MemoryRetrievalService, type SentMemory } from '../memory/memory-retrieval.service.js';
+import { MemoryTurnService } from '../memory/memory-turn.service.js';
 import { UsageLimitsService } from './usage-limits.service.js';
 
 export interface GenerationJob {
@@ -64,6 +66,8 @@ interface RunState {
   chain: Promise<void>;
   flushTimer: NodeJS.Timeout | null;
   lastWrite: number;
+  /** Memories sent with this reply (ids stay in the API), for access events at finalize. */
+  memorySent: SentMemory[];
 }
 
 /**
@@ -88,6 +92,8 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
     private readonly ai: AiServiceClient,
     private readonly hub: StreamHub,
     private readonly usage: UsageLimitsService,
+    private readonly memoryRetrieval: MemoryRetrievalService,
+    private readonly memoryTurn: MemoryTurnService,
     @Inject(API_ENV) private readonly env: ApiEnv,
   ) {}
 
@@ -232,6 +238,7 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
       chain: Promise.resolve(),
       flushTimer: null,
       lastWrite: Date.now(),
+      memorySent: [],
     };
     const context = buildContextWindow(loaded.history as ContextMessage[], {
       maxMessages: this.env.CHAT_CONTEXT_MAX_MESSAGES,
@@ -261,6 +268,15 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
       if (context.length === 0 || context.at(-1)?.role !== 'user') {
         throw new AiServiceError('VALIDATION_ERROR', 'No user message to answer', false, null);
       }
+      // Phase 03 (M4b, arch §9.1): separate short retrieval transaction; never fails the turn.
+      const userTurns = loaded.history.filter((m) => m.role === 'user');
+      const memory = await this.memoryRetrieval.retrieve({
+        userId: job.userId,
+        threadId: loaded.thread.id,
+        latestUserText: userTurns.at(-1)?.content ?? '',
+        previousUserText: userTurns.at(-2)?.content ?? null,
+      });
+      state.memorySent = memory.sent;
       const stream = this.ai.stream(
         {
           request_id: loaded.msg.requestId ?? loaded.msg.id,
@@ -273,6 +289,11 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
           ...(loaded.timezone ? { timezone: loaded.timezone } : {}),
           ...(loaded.replyLanguage ? { reply_language: loaded.replyLanguage } : {}),
           ...(loaded.userName ? { user_name: loaded.userName } : {}),
+          // v5: both omitted when the feature is off (Phase 02 behaviour).
+          ...(memory.status ? { memory_status: memory.status } : {}),
+          ...(memory.status === 'on' && memory.context.length > 0
+            ? { memory_context: memory.context }
+            : {}),
         },
         { signal: controller.signal },
       );
@@ -517,6 +538,12 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
         inputTokens: done?.inputTokens ?? null,
         outputTokens: done?.outputTokens ?? null,
       });
+      // Memory section behind one savepoint: its failure never loses the reply (H3).
+      await this.memoryTurn.writeInTx(tx, {
+        userId: state.job.userId,
+        replyMessageId: state.job.messageId,
+        sent: state.memorySent,
+      });
     };
     if (completed) {
       await this.persist(
@@ -536,6 +563,7 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
         true,
         record,
       );
+      await this.memoryTurn.touchLastUsed(state.job.userId, state.memorySent);
       return cost;
     }
     await this.persist(

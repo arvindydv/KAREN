@@ -262,3 +262,117 @@ export async function lockSuspendedItems(
      ORDER BY suspended_at, id
      FOR UPDATE`;
 }
+
+// ── Retrieval (M4b; arch §6.2–§6.4) ─────────────────────────────────────────────────────────
+
+export interface RetrievalRow {
+  id: string;
+  kind: MemoryKind;
+  slot: string;
+  subject: 'self' | 'third_party';
+  subject_label: string | null;
+  value_text: string;
+  value_key: string;
+  pinned: boolean;
+  lexemes: string[];
+  reasons: ('lexical' | 'pinned' | 'always' | 'recent')[];
+  confirmed_at: Date;
+  created_at: Date;
+  updated_at: Date;
+  expires_at: Date | null;
+}
+
+export interface RetrievalBounds {
+  lexicalMax: number;
+  pinnedMax: number;
+  preferenceMax: number;
+  recentMax: number;
+  recentWindowDays: number;
+}
+
+/**
+ * Bounded per-reason candidate selection in ONE statement (H2): every branch repeats the owner +
+ * lifecycle filter, so ranking and limits only ever see rows that already passed it (§6.2).
+ * Lexical matching uses the stored app-side lexemes (F2) with quoted lexemes cast straight to
+ * tsquery (no parser, no locale). SQL does no ranking — the TypeScript scorer does.
+ */
+export async function selectRetrievalCandidates(
+  tx: TransactionClient,
+  userId: string,
+  tokens: readonly string[],
+  b: RetrievalBounds,
+): Promise<RetrievalRow[]> {
+  const toks = [...tokens];
+  return tx.$queryRaw<RetrievalRow[]>`
+    WITH base AS (
+      SELECT i.id, i.kind, i.pinned, i.updated_at, i.search_lexemes FROM memory.items i
+       WHERE i.user_id = ${userId}::uuid AND i.status = 'active'
+         AND (i.expires_at IS NULL OR i.expires_at > now())
+    ), q AS (
+      SELECT CASE WHEN cardinality(${toks}::text[]) = 0 THEN NULL
+             ELSE (SELECT string_agg(quote_literal(t), ' | ')::tsquery FROM unnest(${toks}::text[]) t)
+             END AS query
+    ), picked AS (
+      (SELECT b.id, 'lexical'::text AS reason FROM base b, q
+        WHERE q.query IS NOT NULL AND b.search_lexemes @@ q.query
+        ORDER BY b.updated_at DESC, b.id LIMIT ${b.lexicalMax})
+      UNION ALL
+      (SELECT b.id, 'pinned' FROM base b WHERE b.pinned
+        ORDER BY b.updated_at DESC, b.id LIMIT ${b.pinnedMax})
+      UNION ALL
+      (SELECT b.id, 'always' FROM base b WHERE b.kind = 'preference'
+        ORDER BY b.updated_at DESC, b.id LIMIT ${b.preferenceMax})
+      UNION ALL
+      (SELECT b.id, 'recent' FROM base b
+        WHERE b.updated_at > now() - make_interval(days => ${b.recentWindowDays}::int)
+        ORDER BY b.updated_at DESC, b.id LIMIT ${b.recentMax})
+    )
+    SELECT i.id, i.kind, i.slot, i.subject, i.subject_label, i.value_text, i.value_key, i.pinned,
+           tsvector_to_array(i.search_lexemes) AS lexemes,
+           array_agg(DISTINCT p.reason) AS reasons,
+           i.confirmed_at, i.created_at, i.updated_at, i.expires_at
+      FROM picked p
+      JOIN memory.items i ON i.id = p.id
+     WHERE i.user_id = ${userId}::uuid AND i.status = 'active'
+       AND (i.expires_at IS NULL OR i.expires_at > now())
+     GROUP BY i.id`;
+}
+
+/**
+ * Access events for the items that were SENT for this reply (H3): `INSERT … SELECT` from items
+ * that are still active and owned, so anything deleted or suspended while the answer streamed is
+ * simply skipped (no FK race can fail the insert). Returns rows written.
+ */
+export async function insertAccessEvents(
+  tx: TransactionClient,
+  userId: string,
+  replyMessageId: string,
+  sent: readonly { itemId: string; rank: number; reason: string }[],
+  retentionDays: number,
+): Promise<number> {
+  if (sent.length === 0) return 0;
+  return tx.$executeRaw`
+    INSERT INTO memory.access_events (user_id, item_id, reply_message_id, rank, reason, expires_at)
+    SELECT i.user_id, i.id, ${replyMessageId}::uuid, s.rank, s.reason,
+           now() + make_interval(days => ${retentionDays}::int)
+      FROM unnest(${sent.map((s) => s.itemId)}::uuid[], ${sent.map((s) => s.rank)}::int[],
+                  ${sent.map((s) => s.reason)}::text[]) AS s(id, rank, reason)
+      JOIN memory.items i ON i.id = s.id
+     WHERE i.user_id = ${userId}::uuid AND i.status = 'active'`;
+}
+
+/**
+ * Best-effort post-commit `last_used_at` (§9.4): no `version`/`updated_at` bump (not a content
+ * change; must not cause If-Match conflicts or feed the "recent" branch); at most daily.
+ */
+export async function touchLastUsed(
+  tx: TransactionClient,
+  userId: string,
+  ids: readonly string[],
+): Promise<number> {
+  if (ids.length === 0) return 0;
+  return tx.$executeRaw`
+    UPDATE memory.items SET last_used_at = now()
+     WHERE user_id = ${userId}::uuid AND id = ANY(${[...ids]}::uuid[]) AND status = 'active'
+       AND (last_used_at IS NULL OR last_used_at < now() - interval '1 day')`;
+}

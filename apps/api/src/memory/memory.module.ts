@@ -3,6 +3,8 @@ import { MemoryConsentService } from './memory-consent.js';
 import { MemoryDeletionService } from './memory-deletion.service.js';
 import { MemoryExportService } from './memory-export.service.js';
 import { MemoryRateLimiter } from './memory-rate-limit.js';
+import { MemoryRetrievalService } from './memory-retrieval.service.js';
+import { MemoryTurnService } from './memory-turn.service.js';
 import { MemoryController } from './memory.controller.js';
 import { MemoryService } from './memory.service.js';
 
@@ -19,7 +21,15 @@ import { MemoryService } from './memory.service.js';
     MemoryDeletionService,
     MemoryExportService,
     MemoryRateLimiter,
+    MemoryRetrievalService,
+    MemoryTurnService,
   ],
-  exports: [MemoryConsentService, MemoryDeletionService, MemoryExportService],
+  exports: [
+    MemoryConsentService,
+    MemoryDeletionService,
+    MemoryExportService,
+    MemoryRetrievalService,
+    MemoryTurnService,
+  ],
 })
 export class MemoryModule {}
