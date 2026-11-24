@@ -23,7 +23,7 @@ import {
 } from './chat-policy.js';
 import { StreamHub } from './stream-hub.js';
 import { MemoryRetrievalService, type SentMemory } from '../memory/memory-retrieval.service.js';
-import { MemoryTurnService } from '../memory/memory-turn.service.js';
+import { MemoryTurnService, type FinalizeMemoryOutcome } from '../memory/memory-turn.service.js';
 import { UsageLimitsService } from '../usage/usage-limits.service.js';
 
 export interface GenerationJob {
@@ -530,6 +530,7 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
           : state.content.length > 0
             ? reserve
             : 0;
+    let memoryOutcome: FinalizeMemoryOutcome | null = null;
     const record = async (tx: TransactionClient) => {
       await this.recordInvocation(tx, state, status, done, completed ? null : f, cost);
       await this.usage.recordInLedger(tx, {
@@ -538,11 +539,13 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
         inputTokens: done?.inputTokens ?? null,
         outputTokens: done?.outputTokens ?? null,
       });
-      // Memory section behind one savepoint: its failure never loses the reply (H3).
-      await this.memoryTurn.writeInTx(tx, {
+      // Memory section (access events + extraction job) behind one savepoint: its failure
+      // never loses the reply (H3).
+      memoryOutcome = await this.memoryTurn.writeInTx(tx, {
         userId: state.job.userId,
         replyMessageId: state.job.messageId,
         sent: state.memorySent,
+        replyStatus: status,
       });
     };
     if (completed) {
@@ -563,7 +566,7 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
         true,
         record,
       );
-      await this.memoryTurn.touchLastUsed(state.job.userId, state.memorySent);
+      await this.memoryTurn.afterCommit(state.job.userId, state.memorySent, memoryOutcome);
       return cost;
     }
     await this.persist(
@@ -588,6 +591,7 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
       true,
       record,
     );
+    await this.memoryTurn.afterCommit(state.job.userId, state.memorySent, memoryOutcome);
     if (f.code !== 'CANCELED') {
       // Error class only — never content (no prompt or completion text in logs).
       this.logger.warn(

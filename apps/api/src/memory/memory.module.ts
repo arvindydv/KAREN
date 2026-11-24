@@ -1,4 +1,8 @@
 import { Module } from '@nestjs/common';
+import { UsageModule } from '../usage/usage.module.js';
+import { MemoryExtractionService } from './memory-extraction.service.js';
+import { InternalMemoryController } from './memory-internal.controller.js';
+import { MemoryMaintenanceService } from './memory-maintenance.service.js';
 import { MemoryConsentService } from './memory-consent.js';
 import { MemoryDeletionService } from './memory-deletion.service.js';
 import { MemoryExportService } from './memory-export.service.js';
@@ -14,7 +18,8 @@ import { MemoryService } from './memory.service.js';
  * modules use only the narrow exports below (arch §5.4; enforced by dependency-cruiser).
  */
 @Module({
-  controllers: [MemoryController],
+  imports: [UsageModule],
+  controllers: [MemoryController, InternalMemoryController],
   providers: [
     MemoryService,
     MemoryConsentService,
@@ -23,6 +28,8 @@ import { MemoryService } from './memory.service.js';
     MemoryRateLimiter,
     MemoryRetrievalService,
     MemoryTurnService,
+    MemoryExtractionService,
+    MemoryMaintenanceService,
   ],
   exports: [
     MemoryConsentService,
@@ -30,6 +37,7 @@ import { MemoryService } from './memory.service.js';
     MemoryExportService,
     MemoryRetrievalService,
     MemoryTurnService,
+    MemoryMaintenanceService,
   ],
 })
 export class MemoryModule {}

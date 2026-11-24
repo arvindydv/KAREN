@@ -7,6 +7,7 @@ import {
 } from '../infrastructure/database/prisma.service.js';
 import type { SentMemory } from './memory-retrieval.service.js';
 import { memoryCount } from './memory-metrics.js';
+import { MemoryExtractionService } from './memory-extraction.service.js';
 import { insertAccessEvents, touchLastUsed } from './memory.repository.js';
 
 const SAVEPOINT = 'karen_memory_finalize';
@@ -15,8 +16,14 @@ export interface FinalizeMemoryInput {
   userId: string;
   replyMessageId: string;
   sent: readonly SentMemory[];
-  /** Further memory writes in the same savepoint (M5b: the extraction job insert). */
-  extra?: (tx: TransactionClient) => Promise<void>;
+  /** Terminal status of the reply (drives extraction eligibility, Q10). */
+  replyStatus: string;
+}
+
+/** What `finalize()` must do after its transaction commits. */
+export interface FinalizeMemoryOutcome {
+  ok: boolean;
+  job: { jobId: string; sourceMessageId: string } | null;
 }
 
 const errClass = (e: unknown) => (e instanceof Error ? e.constructor.name : typeof e);
@@ -37,12 +44,19 @@ export class MemoryTurnService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly extraction: MemoryExtractionService,
     @Inject(API_ENV) private readonly env: ApiEnv,
   ) {}
 
-  /** Returns false when the memory section was rolled back (the caller's transaction is intact). */
-  async writeInTx(tx: TransactionClient, input: FinalizeMemoryInput): Promise<boolean> {
-    if (input.sent.length === 0 && !input.extra) return true;
+  /**
+   * Access events AND the extraction job insert, behind ONE savepoint (H3, 03C-02). `ok=false`
+   * when the memory section was rolled back (the caller's transaction is intact).
+   */
+  async writeInTx(
+    tx: TransactionClient,
+    input: FinalizeMemoryInput,
+  ): Promise<FinalizeMemoryOutcome> {
+    if (!this.env.MEMORY_FEATURE_ENABLED && input.sent.length === 0) return { ok: true, job: null };
     await tx.$executeRawUnsafe(`SAVEPOINT ${SAVEPOINT}`);
     try {
       await tx.$queryRaw`
@@ -54,9 +68,13 @@ export class MemoryTurnService {
         input.sent,
         this.env.MEMORY_ACCESS_EVENT_RETENTION_DAYS,
       );
-      if (input.extra) await input.extra(tx);
+      const job = await this.extraction.enqueueInTx(tx, {
+        userId: input.userId,
+        replyMessageId: input.replyMessageId,
+        replyStatus: input.replyStatus,
+      });
       await tx.$executeRawUnsafe(`RELEASE SAVEPOINT ${SAVEPOINT}`);
-      return true;
+      return { ok: true, job };
     } catch (error) {
       await tx.$executeRawUnsafe(`ROLLBACK TO SAVEPOINT ${SAVEPOINT}`);
       this.logger.warn(
@@ -64,8 +82,18 @@ export class MemoryTurnService {
         'Memory section of finalize rolled back; the reply still commits',
       );
       memoryCount('karen_memory_job_enqueue_failures_total', { stage: 'finalize' });
-      return false;
+      return { ok: false, job: null };
     }
+  }
+
+  /** Post-commit: best-effort last_used_at, then the workflow start (failure → re-kick). */
+  async afterCommit(
+    userId: string,
+    sent: readonly SentMemory[],
+    outcome: FinalizeMemoryOutcome | null,
+  ) {
+    await this.touchLastUsed(userId, sent);
+    if (outcome?.job) await this.extraction.startWorkflow(outcome.job);
   }
 
   /** Post-commit, best-effort (§9.4). Own short transaction; user row FOR SHARE first. */

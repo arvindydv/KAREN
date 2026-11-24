@@ -8,6 +8,7 @@ import { createLogger } from '@karen/observability';
 import { initTelemetry } from '@karen/observability/tracing';
 import { NativeConnection, Worker } from '@temporalio/worker';
 import { createDataRightsActivities } from './activities/data-rights-activities.js';
+import { createMemoryActivities } from './activities/memory-activities.js';
 import { createTaskActivities } from './activities/task-activities.js';
 import { loadWorkerEnv } from './env.js';
 import { startHealthServer } from './health.js';
@@ -39,6 +40,10 @@ const worker = await Worker.create({
   activities: {
     ...createTaskActivities(),
     ...createDataRightsActivities({
+      apiBaseUrl: env.API_INTERNAL_URL,
+      secret: env.INTERNAL_SERVICE_HMAC_SECRET,
+    }),
+    ...createMemoryActivities({
       apiBaseUrl: env.API_INTERNAL_URL,
       secret: env.INTERNAL_SERVICE_HMAC_SECRET,
     }),

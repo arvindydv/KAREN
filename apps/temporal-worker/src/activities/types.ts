@@ -42,3 +42,12 @@ export interface DataRightsActivities {
   expireExport(requestId: string): Promise<ExportExpiryOutcome>;
   executeErasure(requestId: string): Promise<ErasureStepOutcome>;
 }
+
+/**
+ * Phase 03 memory extraction (ADR-0036 §8.3): signed calls back to the API. Inputs are job ids,
+ * results are content-free outcome codes.
+ */
+export interface MemoryActivities {
+  runMemoryExtraction(jobId: string): Promise<{ outcome: string }>;
+  abandonMemoryExtraction(jobId: string): Promise<{ outcome: string }>;
+}

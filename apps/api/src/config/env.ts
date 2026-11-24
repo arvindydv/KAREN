@@ -196,6 +196,11 @@ export const apiEnvShape = {
   MEMORY_CONTEXT_BUDGET_ITEMS: z.coerce.number().int().min(1).max(20).default(12),
   MEMORY_CONTEXT_MAX_CHARS: z.coerce.number().int().min(280).max(8_000).default(2_000),
   MEMORY_RETRIEVAL_TIMEOUT_MS: z.coerce.number().int().min(50).max(5_000).default(250),
+  /** Extraction (M5b): per-user daily job cap (OD-09 provisional), per-call reserve (Q11 for live). */
+  MEMORY_EXTRACTIONS_PER_DAY: z.coerce.number().int().min(1).max(1_000).default(100),
+  MEMORY_EXTRACTION_RESERVE_USD: z.coerce.number().positive().max(1).default(0.01),
+  /** In-process memory maintenance sweep (re-kick, stale termination, purge). 0 disables (tests). */
+  MEMORY_MAINTENANCE_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(86_400).default(300),
   /** Per-user limit for clear / restore / export (03C-09), per rolling hour. */
   MEMORY_SENSITIVE_ACTIONS_PER_HOUR: z.coerce.number().int().min(1).max(1_000).default(20),
 };
