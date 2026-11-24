@@ -64,7 +64,7 @@ describe('memory maintenance functions (M2b, integration)', () => {
   const insertItem = async (userId: string, spec: ItemSpec = {}) => {
     const text = `${marker} ${randomUUID().slice(0, 8)}`;
     const kind = spec.kind ?? 'preference';
-    const suspended = spec.suspendedAgo != null;
+    const suspended = spec.suspendedAgo !== undefined && spec.suspendedAgo !== null;
     const rows = await fixtures.$queryRaw<{ id: string }[]>`
       INSERT INTO memory.items (user_id, kind, slot, single_valued, subject, value_text, value_key,
         search_lexemes, origin, source_recorded_at, confirmed_at, expires_at, status, suspended_at)
