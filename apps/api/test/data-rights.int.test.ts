@@ -26,8 +26,15 @@ describe('data rights (integration)', () => {
   const h = harness(() => app);
 
   // Each call gets a distinct timestamp: identical signatures are rejected as replays.
-  let skew = 0;
-  const internal = (path: string, secret = SECRET, t = Math.floor(Date.now() / 1000) - ++skew) =>
+  // Every signed call needs a distinct timestamp: the guard rejects a repeated signature header
+  // as a replay. `now - ++skew` could repeat when two calls straddle a second boundary
+  // (t1 = n - 1, t2 = (n + 1) - 2), so take a strictly decreasing value instead.
+  let lastT = Number.POSITIVE_INFINITY;
+  const nextT = (): number => {
+    lastT = Math.min(Math.floor(Date.now() / 1000) - 1, lastT - 1);
+    return lastT;
+  };
+  const internal = (path: string, secret = SECRET, t = nextT()) =>
     h
       .http()
       .post(path)
