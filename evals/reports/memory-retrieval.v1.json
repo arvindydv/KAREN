@@ -1,0 +1,392 @@
+{
+  "test": {
+    "split": "test",
+    "queries": 900,
+    "users": 76,
+    "wrong_user_items_sent": 0,
+    "budget_violations": 0,
+    "expired_items_in_dataset": 60,
+    "expired_items_sent": 0,
+    "lexical_bound_hits": 0,
+    "latency_ms_local_docker": {
+      "p50": 2.304,
+      "p95": 3.113,
+      "max": 17.355
+    },
+    "slices": {
+      "en": {
+        "queries_with_relevant": 150,
+        "recall_at_5": {
+          "p": 1,
+          "lo": 0.9750297552478355,
+          "hi": 1,
+          "k": 150
+        },
+        "recall_in_context": {
+          "p": 1,
+          "lo": 0.9750297552478355,
+          "hi": 1,
+          "k": 150
+        },
+        "mrr": 0.905,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.9333333333333333,
+          "lo": 0.8816376443811055,
+          "hi": 0.963388143500352
+        }
+      },
+      "hi": {
+        "queries_with_relevant": 150,
+        "recall_at_5": {
+          "p": 1,
+          "lo": 0.9750297552478355,
+          "hi": 1,
+          "k": 150
+        },
+        "recall_in_context": {
+          "p": 1,
+          "lo": 0.9750297552478355,
+          "hi": 1,
+          "k": 150
+        },
+        "mrr": 0.903,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.98,
+          "lo": 0.9428533163078295,
+          "hi": 0.9931752487300926
+        }
+      },
+      "hg": {
+        "queries_with_relevant": 150,
+        "recall_at_5": {
+          "p": 0.9933333333333333,
+          "lo": 0.9632071598332032,
+          "hi": 0.9988221986779943,
+          "k": 149
+        },
+        "recall_in_context": {
+          "p": 1,
+          "lo": 0.9750297552478355,
+          "hi": 1,
+          "k": 150
+        },
+        "mrr": 0.881,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.9133333333333333,
+          "lo": 0.857371775736057,
+          "hi": 0.9486528219354871
+        }
+      },
+      "code_mixed": {
+        "queries_with_relevant": 60,
+        "recall_at_5": {
+          "p": 0.95,
+          "lo": 0.8629948343000966,
+          "hi": 0.9828504979690988,
+          "k": 57
+        },
+        "recall_in_context": {
+          "p": 0.95,
+          "lo": 0.8629948343000966,
+          "hi": 0.9828504979690988,
+          "k": 57
+        },
+        "mrr": 0.816,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.8333333333333334,
+          "lo": 0.7196838673407889,
+          "hi": 0.9068682306363931
+        }
+      },
+      "cross_script": {
+        "queries_with_relevant": 60,
+        "recall_at_5": {
+          "p": 0.16666666666666666,
+          "lo": 0.093131769363607,
+          "hi": 0.2803161326592111,
+          "k": 10
+        },
+        "recall_in_context": {
+          "p": 0.3333333333333333,
+          "lo": 0.22729261451704225,
+          "hi": 0.45943133649436674,
+          "k": 20
+        },
+        "mrr": 0.103,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.16666666666666666,
+          "lo": 0.093131769363607,
+          "hi": 0.2803161326592111
+        }
+      },
+      "paraphrase": {
+        "queries_with_relevant": 60,
+        "recall_at_5": {
+          "p": 0.2,
+          "lo": 0.11828505273280938,
+          "hi": 0.3178180590877269,
+          "k": 12
+        },
+        "recall_in_context": {
+          "p": 0.38333333333333336,
+          "lo": 0.2708827229561798,
+          "hi": 0.5098240427518066,
+          "k": 23
+        },
+        "mrr": 0.165,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.21666666666666667,
+          "lo": 0.13123043995390482,
+          "hi": 0.3362002767654906
+        }
+      },
+      "temporal": {
+        "queries_with_relevant": 0,
+        "recall_at_5": null,
+        "recall_in_context": null,
+        "mrr": null,
+        "must_not_violations": 0,
+        "f1_recall_at_5": null
+      },
+      "distractor": {
+        "queries_with_relevant": 0,
+        "recall_at_5": null,
+        "recall_in_context": null,
+        "mrr": null,
+        "must_not_violations": 0,
+        "f1_recall_at_5": null
+      },
+      "isolation": {
+        "queries_with_relevant": 150,
+        "recall_at_5": {
+          "p": 0.9733333333333334,
+          "lo": 0.9334461090519078,
+          "hi": 0.9895820592493764,
+          "k": 146
+        },
+        "recall_in_context": {
+          "p": 0.98,
+          "lo": 0.9428533163078295,
+          "hi": 0.9931752487300926,
+          "k": 147
+        },
+        "mrr": 0.959,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.98,
+          "lo": 0.9428533163078295,
+          "hi": 0.9931752487300926
+        }
+      }
+    }
+  },
+  "dev": {
+    "split": "dev",
+    "queries": 248,
+    "users": 35,
+    "wrong_user_items_sent": 0,
+    "budget_violations": 0,
+    "expired_items_in_dataset": 20,
+    "expired_items_sent": 0,
+    "lexical_bound_hits": 0,
+    "latency_ms_local_docker": {
+      "p50": 2.284,
+      "p95": 3.202,
+      "max": 5.501
+    },
+    "slices": {
+      "en": {
+        "queries_with_relevant": 37,
+        "recall_at_5": {
+          "p": 1,
+          "lo": 0.9059421728185314,
+          "hi": 1,
+          "k": 37
+        },
+        "recall_in_context": {
+          "p": 1,
+          "lo": 0.9059421728185314,
+          "hi": 1,
+          "k": 37
+        },
+        "mrr": 0.881,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.9459459459459459,
+          "lo": 0.8229534551581129,
+          "hi": 0.9850490233016582
+        }
+      },
+      "hi": {
+        "queries_with_relevant": 37,
+        "recall_at_5": {
+          "p": 1,
+          "lo": 0.9059421728185314,
+          "hi": 1,
+          "k": 37
+        },
+        "recall_in_context": {
+          "p": 1,
+          "lo": 0.9059421728185314,
+          "hi": 1,
+          "k": 37
+        },
+        "mrr": 0.912,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.972972972972973,
+          "lo": 0.8617593000381216,
+          "hi": 0.9952130256010298
+        }
+      },
+      "hg": {
+        "queries_with_relevant": 37,
+        "recall_at_5": {
+          "p": 0.972972972972973,
+          "lo": 0.8617593000381216,
+          "hi": 0.9952130256010298,
+          "k": 36
+        },
+        "recall_in_context": {
+          "p": 1,
+          "lo": 0.9059421728185314,
+          "hi": 1,
+          "k": 37
+        },
+        "mrr": 0.898,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.972972972972973,
+          "lo": 0.8617593000381216,
+          "hi": 0.9952130256010298
+        }
+      },
+      "code_mixed": {
+        "queries_with_relevant": 20,
+        "recall_at_5": {
+          "p": 0.9,
+          "lo": 0.6989663528135878,
+          "hi": 0.9721335190383086,
+          "k": 18
+        },
+        "recall_in_context": {
+          "p": 0.95,
+          "lo": 0.7638688045357189,
+          "hi": 0.9911185512976646,
+          "k": 19
+        },
+        "mrr": 0.858,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.95,
+          "lo": 0.7638688045357189,
+          "hi": 0.9911185512976646
+        }
+      },
+      "cross_script": {
+        "queries_with_relevant": 20,
+        "recall_at_5": {
+          "p": 0.2,
+          "lo": 0.08065766201776073,
+          "hi": 0.41601743409331715,
+          "k": 4
+        },
+        "recall_in_context": {
+          "p": 0.5,
+          "lo": 0.2992980068701797,
+          "hi": 0.7007019931298202,
+          "k": 10
+        },
+        "mrr": 0.155,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.15,
+          "lo": 0.052368745486726494,
+          "hi": 0.3604188666428642
+        }
+      },
+      "paraphrase": {
+        "queries_with_relevant": 20,
+        "recall_at_5": {
+          "p": 0.15,
+          "lo": 0.052368745486726494,
+          "hi": 0.3604188666428642,
+          "k": 3
+        },
+        "recall_in_context": {
+          "p": 0.4,
+          "lo": 0.2188065312717802,
+          "hi": 0.6134185007652458,
+          "k": 8
+        },
+        "mrr": 0.101,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.15,
+          "lo": 0.052368745486726494,
+          "hi": 0.3604188666428642
+        }
+      },
+      "temporal": {
+        "queries_with_relevant": 0,
+        "recall_at_5": null,
+        "recall_in_context": null,
+        "mrr": null,
+        "must_not_violations": 0,
+        "f1_recall_at_5": null
+      },
+      "distractor": {
+        "queries_with_relevant": 0,
+        "recall_at_5": null,
+        "recall_in_context": null,
+        "mrr": null,
+        "must_not_violations": 0,
+        "f1_recall_at_5": null
+      },
+      "isolation": {
+        "queries_with_relevant": 37,
+        "recall_at_5": {
+          "p": 0.972972972972973,
+          "lo": 0.8617593000381216,
+          "hi": 0.9952130256010298,
+          "k": 36
+        },
+        "recall_in_context": {
+          "p": 0.972972972972973,
+          "lo": 0.8617593000381216,
+          "hi": 0.9952130256010298,
+          "k": 36
+        },
+        "mrr": 0.973,
+        "must_not_violations": 0,
+        "f1_recall_at_5": {
+          "p": 0.972972972972973,
+          "lo": 0.8617593000381216,
+          "hi": 0.9952130256010298
+        }
+      }
+    }
+  },
+  "perf": {
+    "label": "local docker PostgreSQL 17, end-to-end retrieve() incl. transaction; NOT an RDS figure",
+    "users": 50,
+    "items_per_user": 500,
+    "samples": 300,
+    "p50_ms": 2.704,
+    "p95_ms": 3.695,
+    "max_ms": 8.243,
+    "target_p95_ms": 150
+  },
+  "versions": {
+    "tokenizer": "mt-1",
+    "scorer": "ms-1",
+    "search_option": "F2 (app-side tokens, array_to_tsvector, quoted-lexeme tsquery)",
+    "thresholds": "Q9 NOT APPROVED — results reported, not accepted"
+  }
+}

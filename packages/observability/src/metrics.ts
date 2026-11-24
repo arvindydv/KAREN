@@ -137,3 +137,23 @@ export function createEventCounter(serviceName: string, name: string, descriptio
     },
   };
 }
+
+/**
+ * Low-cardinality histogram (e.g. a latency in ms or a small count). Same attribute rules as
+ * `createEventCounter`: a fixed vocabulary, never identifiers or free text.
+ */
+export function createValueHistogram(
+  serviceName: string,
+  name: string,
+  description: string,
+  unit = 'ms',
+) {
+  const histogram = metrics
+    .getMeter(serviceName)
+    .createHistogram(name, { description, unit, valueType: ValueType.DOUBLE });
+  return {
+    record(value: number, attributes: Record<string, string>): void {
+      histogram.record(value, attributes);
+    },
+  };
+}

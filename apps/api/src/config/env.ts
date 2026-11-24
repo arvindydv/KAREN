@@ -192,6 +192,10 @@ export const apiEnvShape = {
   /** Per-user caps (OD-09 provisional); clamped to the domain ceilings. */
   MEMORY_MAX_ACTIVE_ITEMS: z.coerce.number().int().min(1).max(500).default(500),
   MEMORY_MAX_PENDING_SUGGESTIONS: z.coerce.number().int().min(1).max(50).default(50),
+  /** Retrieval budget per turn (arch §6.6; wire ceiling 20) and statement timeout. */
+  MEMORY_CONTEXT_BUDGET_ITEMS: z.coerce.number().int().min(1).max(20).default(12),
+  MEMORY_CONTEXT_MAX_CHARS: z.coerce.number().int().min(280).max(8_000).default(2_000),
+  MEMORY_RETRIEVAL_TIMEOUT_MS: z.coerce.number().int().min(50).max(5_000).default(250),
   /** Per-user limit for clear / restore / export (03C-09), per rolling hour. */
   MEMORY_SENSITIVE_ACTIONS_PER_HOUR: z.coerce.number().int().min(1).max(1_000).default(20),
 };
