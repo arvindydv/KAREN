@@ -125,6 +125,14 @@ IsoDate = Annotated[str, StringConstraints(pattern=r"^\d{4}-\d{2}-\d{2}$"), Afte
 NonNegativeInt = Annotated[int, Field(ge=0)]
 
 
+def _wire_value(value: Any) -> Any:
+    if isinstance(value, ContractModel):
+        return value.to_wire()
+    if isinstance(value, list | tuple):
+        return [_wire_value(v) for v in value]
+    return value
+
+
 class ContractModel(BaseModel):
     """Base for wire models: strict, closed, immutable."""
 
@@ -132,6 +140,15 @@ class ContractModel(BaseModel):
 
     # Keys that are ``.optional()`` in Zod: may be omitted, must not be explicit null.
     _omittable: ClassVar[frozenset[str]] = frozenset()
+
+    def to_wire(self) -> dict[str, Any]:
+        """JSON-ready dict that OMITS unset optional keys (Zod ``.optional()`` rejects ``null``)
+        and keeps nullable keys as ``null``; recursive through nested contract models."""
+        return {
+            name: _wire_value(value)
+            for name in type(self).model_fields
+            if not ((value := getattr(self, name)) is None and name in self._omittable)
+        }
 
     @model_validator(mode="before")
     @classmethod

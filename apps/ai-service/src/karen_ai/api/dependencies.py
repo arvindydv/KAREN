@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from fastapi import Request
 
@@ -19,6 +19,7 @@ from karen_ai.core.internal_auth import (
 from karen_ai.core.logging_setup import log_fields
 from karen_ai.core.replay_guard import SignatureReplayGuard
 from karen_ai.core.settings import Settings
+from karen_ai.memory.extractor import MemoryExtractor, MockMemoryExtractor
 from karen_ai.model_router.service import CompletionService
 
 _logger = logging.getLogger(__name__)
@@ -32,6 +33,8 @@ class ServiceContainer:
     settings: Settings
     completions: CompletionService
     replay_guard: SignatureReplayGuard
+    # Phase 03: the mock extractor only (live extraction is refused at settings load, APP-1).
+    memory_extractor: MemoryExtractor = field(default_factory=MockMemoryExtractor)
 
 
 def get_container(request: Request) -> ServiceContainer:

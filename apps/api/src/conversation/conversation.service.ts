@@ -38,7 +38,7 @@ import { defaultThreadMemoryEnabled, effectiveMemoryStatus } from '@karen/domain
 import { MemoryConsentService } from '../memory/memory-consent.js';
 import { MemoryDeletionService } from '../memory/memory-deletion.service.js';
 import { toConversation, toMessage, type MessageRow } from './mappers.js';
-import { UsageLimitsService } from './usage-limits.service.js';
+import { UsageLimitsService } from '../usage/usage-limits.service.js';
 
 const ACTIVE: MessageStatus[] = ['pending', 'accepted', 'streaming'];
 const IDEMPOTENCY_KEY = /^[A-Za-z0-9_-]{8,128}$/;

@@ -9,7 +9,7 @@ import {
   type TransactionClient,
 } from '../infrastructure/database/prisma.service.js';
 import { RedisService } from '../infrastructure/redis/redis.service.js';
-import { usagePeriods, usdToMicro } from './chat-policy.js';
+import { usagePeriods, usdToMicro } from './usage-periods.js';
 
 /**
  * Atomic reserve: both counters must stay within their limits after adding `amount`, or
@@ -193,10 +193,14 @@ export class UsageLimitsService {
    */
   async recordInLedger(
     tx: TransactionClient,
-    input: Omit<SettleInput, 'reservationKey'>,
+    input: Omit<SettleInput, 'reservationKey'> & {
+      /** L-10: which counter this call increments (cost is always combined). Default chat. */
+      kind?: 'chat' | 'memory_extraction';
+    },
     now = new Date(),
   ): Promise<void> {
     const { dayStart } = usagePeriods(now);
+    const extraction = input.kind === 'memory_extraction';
     await tx.usageLedgerEntry.upsert({
       where: { userId_periodStart: { userId: input.userId, periodStart: dayStart } },
       create: {
@@ -205,13 +209,16 @@ export class UsageLimitsService {
         costMicroUsd: BigInt(input.costMicroUsd),
         inputTokens: BigInt(input.inputTokens ?? 0),
         outputTokens: BigInt(input.outputTokens ?? 0),
-        requests: 1,
+        requests: extraction ? 0 : 1,
+        memoryExtractionRequests: extraction ? 1 : 0,
       },
       update: {
         costMicroUsd: { increment: BigInt(input.costMicroUsd) },
         inputTokens: { increment: BigInt(input.inputTokens ?? 0) },
         outputTokens: { increment: BigInt(input.outputTokens ?? 0) },
-        requests: { increment: 1 },
+        ...(extraction
+          ? { memoryExtractionRequests: { increment: 1 } }
+          : { requests: { increment: 1 } }),
       },
     });
   }

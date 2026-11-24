@@ -6,7 +6,7 @@ import type { AiServiceClient } from '../infrastructure/ai/ai-service.client.js'
 import type { PrismaService } from '../infrastructure/database/prisma.service.js';
 import { GenerationService } from './generation.service.js';
 import type { StreamHub } from './stream-hub.js';
-import type { UsageLimitsService } from './usage-limits.service.js';
+import type { UsageLimitsService } from '../usage/usage-limits.service.js';
 
 const env = loadApiEnv({
   DATABASE_URL: 'postgresql://x',

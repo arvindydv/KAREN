@@ -6,9 +6,13 @@ import {
   aiErrorSchema,
   completionRequestSchema,
   completionResponseSchema,
+  memoryExtractRequestSchema,
+  memoryExtractResponseSchema,
   streamEventSchema,
   type CompletionRequest,
   type CompletionResponse,
+  type MemoryExtractRequest,
+  type MemoryExtractResponse,
   type StreamEvent,
 } from '@karen/ai-model-contracts';
 import { internalRequestSigningString, signTimestamped } from '@karen/domain/node';
@@ -91,6 +95,67 @@ export class AiServiceClient {
       );
     }
     return headers;
+  }
+
+  /**
+   * Phase 03 (M5a): `POST /internal/v1/memory/extract` — candidate PROPOSALS for one user message.
+   * The request is validated before sending, the response is validated as UNTRUSTED input (the
+   * caller still re-validates every candidate, V1–V12). Timeout ≤ 30 s. Errors carry codes and
+   * HTTP status only — never message or candidate text. Retryable: network, timeout, 5xx, 429;
+   * non-retryable: 4xx and contract violations.
+   */
+  async extractMemory(
+    input: Omit<MemoryExtractRequest, 'contract_version'>,
+    options: { timeoutMs?: number; signal?: AbortSignal } = {},
+  ): Promise<MemoryExtractResponse> {
+    const path = '/internal/v1/memory/extract';
+    const outgoing = memoryExtractRequestSchema.safeParse({
+      contract_version: CONTRACT_VERSION,
+      ...input,
+    });
+    if (!outgoing.success) {
+      const where = outgoing.error.issues.map((i) => i.path.join('.') || '(root)').join(', ');
+      throw new AiServiceError(
+        'VALIDATION_ERROR',
+        `Outgoing extract request invalid at: ${where}`,
+        false,
+        null,
+      );
+    }
+    const body = JSON.stringify(outgoing.data);
+    const timeout = AbortSignal.timeout(Math.min(options.timeoutMs ?? 30_000, 30_000));
+    let response: Response;
+    try {
+      response = await this.fetchImpl(`${this.baseUrl}${path}`, {
+        method: 'POST',
+        headers: this.signedHeaders('POST', path, body, input.request_id),
+        body,
+        signal: options.signal ? AbortSignal.any([options.signal, timeout]) : timeout,
+      });
+    } catch {
+      throw new AiServiceError('AI_SERVICE_UNREACHABLE', 'AI service request failed', true, null);
+    }
+    const json: unknown = await response.json().catch(() => undefined);
+    if (!response.ok) {
+      const err = aiErrorSchema.safeParse(json);
+      const retryable = response.status >= 500 || response.status === 429;
+      throw new AiServiceError(
+        err.success ? err.data.error.code : 'AI_SERVICE_BAD_RESPONSE',
+        err.success ? err.data.error.message : `AI service returned ${response.status}`,
+        err.success ? err.data.error.retryable : retryable,
+        response.status,
+      );
+    }
+    const parsed = memoryExtractResponseSchema.safeParse(json);
+    if (!parsed.success || parsed.data.request_id !== input.request_id) {
+      throw new AiServiceError(
+        'AI_SERVICE_CONTRACT_VIOLATION',
+        'AI service extract response violated the contract',
+        false,
+        response.status,
+      );
+    }
+    return parsed.data;
   }
 
   async complete(

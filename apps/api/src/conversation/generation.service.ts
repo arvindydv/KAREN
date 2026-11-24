@@ -24,7 +24,7 @@ import {
 import { StreamHub } from './stream-hub.js';
 import { MemoryRetrievalService, type SentMemory } from '../memory/memory-retrieval.service.js';
 import { MemoryTurnService } from '../memory/memory-turn.service.js';
-import { UsageLimitsService } from './usage-limits.service.js';
+import { UsageLimitsService } from '../usage/usage-limits.service.js';
 
 export interface GenerationJob {
   userId: string;

@@ -197,3 +197,75 @@ describe('AiServiceClient — contract v5 outbound validation (M4a)', () => {
     },
   );
 });
+
+describe('AiServiceClient.extractMemory (M5a, T-CTR-06…08)', () => {
+  const extractInput = () => {
+    const { contract_version: _cv, ...input } = fixture(
+      'memory-extract-request.valid.json',
+    ) as Record<string, unknown>;
+    return input as never;
+  };
+  const reply = (status: number, b: unknown) =>
+    (async () => new Response(JSON.stringify(b), { status })) as unknown as typeof fetch;
+
+  it('signs the request and returns a contract-valid response', async () => {
+    let headers: Record<string, string> = {};
+    const client = new AiServiceClient(env, (async (_u: string, init: RequestInit) => {
+      headers = init.headers as Record<string, string>;
+      return new Response(JSON.stringify(fixture('memory-extract-response.mock.json')), {
+        status: 200,
+      });
+    }) as typeof fetch);
+    const res = await client.extractMemory(extractInput());
+    expect(res.is_mock).toBe(true);
+    expect(res.candidates).toHaveLength(2);
+    expect(headers['x-karen-signature']).toMatch(/^t=\d+,v1=[0-9a-f]{64}$/);
+  });
+
+  it('rejects an untrusted response that violates the contract or answers another request', async () => {
+    const bad = new AiServiceClient(
+      env,
+      reply(200, fixture('memory-extract-response.invalid-sensitivity.json')),
+    );
+    await expect(bad.extractMemory(extractInput())).rejects.toMatchObject({
+      code: 'AI_SERVICE_CONTRACT_VIOLATION',
+      retryable: false,
+    });
+    const other = {
+      ...(fixture('memory-extract-response.mock.json') as object),
+      request_id: 'memx_someone-else_1',
+    };
+    await expect(
+      new AiServiceClient(env, reply(200, other)).extractMemory(extractInput()),
+    ).rejects.toMatchObject({ code: 'AI_SERVICE_CONTRACT_VIOLATION' });
+  });
+
+  it('maps 5xx/network as retryable and 4xx as non-retryable; never echoes content', async () => {
+    await expect(
+      new AiServiceClient(env, reply(503, { nope: true })).extractMemory(extractInput()),
+    ).rejects.toMatchObject({ retryable: true, httpStatus: 503 });
+    await expect(
+      new AiServiceClient(env, reply(422, fixture('error.budget-exceeded.json'))).extractMemory(
+        extractInput(),
+      ),
+    ).rejects.toMatchObject({ code: 'BUDGET_EXCEEDED' });
+    const down = new AiServiceClient(env, async () => {
+      throw new Error('ECONNREFUSED');
+    });
+    const err = await down.extractMemory(extractInput()).catch((e: unknown) => e);
+    expect(err).toMatchObject({ code: 'AI_SERVICE_UNREACHABLE', retryable: true });
+    expect((err as Error).message).not.toMatch(/vegetarian|cilantro/);
+  });
+
+  it('refuses an invalid outgoing request locally (too long message)', async () => {
+    const client = new AiServiceClient(env, async () => {
+      throw new Error('must not be called');
+    });
+    const { contract_version: _cv, ...input } = fixture(
+      'memory-extract-request.invalid-too-long.json',
+    ) as Record<string, unknown>;
+    await expect(client.extractMemory(input as never)).rejects.toMatchObject({
+      code: 'VALIDATION_ERROR',
+    });
+  });
+});

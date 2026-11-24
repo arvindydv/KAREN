@@ -36,6 +36,13 @@ module.exports = {
       to: { path: '^src/(conversation|data-rights)/' },
     },
     {
+      // M5a (M-09): usage accounting is shared by conversation and memory; it imports neither.
+      name: 'usage-is-shared-leaf',
+      severity: 'error',
+      from: { path: '^src/usage/' },
+      to: { path: '^src/(conversation|memory|data-rights)/' },
+    },
+    {
       // Other modules use only memory's narrow services, never its repository/internals.
       name: 'memory-narrow-interface',
       severity: 'error',

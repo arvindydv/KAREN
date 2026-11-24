@@ -860,7 +860,11 @@ model UsageLedgerEntry {
   costMicroUsd BigInt   @default(0) @map("cost_micro_usd")
   inputTokens  BigInt   @default(0) @map("input_tokens")
   outputTokens BigInt   @default(0) @map("output_tokens")
+  /// Chat generations (Phase 02 meaning, unchanged).
   requests     Int      @default(0)
+  /// Phase 03 (L-10): memory extraction calls, counted separately so chat counts stay meaningful;
+  /// their cost is included in cost_micro_usd and counts against the same limits (D10).
+  memoryExtractionRequests Int @default(0) @map("memory_extraction_requests")
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

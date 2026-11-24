@@ -200,18 +200,8 @@ export function parseResumeSeq(raw: string | undefined): number {
 
 // ── Usage periods (UTC) ──────────────────────────────────────────────────────────────────
 
-export const MICRO_USD_PER_USD = 1_000_000;
-export const usdToMicro = (usd: number): number => Math.ceil(usd * MICRO_USD_PER_USD);
-
-export function usagePeriods(now: Date) {
-  const day = now.toISOString().slice(0, 10).replaceAll('-', '');
-  const month = day.slice(0, 6);
-  const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const dayReset = new Date(dayStart.getTime() + 86_400_000);
-  const monthReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-  return { day, month, dayStart, monthStart, dayReset, monthReset };
-}
+// Money/period helpers live in the usage module (M5a); re-exported for existing callers.
+export { MICRO_USD_PER_USD, usagePeriods, usdToMicro } from '../usage/usage-periods.js';
 
 /**
  * The name KAREN may call the user by (ADR-0034): the preferred name, else the first word of the
