@@ -33,10 +33,19 @@ export interface GenerationJob {
   reservationKey: string;
 }
 
-type AbortReason = 'canceled' | 'timeout' | 'shutdown' | 'error';
+/** `consent_revoked`: AI_PROCESSING was revoked while the answer streamed (M4a, owner 2026-11-24). */
+type AbortReason = 'canceled' | 'timeout' | 'shutdown' | 'error' | 'consent_revoked';
+
+const consentRequiredFailure = (): Failure => ({
+  ...mapAiFailure('CONSENT_REQUIRED', false),
+  aiCode: 'CONSENT_REQUIRED',
+});
 
 /** Thrown when the message left the active state underneath the runner (reaper, deletion). */
 class LostOwnership extends Error {}
+
+/** AI_PROCESSING was not active when the runner loaded the message: no AI call is made. */
+class ConsentRevokedBeforeCall extends Error {}
 
 const ACTIVE: MessageStatus[] = ['pending', 'accepted', 'streaming'];
 const FLUSH_MS = 40;
@@ -128,6 +137,10 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
         where: { id: job.messageId, userId: job.userId, role: 'assistant' },
       });
       if (!msg || !ACTIVE.includes(msg.status as MessageStatus)) return null;
+      // S2 (D11, arch §2.3 item 1): AI_PROCESSING is re-checked by the runner itself, in the same
+      // transaction as everything it is about to send — the send-path check alone is not enough
+      // (the user can revoke between accepting the message and the runner starting).
+      const aiConsent = await this.hasAiConsent(tx, job.userId);
       const [thread, user, prefs, history] = await Promise.all([
         tx.conversationThread.findUniqueOrThrow({ where: { id: msg.threadId } }),
         tx.user.findUnique({
@@ -160,8 +173,37 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
         // A saved reply language overrides automatic detection ("auto" = detect).
         replyLanguage: isReplyLanguage(replyLanguage) ? replyLanguage : null,
         history: history.reverse(),
+        aiConsent,
       };
     });
+  }
+
+  /** ACTIVE, unexpired AI_PROCESSING grant (same rule as ConsentService.hasActiveConsent). */
+  private async hasAiConsent(tx: TransactionClient, userId: string): Promise<boolean> {
+    const grant = await tx.consentGrant.findFirst({
+      where: {
+        userId,
+        purpose: 'AI_PROCESSING',
+        scope: '*',
+        status: 'ACTIVE',
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+      select: { id: true },
+    });
+    return grant !== null;
+  }
+
+  /**
+   * Mid-reply re-check (owner instruction 2026-11-24, amends OD-03): if AI_PROCESSING was revoked
+   * while the answer streams, stop consuming the stream, cancel the upstream request and end the
+   * message CONSENT_REQUIRED. Runs on every API instance for its own runners (no single-instance
+   * abort), so the residual window is at most CHAT_CONSENT_RECHECK_SECONDS.
+   */
+  private async recheckConsent(state: RunState): Promise<void> {
+    const ok = await this.prisma.withUserScope(state.job.userId, (tx) =>
+      this.hasAiConsent(tx, state.job.userId),
+    );
+    if (!ok) state.controller.abort('consent_revoked' satisfies AbortReason);
   }
 
   private async run(job: GenerationJob, controller: AbortController): Promise<void> {
@@ -203,11 +245,19 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
       () => this.enqueue(state, () => this.renewLease(state)),
       Math.max(1_000, (this.env.CHAT_GENERATION_LEASE_SECONDS * 1000) / 3),
     );
+    const consentTimer = setInterval(
+      () => this.enqueue(state, () => this.recheckConsent(state)),
+      this.env.CHAT_CONSENT_RECHECK_SECONDS * 1000,
+    );
 
     let done: DoneInfo | null = null;
     let failure: Failure | null = null;
 
     try {
+      if (!loaded.aiConsent) {
+        // No AI call at all: the message ends CONSENT_REQUIRED (T-STR-01).
+        throw new ConsentRevokedBeforeCall();
+      }
       if (context.length === 0 || context.at(-1)?.role !== 'user') {
         throw new AiServiceError('VALIDATION_ERROR', 'No user message to answer', false, null);
       }
@@ -263,6 +313,8 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
         : undefined;
       if (error instanceof LostOwnership) {
         failure = null;
+      } else if (error instanceof ConsentRevokedBeforeCall || reason === 'consent_revoked') {
+        failure = consentRequiredFailure();
       } else if (reason === 'canceled') {
         failure = {
           code: 'CANCELED',
@@ -286,12 +338,14 @@ export class GenerationService implements OnModuleInit, OnApplicationShutdown {
       if (error instanceof LostOwnership) {
         clearTimeout(timeout);
         clearInterval(leaseTimer);
+        clearInterval(consentTimer);
         await this.usage.settleCounters(job.userId, job.reservationKey, 0);
         return;
       }
     } finally {
       clearTimeout(timeout);
       clearInterval(leaseTimer);
+      clearInterval(consentTimer);
     }
 
     // Terminal state: pending text, terminal event, invocation metadata and the usage-ledger

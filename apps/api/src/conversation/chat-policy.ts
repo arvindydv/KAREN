@@ -111,6 +111,12 @@ export interface MessageFailure {
  */
 export function mapAiFailure(code: string, retryable: boolean): MessageFailure {
   switch (code) {
+    case 'CONSENT_REQUIRED':
+      return {
+        code: 'CONSENT_REQUIRED',
+        message: 'AI assistance is turned off. Turn it on in Settings › Privacy.',
+        retryable: false,
+      };
     case 'BUDGET_EXCEEDED':
       return {
         code: 'SERVICE_LIMIT_REACHED',
