@@ -2,6 +2,7 @@
  * T-UNIT-03 (character policy parity), T-UNIT-04 (span/value checks), T-UNIT-07 (normaliser).
  */
 import { describe, expect, it } from 'vitest';
+import { MEMORY_UNICODE_VERSION } from './unicode-tables.js';
 import {
   disallowedCodePointRanges,
   firstDisallowedCodePoint,
@@ -38,6 +39,14 @@ function parseSqlClass(cls: string): Array<[number, number]> {
 }
 
 describe('T-UNIT-03 character policy', () => {
+  it('uses pinned, sorted, non-overlapping Unicode tables (independent of the runtime ICU)', () => {
+    expect(MEMORY_UNICODE_VERSION).toBe('16.0');
+    const r = disallowedCodePointRanges();
+    for (let i = 0; i < r.length; i++) {
+      expect(r[i]![0]).toBeLessThanOrEqual(r[i]![1]);
+      if (i > 0) expect(r[i]![0]).toBeGreaterThan(r[i - 1]![1] + 1);
+    }
+  });
   it('generated SQL class classifies every BMP code point exactly like the TS policy', () => {
     const ranges = parseSqlClass(memoryTextSqlCharClass());
     const inSql = (cp: number) => ranges.some(([a, b]) => cp >= a && cp <= b);

@@ -31,14 +31,14 @@ ALTER ROLE karen_api_runtime NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPAS
 
 -- Nobody but the owner may create objects in public or in KAREN schemas.
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA identity, consent, audit, platform, conversation FROM PUBLIC;
+REVOKE ALL ON SCHEMA identity, consent, audit, platform, conversation, memory FROM PUBLIC;
 
-GRANT USAGE ON SCHEMA identity, consent, audit, platform, conversation TO karen_api_runtime;
+GRANT USAGE ON SCHEMA identity, consent, audit, platform, conversation, memory TO karen_api_runtime;
 
 -- Start from zero on every run so removed privileges do not linger.
-REVOKE ALL ON ALL TABLES IN SCHEMA identity, consent, audit, platform, conversation FROM karen_api_runtime;
-REVOKE ALL ON ALL SEQUENCES IN SCHEMA identity, consent, audit, platform, conversation FROM karen_api_runtime;
-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA identity, consent, audit, platform, conversation FROM karen_api_runtime;
+REVOKE ALL ON ALL TABLES IN SCHEMA identity, consent, audit, platform, conversation, memory FROM karen_api_runtime;
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA identity, consent, audit, platform, conversation, memory FROM karen_api_runtime;
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA identity, consent, audit, platform, conversation, memory FROM karen_api_runtime;
 
 -- identity (RLS: own rows only)
 GRANT SELECT, INSERT, UPDATE ON identity.users TO karen_api_runtime;
@@ -96,6 +96,22 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON conversation.feedback TO karen_api_runti
 GRANT EXECUTE ON FUNCTION conversation.reap_stale_generations(timestamptz) TO karen_api_runtime;
 GRANT EXECUTE ON FUNCTION conversation.purge_expired(timestamptz, interval) TO karen_api_runtime;
 
+-- memory (Phase 03, ADR-0036; arch §5.2). FORCE RLS, owner only. Memories, suggestions and
+-- revisions are user content the user may delete outright; extraction jobs are never deleted by
+-- the request path (purge is maintenance, M2b); access events are append-only.
+GRANT SELECT, INSERT, UPDATE ON memory.user_settings TO karen_api_runtime;
+GRANT SELECT, INSERT, UPDATE, DELETE ON memory.items TO karen_api_runtime;
+GRANT SELECT, INSERT, DELETE ON memory.item_revisions TO karen_api_runtime;
+GRANT SELECT, INSERT, UPDATE, DELETE ON memory.suggestions TO karen_api_runtime;
+GRANT SELECT, INSERT, UPDATE ON memory.extraction_jobs TO karen_api_runtime;
+GRANT SELECT, INSERT ON memory.access_events TO karen_api_runtime;
+-- Character-policy CHECK functions (evaluated with the inserting role's privileges) and the
+-- job-retention constant used by the SECURITY INVOKER consent trigger (03C-05). Each takes no
+-- privilege-relevant input and returns a boolean / constant.
+GRANT EXECUTE ON FUNCTION memory.text_allowed(text) TO karen_api_runtime;
+GRANT EXECUTE ON FUNCTION memory.label_allowed(text) TO karen_api_runtime;
+GRANT EXECUTE ON FUNCTION memory.job_retention() TO karen_api_runtime;
+
 -- audit: append-only for the application (trigger also blocks UPDATE/DELETE/TRUNCATE)
 GRANT INSERT ON audit.audit_events TO karen_api_runtime;
 
@@ -118,8 +134,8 @@ ALTER ROLE karen_staff_runtime NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYP
 REVOKE ALL ON SCHEMA staff FROM PUBLIC;
 REVOKE ALL ON SCHEMA staff FROM karen_api_runtime;
 REVOKE ALL ON ALL TABLES IN SCHEMA staff FROM karen_api_runtime;
-REVOKE ALL ON ALL TABLES IN SCHEMA staff, identity, consent, audit, platform, conversation FROM karen_staff_runtime;
-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA staff, identity, consent, audit, platform, conversation FROM karen_staff_runtime;
+REVOKE ALL ON ALL TABLES IN SCHEMA staff, identity, consent, audit, platform, conversation, memory FROM karen_staff_runtime;
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA staff, identity, consent, audit, platform, conversation, memory FROM karen_staff_runtime;
 
 GRANT USAGE ON SCHEMA staff, audit, identity TO karen_staff_runtime;
 -- No DELETE anywhere: revocation, disablement and expiry are UPDATEs (kept for audit).

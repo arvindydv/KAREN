@@ -7,7 +7,8 @@
 //   audit     — append-only audit events (DB trigger blocks UPDATE/DELETE) (owner: api/audit)
 //   platform  — transactional outbox, API idempotency records, AI usage   (owner: api/platform)
 //   conversation — threads, messages, stream events, feedback (Phase 02) (owner: api/conversation)
-// Future schemas (memory, tasks, approvals, conversations, providers, notifications, billing)
+//   memory    — personal memory (Phase 03, ADR-0036); FORCE RLS, owner only  (owner: api/memory)
+// Future schemas (tasks, approvals, conversations, providers, notifications, billing)
 // are documented in docs/database/future-entities.md and arrive with their features.
 //
 // Conventions: UUID v4 PKs generated in the DB, snake_case tables/columns, timestamptz,
@@ -24,7 +25,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["identity", "consent", "audit", "platform", "staff", "conversation"]
+  schemas  = ["identity", "consent", "audit", "platform", "staff", "conversation", "memory"]
 }
 
 /// Account lifecycle (ADR-0015). Transitions are enforced by @karen/domain
@@ -80,6 +81,12 @@ model User {
   threads            ConversationThread[]
   aiInvocations      AiInvocation[]
   usageLedger        UsageLedgerEntry[]
+  memorySettings     MemoryUserSettings?
+  memoryItems        MemoryItem[]
+  memoryRevisions    MemoryItemRevision[]
+  memorySuggestions  MemorySuggestion[]
+  memoryJobs         MemoryExtractionJob[]
+  memoryAccess       MemoryAccessEvent[]
 
   @@map("users")
   @@schema("identity")
@@ -710,14 +717,19 @@ model ConversationThread {
   lastMessageAt DateTime? @map("last_message_at") @db.Timestamptz(3)
   expiresAt     DateTime? @map("expires_at") @db.Timestamptz(3)
   nextSeq       Int       @default(1) @map("next_seq")
+  /// Per-thread memory switch (D8, ADR-0036). DB CHECK: never true on ephemeral threads.
+  memoryEnabled Boolean   @default(false) @map("memory_enabled")
   /// Thread document schema version (data migrations of stored message formats).
   schemaVersion Int       @default(1) @map("schema_version")
   version       Int       @default(0)
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages ConversationMessage[]
+  user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages          ConversationMessage[]
+  memoryItems       MemoryItem[]
+  memorySuggestions MemorySuggestion[]
+  memoryJobs        MemoryExtractionJob[]
 
   @@index([userId, pinned(sort: Desc), lastMessageAt(sort: Desc)])
   @@index([userId, archivedAt])
@@ -759,6 +771,12 @@ model ConversationMessage {
   thread   ConversationThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
   events   MessageEvent[]
   feedback MessageFeedback?
+
+  memoryItems        MemoryItem[]          @relation("MemoryItemSourceMessage")
+  memorySuggestions  MemorySuggestion[]    @relation("MemorySuggestionSourceMessage")
+  memoryJobsSourced  MemoryExtractionJob[] @relation("MemoryJobSourceMessage")
+  memoryJobsReplies  MemoryExtractionJob[] @relation("MemoryJobReplyMessage")
+  memoryAccessEvents MemoryAccessEvent[]
 
   @@unique([threadId, seq])
   @@unique([userId, clientIdempotencyKey])
@@ -850,4 +868,183 @@ model UsageLedgerEntry {
   @@id([userId, periodStart])
   @@map("usage_ledger")
   @@schema("platform")
+}
+
+// ── Phase 03: personal memory (ADR-0036; docs/phase-03/PHASE_03_MEMORY_ARCHITECTURE.md §4.3) ──
+// Every table is ENABLE + FORCE row-level security, owner only. CHECK constraints, partial
+// unique indexes (dedupe, single-valued slots), owner/source triggers and the consent suspension
+// trigger live in the reviewed migration 20261123120000_memory_phase03 (Prisma cannot express
+// them). Every query must ALSO filter user_id explicitly (arch §5.4).
+
+model MemoryUserSettings {
+  userId          String   @id @map("user_id") @db.Uuid
+  askBeforeSaving Boolean  @default(false) @map("ask_before_saving")
+  version         Int      @default(0)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+  @@schema("memory")
+}
+
+model MemoryItem {
+  id               String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String                  @map("user_id") @db.Uuid
+  /// fact | preference | context | event
+  kind             String                  @db.VarChar(16)
+  /// closed vocabulary (@karen/domain/memory MEMORY_SLOTS)
+  slot             String                  @db.VarChar(48)
+  singleValued     Boolean                 @map("single_valued")
+  /// self | third_party
+  subject          String                  @db.VarChar(16)
+  subjectLabel     String?                 @map("subject_label") @db.VarChar(40)
+  /// The user's verbatim words (never model-authored).
+  valueText        String                  @map("value_text") @db.VarChar(280)
+  valueKey         String                  @map("value_key") @db.Char(64)
+  /// Written by the API from tokenizeForSearch (raw SQL only).
+  searchLexemes    Unsupported("tsvector") @map("search_lexemes")
+  /// active | suspended
+  status           String                  @default("active") @db.VarChar(16)
+  /// explicit_request | confirmed_suggestion | user_created
+  origin           String                  @db.VarChar(24)
+  pinned           Boolean                 @default(false)
+  sourceMessageId  String?                 @map("source_message_id") @db.Uuid
+  sourceThreadId   String?                 @map("source_thread_id") @db.Uuid
+  sourceExcerpt    String?                 @map("source_excerpt") @db.VarChar(280)
+  sourceRecordedAt DateTime                @map("source_recorded_at") @db.Timestamptz(3)
+  confirmedAt      DateTime                @map("confirmed_at") @db.Timestamptz(3)
+  expiresAt        DateTime?               @map("expires_at") @db.Timestamptz(3)
+  suspendedAt      DateTime?               @map("suspended_at") @db.Timestamptz(3)
+  editedAt         DateTime?               @map("edited_at") @db.Timestamptz(3)
+  lastUsedAt       DateTime?               @map("last_used_at") @db.Timestamptz(3)
+  version          Int                     @default(0)
+  createdAt        DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime                @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceMessage ConversationMessage? @relation("MemoryItemSourceMessage", fields: [sourceMessageId], references: [id], onDelete: SetNull)
+  sourceThread  ConversationThread?  @relation(fields: [sourceThreadId], references: [id], onDelete: SetNull)
+  revisions     MemoryItemRevision[]
+  conflicts     MemorySuggestion[]   @relation("MemorySuggestionConflict")
+  accessEvents  MemoryAccessEvent[]
+
+  @@unique([id, userId])
+  @@index([userId, status, kind, updatedAt(sort: Desc)])
+  @@index([userId, sourceThreadId])
+  @@map("items")
+  @@schema("memory")
+}
+
+model MemoryItemRevision {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  itemId      String   @map("item_id") @db.Uuid
+  itemVersion Int      @map("item_version")
+  kind        String   @db.VarChar(16)
+  slot        String   @db.VarChar(48)
+  valueText   String   @map("value_text") @db.VarChar(280)
+  /// user_edit | explicit_supersede
+  changedBy   String   @map("changed_by") @db.VarChar(24)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt   DateTime @map("expires_at") @db.Timestamptz(3)
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item MemoryItem @relation(fields: [itemId, userId], references: [id, userId], onDelete: Cascade)
+
+  @@unique([itemId, itemVersion])
+  @@index([userId, itemId])
+  @@index([expiresAt])
+  @@map("item_revisions")
+  @@schema("memory")
+}
+
+model MemorySuggestion {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId              String    @map("user_id") @db.Uuid
+  kind                String    @db.VarChar(16)
+  slot                String    @db.VarChar(48)
+  singleValued        Boolean   @map("single_valued")
+  subject             String    @db.VarChar(16)
+  subjectLabel        String?   @map("subject_label") @db.VarChar(40)
+  valueText           String    @map("value_text") @db.VarChar(280)
+  valueKey            String    @map("value_key") @db.Char(64)
+  /// stated | third_party | conflict | ask_before_saving | restore_conflict
+  reason              String    @db.VarChar(32)
+  conflictsWithItemId String?   @map("conflicts_with_item_id") @db.Uuid
+  sourceMessageId     String?   @map("source_message_id") @db.Uuid
+  sourceThreadId      String?   @map("source_thread_id") @db.Uuid
+  sourceExcerpt       String?   @map("source_excerpt") @db.VarChar(280)
+  sourceRecordedAt    DateTime  @map("source_recorded_at") @db.Timestamptz(3)
+  validUntil          DateTime? @map("valid_until") @db.Timestamptz(3)
+  expiresAt           DateTime  @map("expires_at") @db.Timestamptz(3)
+  version             Int       @default(0)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conflictsWith MemoryItem?          @relation("MemorySuggestionConflict", fields: [conflictsWithItemId, userId], references: [id, userId], onDelete: Cascade)
+  sourceMessage ConversationMessage? @relation("MemorySuggestionSourceMessage", fields: [sourceMessageId], references: [id], onDelete: Cascade)
+  sourceThread  ConversationThread?  @relation(fields: [sourceThreadId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, slot, valueKey])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([expiresAt])
+  @@map("suggestions")
+  @@schema("memory")
+}
+
+model MemoryExtractionJob {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  sourceMessageId String    @unique @map("source_message_id") @db.Uuid
+  threadId        String    @map("thread_id") @db.Uuid
+  replyMessageId  String    @map("reply_message_id") @db.Uuid
+  /// pending | running | completed | skipped | failed | canceled
+  status          String    @default("pending") @db.VarChar(16)
+  outcomeCode     String?   @map("outcome_code") @db.VarChar(40)
+  storedCount     Int       @default(0) @map("stored_count") @db.SmallInt
+  suggestedCount  Int       @default(0) @map("suggested_count") @db.SmallInt
+  rejectedCount   Int       @default(0) @map("rejected_count") @db.SmallInt
+  /// Most restrictive class only (secret | sensitive | minor | invalid); never content.
+  rejectedClass   String?   @map("rejected_class") @db.VarChar(16)
+  policyVersion   String?   @map("policy_version") @db.VarChar(32)
+  attempts        Int       @default(0) @db.SmallInt
+  nextAttemptAt   DateTime  @default(now()) @map("next_attempt_at") @db.Timestamptz(3)
+  startedAt       DateTime? @map("started_at") @db.Timestamptz(3)
+  completedAt     DateTime? @map("completed_at") @db.Timestamptz(3)
+  expiresAt       DateTime? @map("expires_at") @db.Timestamptz(3)
+  version         Int       @default(0)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceMessage ConversationMessage @relation("MemoryJobSourceMessage", fields: [sourceMessageId], references: [id], onDelete: Cascade)
+  thread        ConversationThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  replyMessage  ConversationMessage @relation("MemoryJobReplyMessage", fields: [replyMessageId], references: [id], onDelete: Cascade)
+
+  @@index([userId, threadId, createdAt(sort: Desc)])
+  @@map("extraction_jobs")
+  @@schema("memory")
+}
+
+model MemoryAccessEvent {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  itemId         String   @map("item_id") @db.Uuid
+  replyMessageId String   @map("reply_message_id") @db.Uuid
+  rank           Int      @db.SmallInt
+  /// pinned | always | lexical | recent
+  reason         String   @db.VarChar(16)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz(3)
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item         MemoryItem          @relation(fields: [itemId, userId], references: [id, userId], onDelete: Cascade)
+  replyMessage ConversationMessage @relation(fields: [replyMessageId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([itemId])
+  @@index([expiresAt])
+  @@map("access_events")
+  @@schema("memory")
 }

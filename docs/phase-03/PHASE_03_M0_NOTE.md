@@ -248,3 +248,12 @@ Template: `PHASE_03_D1_APPROVAL_TEMPLATE.md`. Owner instruction in the session: 
 | `openai/text-embedding-3-small`                                                                                                                                                                                                                                                                 | 0.02                                 | 8192                  |
 | `qwen/qwen3-embedding-8b`                                                                                                                                                                                                                                                                       | 0.01                                 | 40960                 |
 | `qwen/qwen3-embedding-4b`                                                                                                                                                                                                                                                                       | 0.02                                 | 32768                 |
+
+## 6. Later owner approvals (same day)
+
+| Date       | Approval                                                                                                                                      |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-23 | Implementation scope extended to **M2a** (owner: "yes" to "continue with M2a"); M2a built stacked on the unmerged M1 PR, merge order enforced |
+| 2026-11-23 | **Q6:** the consent suspension trigger writes the content-free `memory.suspended` audit row                                                   |
+
+M2b and later milestones still need a further written approval.
