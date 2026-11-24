@@ -4,6 +4,7 @@ import {
   conversationListSchema,
   conversationSchema,
   createConversationRequestSchema,
+  deleteConversationQuerySchema,
   feedbackRequestSchema,
   forkConversationRequestSchema,
   messageListQuerySchema,
@@ -129,12 +130,17 @@ export class ConversationController {
 
   @Delete(':id')
   @HttpCode(204)
-  @ApiOperation({ summary: 'Delete a conversation and all its messages (permanent)' })
+  @ApiOperation({
+    summary:
+      'Delete a conversation and all its messages (permanent). Saved memories are kept unless delete_memories=true',
+  })
+  @ApiZodQuery('delete_memories', deleteConversationQuerySchema.shape.delete_memories)
   async remove(
     @CurrentPrincipal() p: AuthenticatedPrincipal,
     @Param('id', Uuid) id: string,
+    @ZodQuery(deleteConversationQuerySchema) q: z.infer<typeof deleteConversationQuerySchema>,
   ): Promise<void> {
-    await this.conversations.remove(p.userId, id);
+    await this.conversations.remove(p.userId, id, q.delete_memories);
   }
 
   @Get(':id/messages')

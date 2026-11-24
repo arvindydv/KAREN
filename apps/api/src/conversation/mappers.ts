@@ -21,6 +21,7 @@ export function toConversation(t: ConversationThread): Conversation {
     created_at: t.createdAt.toISOString(),
     updated_at: t.updatedAt.toISOString(),
     version: t.version,
+    memory_enabled: t.memoryEnabled,
   };
 }
 

@@ -171,6 +171,27 @@ export const apiEnvShape = {
   /** Interval of the in-process maintenance sweep (reaper + retention). 0 disables (tests). */
   CHAT_MAINTENANCE_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(3_600).default(30),
   KAREN_EXECUTION_PAUSED: booleanFlag(false),
+
+  // ── Phase 03 personal memory (ADR-0036; docs/development/environment-variables.md) ─────────
+  /** Master switch. OFF everywhere; enabling it in any deployed environment needs APP-4. */
+  MEMORY_FEATURE_ENABLED: booleanFlag(false),
+  /**
+   * Consent-notice versions (`consent_grants.policy_version`) under which a MEMORY_STORAGE grant
+   * is eligible (D5 re-confirmation). EMPTY = no grant is eligible (memory stays off) until the
+   * legally reviewed notice version is recorded (Q5 / LEG-1).
+   */
+  MEMORY_CONSENT_ELIGIBLE_POLICY_VERSIONS: csv,
+  /** Provisional per-row retention (D12, not legally approved; never shown to users). */
+  MEMORY_SUGGESTION_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
+  MEMORY_CONTEXT_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
+  MEMORY_EVENT_TTL_DAYS: z.coerce.number().int().min(1).max(3_650).default(365),
+  MEMORY_REVISION_RETENTION_DAYS: z.coerce.number().int().min(1).max(365).default(30),
+  MEMORY_ACCESS_EVENT_RETENTION_DAYS: z.coerce.number().int().min(1).max(365).default(90),
+  /** Per-user caps (OD-09 provisional); clamped to the domain ceilings. */
+  MEMORY_MAX_ACTIVE_ITEMS: z.coerce.number().int().min(1).max(500).default(500),
+  MEMORY_MAX_PENDING_SUGGESTIONS: z.coerce.number().int().min(1).max(50).default(50),
+  /** Per-user limit for clear / restore / export (03C-09), per rolling hour. */
+  MEMORY_SENSITIVE_ACTIONS_PER_HOUR: z.coerce.number().int().min(1).max(1_000).default(20),
 };
 
 export type ApiEnv = ReturnType<typeof loadApiEnv>;
@@ -249,6 +270,12 @@ export function loadApiEnv(source: Record<string, string | undefined> = process.
       (env) =>
         env.CONSENT_RECEIPT_KEY !== undefined && env.CONSENT_RECEIPT_KEY.length < 32
           ? 'CONSENT_RECEIPT_KEY must be at least 32 characters'
+          : undefined,
+      (env) =>
+        env.MEMORY_FEATURE_ENABLED &&
+        isDeployedEnv(env.APP_ENV) &&
+        env.MEMORY_CONSENT_ELIGIBLE_POLICY_VERSIONS.length === 0
+          ? 'MEMORY_FEATURE_ENABLED requires MEMORY_CONSENT_ELIGIBLE_POLICY_VERSIONS when deployed'
           : undefined,
       (env) =>
         isDeployedEnv(env.APP_ENV) && env.ALLOW_DRAFT_NOTICES

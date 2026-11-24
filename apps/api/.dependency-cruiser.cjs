@@ -14,7 +14,7 @@ module.exports = {
       severity: 'error',
       from: { path: '^src/infrastructure' },
       to: {
-        path: '^src/(identity|consent|audit|policy|admin|health|auth|security|onboarding|data-rights|conversation)/',
+        path: '^src/(identity|consent|audit|policy|admin|health|auth|security|onboarding|data-rights|conversation|memory)/',
       },
     },
     {
@@ -25,6 +25,25 @@ module.exports = {
       from: { path: '^src/security/', pathNot: '\\.module\\.ts$' },
       to: {
         path: '^src/(identity|consent|audit|policy|admin|health|auth|infrastructure|generated|onboarding|data-rights|conversation)/',
+      },
+    },
+    {
+      // Phase 03 (ADR-0036 §5.4): memory depends on consent data, audit and infrastructure only;
+      // it must never import the conversation module (conversation depends on memory).
+      name: 'memory-does-not-import-conversation',
+      severity: 'error',
+      from: { path: '^src/memory/' },
+      to: { path: '^src/(conversation|data-rights)/' },
+    },
+    {
+      // Other modules use only memory's narrow services, never its repository/internals.
+      name: 'memory-narrow-interface',
+      severity: 'error',
+      from: { path: '^src/', pathNot: '^src/memory/' },
+      to: {
+        path: '^src/memory/',
+        pathNot:
+          '^src/memory/(memory\\.module|memory-consent|memory-deletion\\.service|memory-export\\.service)\\.ts$',
       },
     },
     {

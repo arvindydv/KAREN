@@ -11,6 +11,7 @@ import {
   dataRightsWorkflowId,
 } from '@karen/domain';
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { MemoryExportService } from '../memory/memory-export.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { ApiError } from '../common/api-error.js';
 import { securityEvent } from '../common/security-metrics.js';
@@ -67,6 +68,7 @@ export class DataRightsService {
     private readonly audit: AuditService,
     @Inject(WORKFLOW_STARTER) private readonly workflows: WorkflowStarter,
     @Inject(API_ENV) private readonly env: ApiEnv,
+    private readonly memoryExport: MemoryExportService,
   ) {}
 
   // ── User-facing ─────────────────────────────────────────────────────────────────────────
@@ -532,6 +534,9 @@ export class DataRightsService {
         input_tokens: Number(u.inputTokens),
         output_tokens: Number(u.outputTokens),
       })),
+      // Phase 03 (arch §10.2): additive section under karen.data-export.v1 — whether the format
+      // version is bumped instead is owner decision Q7 (pending); additive keeps v1 readers valid.
+      memory: await this.memoryExport.buildInTx(tx, userId),
       not_included: EXCLUDED_FROM_EXPORT,
     };
   }

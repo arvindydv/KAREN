@@ -51,6 +51,7 @@ const conversation = (over: Partial<Conversation> = {}): Conversation => ({
   created_at: '2026-11-21T09:00:00.000Z',
   updated_at: '2026-11-21T10:00:00.000Z',
   version: 0,
+  memory_enabled: false,
   ...over,
 });
 const msg = (over: Partial<Message>): Message => ({

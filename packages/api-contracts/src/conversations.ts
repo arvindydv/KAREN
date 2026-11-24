@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { memoryStatusSchema } from './memory.js';
 
 /**
  * Phase 02 — conversations, messages and the public chat streaming protocol
@@ -70,6 +71,13 @@ export const conversationSchema = z
     updated_at: z.iso.datetime(),
     /** For `If-Match` on PATCH. */
     version: z.number().int().min(0),
+    /**
+     * Phase 03 (D8): this conversation's memory switch. Ephemeral conversations are always false.
+     * Memory is used only when this is on AND the feature is on AND memory permission is eligible.
+     */
+    memory_enabled: z.boolean(),
+    /** Detail responses only: the effective memory status the chat header shows (D8, §3.5). */
+    memory_status: memoryStatusSchema.optional(),
   })
   .strict()
   .meta({ id: 'Conversation' });
@@ -101,6 +109,12 @@ export const createConversationRequestSchema = z
       .regex(/^[a-z]{2,3}(-[A-Z]{2})?$/, 'Use a locale like en-IN or hi-IN')
       .optional(),
     mode: conversationModeSchema.default('standard'),
+    /**
+     * Phase 03. Omit for the default (on for standard conversations when memory permission is
+     * eligible). `true` without permission → 403 CONSENT_REQUIRED; `true` on an ephemeral
+     * conversation → 400. Ignored while the memory feature is off.
+     */
+    memory_enabled: z.boolean().optional(),
   })
   .strict()
   .meta({ id: 'CreateConversationRequest' });
@@ -111,10 +125,25 @@ export const updateConversationRequestSchema = z
     title: titleSchema.optional(),
     pinned: z.boolean().optional(),
     archived: z.boolean().optional(),
+    /** Phase 03: same rules as on create; turning it off never needs permission. */
+    memory_enabled: z.boolean().optional(),
   })
   .strict()
   .refine((v) => Object.keys(v).length > 0, 'Change at least one field')
   .meta({ id: 'UpdateConversationRequest' });
+
+export const deleteConversationQuerySchema = z
+  .object({
+    /**
+     * Phase 03 (M-05, Q12 pending): also delete the memories saved from this conversation, in the
+     * same transaction. Default false: saved memories are kept (and stay manageable in Memory).
+     */
+    delete_memories: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((v) => v === 'true'),
+  })
+  .strict();
 export type UpdateConversationRequest = z.infer<typeof updateConversationRequestSchema>;
 
 export const messageErrorSchema = z

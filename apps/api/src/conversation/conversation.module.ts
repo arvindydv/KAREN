@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MemoryModule } from '../memory/memory.module.js';
 import { AiUsageController, ConversationController } from './conversation.controller.js';
 import { ConversationService } from './conversation.service.js';
 import { GenerationService } from './generation.service.js';
@@ -13,6 +14,7 @@ import { UsageLimitsService } from './usage-limits.service.js';
  * AiServiceClient (signed internal calls); never the gateway.
  */
 @Module({
+  imports: [MemoryModule],
   controllers: [ConversationController, AiUsageController],
   providers: [
     ConversationService,
