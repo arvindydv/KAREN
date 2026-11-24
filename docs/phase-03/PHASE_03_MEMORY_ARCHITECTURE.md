@@ -1,7 +1,9 @@
 # KAREN — Phase 03 (Personal Memory) — Task 03: Memory Architecture
 
 - **Date:** 2026-11-23 · **Baseline:** `main` @ `e5ff562`
-- **Status:** PROPOSED architecture for owner review — **Revision 3 (Task 03C, 2026-11-23)**,
+- **Status:** ACCEPTED (ADR-0036, 2026-11-23) — **Revision 3 (Task 03C, 2026-11-23)**, with as-built
+  reconciliations recorded inline (2026-11-24: §4.3 conflict FK CASCADE; implementation status in
+  `docs/PHASE_03_REPORT.md`),
   a consolidation of Revision 2 (Task 03B).
   Companion decision record: `docs/adr/0036-personal-memory-architecture.md` (Status: Proposed;
   renamed from `ADR-0036-personal-memory-architecture.md` to the repository's `NNNN-slug.md`
@@ -709,10 +711,12 @@ CREATE TABLE memory.suggestions (
   reason                 varchar(32) NOT NULL CHECK (reason IN
                            ('stated', 'third_party', 'conflict', 'ask_before_saving', 'restore_conflict')),
   conflicts_with_item_id uuid,
-  -- M-03: same-owner composite FK; the column-list form of SET NULL (PostgreSQL 15+ [PG]) nulls
-  -- only conflicts_with_item_id and keeps user_id NOT NULL.
+  -- M-03: same-owner composite FK. AS BUILT (M2a, 2026-11-23): ON DELETE CASCADE — deleting the
+  -- item deletes the conflict suggestion about it (the conflict is moot). Revision 3 proposed the
+  -- column-list `SET NULL (conflicts_with_item_id)`; Prisma cannot model it on a composite FK with
+  -- a required user_id, so the drift check would fail. See the M2a implementation note below.
   FOREIGN KEY (conflicts_with_item_id, user_id) REFERENCES memory.items(id, user_id)
-    ON DELETE SET NULL (conflicts_with_item_id),
+    ON DELETE CASCADE,
   source_message_id      uuid REFERENCES conversation.messages(id) ON DELETE CASCADE,
   source_thread_id       uuid REFERENCES conversation.threads(id)  ON DELETE CASCADE,
   source_excerpt         varchar(280),

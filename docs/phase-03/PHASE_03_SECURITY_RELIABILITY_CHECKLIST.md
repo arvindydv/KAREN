@@ -179,11 +179,11 @@ Columns: **Where** = arch section · **M** = implementing milestone · **Proof**
 
 ### A15. Mobile client
 
-| ID       | Control                                                                                       | Where      | M   | Proof    | Env | State                                                                      |
-| -------- | --------------------------------------------------------------------------------------------- | ---------- | --- | -------- | --- | -------------------------------------------------------------------------- |
-| SR-UI-01 | Consent, flag and memory status come from the server only; the app never decides them locally | §2.1, §3.5 | M6  | T-MOB-02 | L   | [x] L — M6: server-driven state; no persisted cache (memory-screens tests) |
-| SR-UI-02 | No memory text in device logs; no caching of memory content beyond the screen's query cache   | §2.1       | M6  | T-MOB-05 | L   | [x] L — M6: no duration/purge date rendered (asserted)                     |
-| SR-UI-03 | No retention duration or purge date rendered anywhere until legal approval (H6, OD-02)        | §3.3, §11  | M6  | T-MOB-04 | L   | [x] L — M6: no memory text in device logs (asserted)                       |
+| ID       | Control                                                                                       | Where      | M   | Proof    | Env | State                                                                                         |
+| -------- | --------------------------------------------------------------------------------------------- | ---------- | --- | -------- | --- | --------------------------------------------------------------------------------------------- |
+| SR-UI-01 | Consent, flag and memory status come from the server only; the app never decides them locally | §2.1, §3.5 | M6  | T-MOB-02 | L   | [x] L — M6: server-driven state; no persisted cache (memory-screens tests)                    |
+| SR-UI-02 | No memory text in device logs; no caching of memory content beyond the screen's query cache   | §2.1       | M6  | T-MOB-05 | L   | [x] L — M6: no memory text in device logs; React Query cache only, never persisted (asserted) |
+| SR-UI-03 | No retention duration or purge date rendered anywhere until legal approval (H6, OD-02)        | §3.3, §11  | M6  | T-MOB-04 | L   | [x] L — M6: no duration/purge date rendered or in any copy string (asserted)                  |
 
 ---
 
