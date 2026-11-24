@@ -5,7 +5,11 @@
 - **Rule:** an item is ticked only **with an evidence link** (PR, CI run, recorded owner/legal
   decision, protection API output). A tick without evidence does not count. No item may be ticked
   on the basis of this documentation alone.
-- **Current state (2026-11-23, M0):** owner decision session held; ADR-0036 **Accepted** (effective
+- **Update 2026-11-24:** M2b → M7 and NEW-1 implemented in stacked PRs #54–#61 + M7 (none merged);
+  evidence in `docs/PHASE_03_REPORT.md`; decisions in `PHASE_03_PENDING_DECISIONS.md`. Gate 03
+  **NOT PASSED** (G-1, G-5, G-6, G-7, G-8, G-9 unmet; G-2…G-4 met locally). `[~]` = code and evidence
+  complete, not merged (exit needs the owner's merge).
+- **Earlier state (2026-11-23, M0):** owner decision session held; ADR-0036 **Accepted** (effective
   on merge of PR-M0-1); implementation authorised for **M0 → M1 only**; branch protection on. Gate 03 **NOT
   PASSED**. Gate 02 **NO-GO**. Production **not approved**.
 
@@ -73,19 +77,19 @@ Per-milestone prerequisites (decisions that must exist before **that** milestone
 Full criteria are in `PHASE_03_MILESTONE_PLAN.md` (rows "Acceptance criteria" and "Exit
 conditions"). Summary for ticking:
 
-| Milestone | Exit evidence                                                                                                                                      | Done |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| M0        | Protection API output; ADR Accepted + indexed; D1, D2, D4 records                                                                                  | [ ]  |
-| M1        | Merged PR; T-UNIT-01…09 green in CI; policy/tokeniser versions recorded; OD-11 honoured                                                            | [ ]  |
-| M2a       | Merged PR; T-RLS-00…08, T-CON-01…03, T-DR-03, T-MNT-05 green (owner-role tests as non-superuser); drift clean; OD-12 honoured; NEW-1 not regressed | [ ]  |
-| M2b       | Merged PR; T-RLS-04, T-MNT-01…04 green as non-superuser owner                                                                                      | [ ]  |
-| M3        | Merged PR(s); T-API-01…10, T-RACE-10/16/17, T-DR-01/02/04 green; OpenAPI regenerated; env vars documented                                          | [ ]  |
-| M4a       | Merged PR(s); T-CTR-01…05, T-STR-01, T-INJ-01/02 green in TS and Python                                                                            | [ ]  |
-| M4b       | Merged PR(s); T-TXN-01, T-RET-01…08, T-RACE-11/12, T-STR-02/03 green; T-RET-EVAL report on the sealed split (or "FTS not yet sufficient")          | [ ]  |
-| M5a       | Merged PR(s); usage tests unchanged and green; T-CTR-06…08, T-TXN-01 re-run, T-LOG-02 green; no dependency cycle                                   | [ ]  |
-| M5b       | Merged PR(s); T-RACE-01…09/13/14/15/18/19, T-WF-01…08, T-EXT-01…07 (mock), T-LOG-01 green                                                          | [ ]  |
-| M6        | Merged PR(s); T-MOB-01…05 green; release still blocked on legal                                                                                    | [ ]  |
-| M7        | Evidence package and `docs/PHASE_03_REPORT.md` merged; dashboards/alerts delivered; Gate 03 status recorded                                        | [ ]  |
+| Milestone | Exit evidence                                                                                                                                      | Done                                                                                                                    |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| M0        | Protection API output; ADR Accepted + indexed; D1, D2, D4 records                                                                                  | [ ]                                                                                                                     |
+| M1        | Merged PR; T-UNIT-01…09 green in CI; policy/tokeniser versions recorded; OD-11 honoured                                                            | [ ]                                                                                                                     |
+| M2a       | Merged PR; T-RLS-00…08, T-CON-01…03, T-DR-03, T-MNT-05 green (owner-role tests as non-superuser); drift clean; OD-12 honoured; NEW-1 not regressed | [ ]                                                                                                                     |
+| M2b       | Merged PR; T-RLS-04, T-MNT-01…04 green as non-superuser owner                                                                                      | [~] PR #55 (+NEW-1 #54): 17 tests both owner models; NOT merged                                                         |
+| M3        | Merged PR(s); T-API-01…10, T-RACE-10/16/17, T-DR-01/02/04 green; OpenAPI regenerated; env vars documented                                          | [~] PR #56: 36 tests both owner models; OpenAPI regenerated; NOT merged                                                 |
+| M4a       | Merged PR(s); T-CTR-01…05, T-STR-01, T-INJ-01/02 green in TS and Python                                                                            | [~] PR #57: T-STR-01 + mid-reply stop; contracts TS 26 / Py 29; injection golden 0 FAIL; NOT merged                     |
+| M4b       | Merged PR(s); T-TXN-01, T-RET-01…08, T-RACE-11/12, T-STR-02/03 green; T-RET-EVAL report on the sealed split (or "FTS not yet sufficient")          | [~] PR #58: T-TXN-01 proven; 11 retrieval tests; sealed-split report; NOT merged                                        |
+| M5a       | Merged PR(s); usage tests unchanged and green; T-CTR-06…08, T-TXN-01 re-run, T-LOG-02 green; no dependency cycle                                   | [~] PR #59: usage tests unchanged; extract contract both sides; T-LOG-02; NOT merged                                    |
+| M5b       | Merged PR(s); T-RACE-01…09/13/14/15/18/19, T-WF-01…08, T-EXT-01…07 (mock), T-LOG-01 green                                                          | [~] PR #60: 14 pipeline tests both owner models; worker 29; T-EXT report (SENSITIVE 2/296 FAIL); NOT merged             |
+| M6        | Merged PR(s); T-MOB-01…05 green; release still blocked on legal                                                                                    | [~] PR #61: 19 mobile tests; release blocked on legal; NOT merged                                                       |
+| M7        | Evidence package and `docs/PHASE_03_REPORT.md` merged; dashboards/alerts delivered; Gate 03 status recorded                                        | [~] M7 PR: reports, `docs/PHASE_03_REPORT.md`, dashboards/alarms (disabled); Gate 03 status to be recorded by the owner |
 
 ---
 
@@ -95,18 +99,18 @@ Gate 03 (`karen_phases.md` PHASE 03) passes only when **every** row holds. Rows 
 "outside plan" cannot be met within M0–M7, so the expected status at M7 is **NOT PASSED**
 (OD-04).
 
-| #    | Criterion                                                                                                                                                                           | Evidence                              | Within M0–M7?         | Done |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | --------------------- | ---- |
-| G-1  | Gate 02 recorded GO (D1; APP-6)                                                                                                                                                     | Phase 02 gate record                  | **No** (outside plan) | [ ]  |
-| G-2  | Zero cross-user recall on the adversarial isolation suite                                                                                                                           | T-RET-02, T-RLS-02/07                 | Yes                   | [ ]  |
-| G-3  | Deleted/suspended/expired items retrieved = 0                                                                                                                                       | T-RET-03                              | Yes                   | [ ]  |
-| G-4  | Edit/delete reflected in the next response (definition OD-04) = 100 %                                                                                                               | T-RET-04                              | Yes                   | [ ]  |
-| G-5  | No restricted memory written without valid permission: SECRET/SENSITIVE/minor stored = 0; false tier-1 = 0; assistant-sourced = 0; third-party unconfirmed = 0; consent races clean | T-EXT-01…06, T-CON-*, T-RACE-01/03/18 | Yes (mock)            | [ ]  |
-| G-6  | Retrieval thresholds (Q9) met on the sealed test split with per-slice minimums and Wilson intervals                                                                                 | T-RET-EVAL report                     | Yes (if Q9 approved)  | [ ]  |
-| G-7  | Live extraction approved (APP-1), run within an approved spend cap                                                                                                                  | Owner approval + run record           | **No** (outside plan) | [ ]  |
-| G-8  | **Human-reviewed** live extraction set passes the approved precision/recall                                                                                                         | Review record + report                | **No** (outside plan) | [ ]  |
-| G-9  | Legal review complete for D5, D6, D9, D12 incl. any duration shown in copy (LEG-1…LEG-4)                                                                                            | Legal sign-off                        | **No** (outside plan) | [ ]  |
-| G-10 | Q1, Q5, Q11 resolved for any live or user-facing enablement                                                                                                                         | Register                              | Partly                | [ ]  |
+| #    | Criterion                                                                                                                                                                           | Evidence                              | Within M0–M7?         | Done                                         |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | --------------------- | -------------------------------------------- |
+| G-1  | Gate 02 recorded GO (D1; APP-6)                                                                                                                                                     | Phase 02 gate record                  | **No** (outside plan) | [ ]                                          |
+| G-2  | Zero cross-user recall on the adversarial isolation suite                                                                                                                           | T-RET-02, T-RLS-02/07                 | Yes                   | [~] 0 on 900 sealed queries (local)          |
+| G-3  | Deleted/suspended/expired items retrieved = 0                                                                                                                                       | T-RET-03                              | Yes                   | [~] 0 (local)                                |
+| G-4  | Edit/delete reflected in the next response (definition OD-04) = 100 %                                                                                                               | T-RET-04                              | Yes                   | [~] 100 % (T-RET-04, local)                  |
+| G-5  | No restricted memory written without valid permission: SECRET/SENSITIVE/minor stored = 0; false tier-1 = 0; assistant-sourced = 0; third-party unconfirmed = 0; consent races clean | T-EXT-01…06, T-CON-*, T-RACE-01/03/18 | Yes (mock)            | [ ] **FAIL**: SENSITIVE stored 2/296 (NEW-B) |
+| G-6  | Retrieval thresholds (Q9) met on the sealed test split with per-slice minimums and Wilson intervals                                                                                 | T-RET-EVAL report                     | Yes (if Q9 approved)  | [ ]                                          |
+| G-7  | Live extraction approved (APP-1), run within an approved spend cap                                                                                                                  | Owner approval + run record           | **No** (outside plan) | [ ]                                          |
+| G-8  | **Human-reviewed** live extraction set passes the approved precision/recall                                                                                                         | Review record + report                | **No** (outside plan) | [ ]                                          |
+| G-9  | Legal review complete for D5, D6, D9, D12 incl. any duration shown in copy (LEG-1…LEG-4)                                                                                            | Legal sign-off                        | **No** (outside plan) | [ ]                                          |
+| G-10 | Q1, Q5, Q11 resolved for any live or user-facing enablement                                                                                                                         | Register                              | Partly                | [ ]                                          |
 
 ---
 
@@ -114,14 +118,14 @@ Gate 03 (`karen_phases.md` PHASE 03) passes only when **every** row holds. Rows 
 
 Production approval is a separate written decision after Gate 03. Minimum criteria:
 
-| #   | Criterion                                                                                                                                            | Evidence                            | Done |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ---- |
-| P-1 | Gate 03 passed (§5)                                                                                                                                  | §5 all ticked                       | [ ]  |
-| P-2 | NEW-1 fixed and verified (checklist Part B, T-NEW1-03/04, T-AWS-02)                                                                                  | PR + RDS evidence                   | [ ]  |
-| P-3 | RDS verification: T-AWS-01, T-AWS-03, T-AWS-05, T-PERF-03                                                                                            | Recorded runs                       | [ ]  |
-| P-4 | Backup/restore deletion re-application approach and runbook (OD-13), drilled (T-AWS-06)                                                              | Runbook + drill record              | [ ]  |
-| P-5 | Dashboards, alerts and on-call routing for `karen_memory_*` (SR-OBS-03/04); memory runbook                                                           | Monitoring config + runbook         | [ ]  |
-| P-6 | Legal: notice text and version (Q5), copy incl. durations (OD-02), refusal copy, minors scope (OD-07), export/backup disclosure (OD-06, OD-13)       | Legal sign-off                      | [ ]  |
-| P-7 | Security review of the memory module and internal endpoints (threat model updated in `docs/security/threat-model.md`)                                | Review record, high findings closed | [ ]  |
-| P-8 | Written approval to enable `MEMORY_FEATURE_ENABLED` per environment (APP-4) and for production launch (APP-5)                                        | Owner approval                      | [ ]  |
-| P-9 | Pre-existing platform gates that production depends on (Phase 00/01 closure items, `docs/PHASE_02_REPORT.md` §7 "Production launch: NO-GO") resolved | Their own checklists                | [ ]  |
+| #   | Criterion                                                                                                                                            | Evidence                            | Done                                                                                                      |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| P-1 | Gate 03 passed (§5)                                                                                                                                  | §5 all ticked                       | [ ]                                                                                                       |
+| P-2 | NEW-1 fixed and verified (checklist Part B, T-NEW1-03/04, T-AWS-02)                                                                                  | PR + RDS evidence                   | [~] fixed locally (#54, ADR-0037 Proposed); RDS NOT VERIFIED                                              |
+| P-3 | RDS verification: T-AWS-01, T-AWS-03, T-AWS-05, T-PERF-03                                                                                            | Recorded runs                       | [ ]                                                                                                       |
+| P-4 | Backup/restore deletion re-application approach and runbook (OD-13), drilled (T-AWS-06)                                                              | Runbook + drill record              | [ ]                                                                                                       |
+| P-5 | Dashboards, alerts and on-call routing for `karen_memory_*` (SR-OBS-03/04); memory runbook                                                           | Monitoring config + runbook         | [~] dashboards/alarms in Terraform (disabled until metrics export exists); runbook `memory-operations.md` |
+| P-6 | Legal: notice text and version (Q5), copy incl. durations (OD-02), refusal copy, minors scope (OD-07), export/backup disclosure (OD-06, OD-13)       | Legal sign-off                      | [ ]                                                                                                       |
+| P-7 | Security review of the memory module and internal endpoints (threat model updated in `docs/security/threat-model.md`)                                | Review record, high findings closed | [ ]                                                                                                       |
+| P-8 | Written approval to enable `MEMORY_FEATURE_ENABLED` per environment (APP-4) and for production launch (APP-5)                                        | Owner approval                      | [ ]                                                                                                       |
+| P-9 | Pre-existing platform gates that production depends on (Phase 00/01 closure items, `docs/PHASE_02_REPORT.md` §7 "Production launch: NO-GO") resolved | Their own checklists                | [ ]                                                                                                       |

@@ -36,3 +36,12 @@ Gate 03 **NOT PASSED** · Gate 02 **NO-GO**. Decisions and evidence: [PHASE_03_M
 | [PHASE_03_OWNER_DECISIONS.md](PHASE_03_OWNER_DECISIONS.md)                 | 02   | D1–D13, OWNER APPROVED 2026-11-23 (§17). Authority baseline; unchanged |
 | [PHASE_03_ARCHITECTURE_VALIDATION.md](PHASE_03_ARCHITECTURE_VALIDATION.md) | 03   | Validation of Revision 1 (refers to the ADR's old filename)            |
 | [PHASE_03_TASK_03B_CORRECTIONS.md](PHASE_03_TASK_03B_CORRECTIONS.md)       | 03B  | Correction matrix; its §3 register is superseded by the live register  |
+
+## Implementation (2026-11-24)
+
+- `PHASE_03_PENDING_DECISIONS.md` — decisions, legal reviews and approvals still needed
+- `PHASE_03_RDS_VERIFICATION.md` — AWS/RDS verification checklist (not executed)
+- `PHASE_03_MOBILE_INTEGRATION.md` — mobile memory surfaces and API mapping
+- `../PHASE_03_REPORT.md` — implementation and evidence report
+- `../../evals/reports/memory-retrieval.v1.md`, `../../evals/reports/memory-extraction.v1.md` — sealed-split evaluations
+- `../runbooks/memory-operations.md`, `../database/memory-maintenance.md`

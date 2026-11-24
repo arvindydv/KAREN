@@ -1,8 +1,13 @@
 # KAREN — Phase 03 — Milestone execution plan (M0–M7)
 
 - **Date:** 2026-11-23 (Task 03C) · **Baseline:** `main` @ `e5ff562`
-- **Status:** PLAN for owner review. **No milestone is authorised to start.** Implementation
-  authorisation requires the conditions in `PHASE_03_CLOSURE_CHECKLIST.md` §3.
+- **Status (2026-11-24):** M0, M1, M2a **merged** (`e647f97`). M2b → M7 **implemented, not merged**
+  (stacked PRs #54 NEW-1, #55 M2b, #56 M3, #57 M4a, #58 M4b, #59 M5a, #60 M5b, #61 M6, M7), authorised
+  for development/test by the owner instruction of 2026-11-24 (`PHASE_03_M0_NOTE.md` §6). A milestone
+  is complete only when merged (rule 7). Evidence: `docs/PHASE_03_REPORT.md`.
+- **Numbering:** the plan has 11 milestone units — M0, M1, M2a, M2b, M3, M4a, M4b, M5a, M5b, M6, M7
+  (the "M1 prerequisite: sealed evaluation sets" is part of M1, not a separate milestone).
+- _(Original status line, 2026-11-23: PLAN for owner review; no milestone authorised to start.)_
 - **Design source:** `PHASE_03_MEMORY_ARCHITECTURE.md` Revision 3 ("arch", §-numbers refer to it)
   and ADR-0036 (Proposed). This plan expands arch §14; where the two differ, the difference is
   listed in §1 below and arch §14 has been aligned to it.

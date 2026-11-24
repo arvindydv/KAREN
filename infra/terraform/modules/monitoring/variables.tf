@@ -115,3 +115,16 @@ variable "budget_environment_tag" {
   description = "Value of the Environment cost-allocation tag the budget filters on (tag must be activated in Billing)."
   type        = string
 }
+
+# ── Phase 03 memory (ADR-0036 §12.1; M7) ──────────────────────────────────────────────────
+variable "memory_alarms_enabled" {
+  description = "Create the karen_memory_* dashboard and alarms. Keep false until the API's OpenTelemetry metrics are exported to CloudWatch (no such pipeline exists yet) AND memory is approved for the environment (APP-4)."
+  type        = bool
+  default     = false
+}
+
+variable "app_metrics_namespace" {
+  description = "CloudWatch namespace the API's OpenTelemetry metrics are exported to (e.g. by an EMF exporter)."
+  type        = string
+  default     = "KAREN/App"
+}
