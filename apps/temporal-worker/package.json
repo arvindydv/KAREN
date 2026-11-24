@@ -29,9 +29,9 @@
   "devDependencies": {
     "@karen/eslint-config": "workspace:*",
     "@karen/typescript-config": "workspace:*",
-    "@temporalio/testing": "1.25.0",
+    "@temporalio/testing": "1.26.0",
     "@types/node": "24.19.2",
-    "eslint": "10.14.0",
+    "eslint": "10.15.0",
     "typescript": "6.0.3",
     "vitest": "4.1.12"
   }
