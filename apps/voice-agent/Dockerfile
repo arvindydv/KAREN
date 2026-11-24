@@ -4,7 +4,7 @@
 
 FROM ghcr.io/astral-sh/uv:0.13.9 AS uv
 
-FROM python:3.12-slim-trixie AS builder
+FROM python:3.14-slim-trixie AS builder
 COPY --from=uv /uv /usr/local/bin/uv
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
@@ -18,7 +18,7 @@ COPY src ./src
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
-FROM python:3.12-slim-trixie AS runtime
+FROM python:3.14-slim-trixie AS runtime
 RUN groupadd --system --gid 10001 karen \
     && useradd --system --uid 10001 --gid karen --no-create-home --shell /usr/sbin/nologin karen
 WORKDIR /app
