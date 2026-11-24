@@ -93,8 +93,9 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON conversation.threads TO karen_api_runtim
 GRANT SELECT, INSERT, UPDATE ON conversation.messages TO karen_api_runtime;
 GRANT SELECT, INSERT ON conversation.message_events TO karen_api_runtime;
 GRANT SELECT, INSERT, UPDATE, DELETE ON conversation.feedback TO karen_api_runtime;
-GRANT EXECUTE ON FUNCTION conversation.reap_stale_generations(timestamptz) TO karen_api_runtime;
-GRANT EXECUTE ON FUNCTION conversation.purge_expired(timestamptz, interval) TO karen_api_runtime;
+-- NEW-1 / B5.6 (20261124100000): no caller-supplied clock; retention clamped to >= 1 hour.
+GRANT EXECUTE ON FUNCTION conversation.reap_stale_generations() TO karen_api_runtime;
+GRANT EXECUTE ON FUNCTION conversation.purge_expired(interval) TO karen_api_runtime;
 
 -- memory (Phase 03, ADR-0036; arch §5.2). FORCE RLS, owner only. Memories, suggestions and
 -- revisions are user content the user may delete outright; extraction jobs are never deleted by

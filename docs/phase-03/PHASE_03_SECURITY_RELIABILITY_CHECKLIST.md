@@ -7,8 +7,10 @@
 - **State today:** every Part A item is **DESIGNED, NOT IMPLEMENTED** unless marked otherwise. No
   item is ticked, because no Phase 03 code exists. A tick requires a merged PR **and** a passing
   test or recorded evidence.
-- **Part B** tracks **NEW-1** separately. It is a pre-existing defect outside Phase 03 and is
-  **not fixed** by Phase 03 documentation.
+- **Part B** tracks **NEW-1** separately. It is a pre-existing defect outside Phase 03.
+  **Update 2026-11-24:** reproduced and fixed locally (ADR-0037, Proposed; branch
+  `phase-03/new1-force-rls-definer-lookups`); RDS verification **NOT VERIFIED** (no RDS instance).
+  See B7.
 
 Evidence labels: **[V]** verified in repository code/config · **[V-gh]** GitHub API · **[PG]**
 documented PostgreSQL/Temporal behaviour · **[NV]** not verified · **[P]** proposed.
@@ -72,17 +74,17 @@ Columns: **Where** = arch section · **M** = implementing milestone · **Proof**
 
 ### A5. Deletion guarantees, export and account erasure
 
-| ID        | Control                                                                                                                                              | Where      | M           | Proof                | Env     | State                           |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ----------- | -------------------- | ------- | ------------------------------- |
-| SR-DEL-01 | Deletion is synchronous SQL with FK cascades; never depends on Temporal                                                                              | §8.6       | M3          | T-API-04, T-DR-02    | L       | [ ]                             |
-| SR-DEL-02 | No resurrection by delayed jobs: run step re-reads job/message/thread/consent under the user lock; `clear` cancels in-scope jobs                     | §8.4, §8.6 | M3, M5b     | T-RACE-04…06, 09, 10 | L       | [ ]                             |
-| SR-DEL-03 | Atomic `delete_memories=true` on thread delete                                                                                                       | §3.6       | M3          | T-RACE-16            | L       | [ ]                             |
-| SR-DEL-04 | Deletion reflected in the next response (different-thread definition, OD-04)                                                                         | §13.3      | M4b, M7     | T-RET-04             | L       | [ ]                             |
-| SR-DEL-05 | Undo guards: supersession undo needs consent + version; new-item undo is a deletion                                                                  | §3.6       | M3          | T-RACE-17            | L       | [ ]                             |
-| SR-EXP-01 | Export contains every memory row with provenance and revisions; no consent required                                                                  | §10.2      | M3          | T-DR-01              | L       | [ ]                             |
-| SR-EXP-02 | Stored exports keep deleted memory text until export expiry (`DATA_EXPORT_TTL_HOURS`, 168 h **[V]**) or erasure — disclosed or invalidated per OD-06 | §10.3      | M3          | T-DR-04              | L       | [ ] (OD-06)                     |
-| SR-EXP-03 | Erasure: new `erase_user` version deletes every memory table explicitly; other users untouched; existing body unchanged (OD-12)                      | §10.1      | M2a         | T-DR-03              | L       | [ ]                             |
-| SR-EXP-04 | Erasure and export work when the definer owner is **not** a superuser — **blocked by NEW-1** (Part B)                                                | §5.3       | NEW-1 track | T-AWS-02, T-NEW1-*   | L + AWS | [ ] **FAILS by analysis today** |
+| ID        | Control                                                                                                                                              | Where      | M           | Proof                | Env     | State                                                                                       |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ----------- | -------------------- | ------- | ------------------------------------------------------------------------------------------- |
+| SR-DEL-01 | Deletion is synchronous SQL with FK cascades; never depends on Temporal                                                                              | §8.6       | M3          | T-API-04, T-DR-02    | L       | [ ]                                                                                         |
+| SR-DEL-02 | No resurrection by delayed jobs: run step re-reads job/message/thread/consent under the user lock; `clear` cancels in-scope jobs                     | §8.4, §8.6 | M3, M5b     | T-RACE-04…06, 09, 10 | L       | [ ]                                                                                         |
+| SR-DEL-03 | Atomic `delete_memories=true` on thread delete                                                                                                       | §3.6       | M3          | T-RACE-16            | L       | [ ]                                                                                         |
+| SR-DEL-04 | Deletion reflected in the next response (different-thread definition, OD-04)                                                                         | §13.3      | M4b, M7     | T-RET-04             | L       | [ ]                                                                                         |
+| SR-DEL-05 | Undo guards: supersession undo needs consent + version; new-item undo is a deletion                                                                  | §3.6       | M3          | T-RACE-17            | L       | [ ]                                                                                         |
+| SR-EXP-01 | Export contains every memory row with provenance and revisions; no consent required                                                                  | §10.2      | M3          | T-DR-01              | L       | [ ]                                                                                         |
+| SR-EXP-02 | Stored exports keep deleted memory text until export expiry (`DATA_EXPORT_TTL_HOURS`, 168 h **[V]**) or erasure — disclosed or invalidated per OD-06 | §10.3      | M3          | T-DR-04              | L       | [ ] (OD-06)                                                                                 |
+| SR-EXP-03 | Erasure: new `erase_user` version deletes every memory table explicitly; other users untouched; existing body unchanged (OD-12)                      | §10.1      | M2a         | T-DR-03              | L       | [ ]                                                                                         |
+| SR-EXP-04 | Erasure and export work when the definer owner is **not** a superuser — **blocked by NEW-1** (Part B)                                                | §5.3       | NEW-1 track | T-AWS-02, T-NEW1-*   | L + AWS | [x] L (NEW-1 fix, T-NEW1-01…04; whole suite under a non-superuser owner) · [ ] AWS **[NV]** |
 
 ### A6. Temporal retries and idempotency
 
@@ -280,3 +282,19 @@ Whatever is chosen must keep the Phase 03 memory deletes in `erase_user` (OD-12)
   production readiness (register PROD row).
 - Interacts with M2a (OD-12): both redefine `identity.erase_user`.
 - Phase 03's own maintenance design does not copy the pattern (arch §5.3 item 3).
+
+### B7. Status (2026-11-24)
+
+| Step                              | Result                                                                                                                                                                                                                                         |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B2.1 inventory                    | Done from the catalog (`pg_proc.prosecdef`): 10 definer functions; only `lookup_data_rights_request` and the first read of `erase_user` touch a FORCEd table unscoped. Enforced by `definer-owner.int.test.ts` (allow-list)                    |
+| B2.2 AWS ownership model          | Documented in `docs/runbooks/database-migrations.md` step 8; RDS **[NV]** (no instance)                                                                                                                                                        |
+| B3.1–B3.4 reproduction            | **Reproduced [V-local]** on a database migrated by `NOSUPERUSER NOBYPASSRLS` `karen_owner_nonsuper`: unscoped lookup 0 rows (scoped 1), `erase_user` → `no deletion request`; whole suite → exactly 8 data-export/erasure failures, 198 passes |
+| B4 option                         | **(e)** exact-id, GUC-gated, owner-only `FOR SELECT` policy (a narrowed (a)); ADR-0037 **Proposed**                                                                                                                                            |
+| B5.1 non-superuser config + guard | `integration-nonsuper-owner` project + T-NEW1-00 guard                                                                                                                                                                                         |
+| B5.2 data-rights suite            | 218/218 pass under the non-superuser owner and under the superuser owner                                                                                                                                                                       |
+| B5.3 negative test                | T-NEW1-02: runtime role unscoped (even setting the GUC) → 0 rows                                                                                                                                                                               |
+| B5.4 CI                           | `pnpm test:integration` runs both projects (CI Integration job)                                                                                                                                                                                |
+| B5.5 RDS                          | **NOT VERIFIED** — script ready: `infra/database/verify/rds-verification.sql`, checklist `PHASE_03_RDS_VERIFICATION.md`                                                                                                                        |
+| B5.6 maintenance clock            | `reap_stale_generations()` / `purge_expired(interval)` — no caller clock; retention clamped ≥ 1 h (T-NEW1-04)                                                                                                                                  |
+| OD-12                             | `erase_user` keeps every M2a delete incl. all six memory tables (T-NEW1-03, compared with the live definition)                                                                                                                                 |
