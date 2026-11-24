@@ -15,7 +15,10 @@ REDACTED: Final = "[REDACTED]"
 # Matches on the key's *suffix* so metadata such as ``input_tokens`` or ``first_token_at`` survives.
 _SENSITIVE_KEY: Final = re.compile(
     r"(?i)(authorization|api[_-]?key|(?:^|[_-])key|secret|password|passwd|token|cookie|signature|dsn"
-    r"|credentials?)$"
+    r"|credentials?"
+    # Phase 03 memory content (ADR-0036 §12.2): masked whatever the nesting.
+    r"|value_text|source_excerpt|source_span|trigger_text|memory_context|message_text|subject_label"
+    r"|(?:^|[_-])text)$"
 )
 
 # Order matters: specific secret formats first, generic digit runs last.

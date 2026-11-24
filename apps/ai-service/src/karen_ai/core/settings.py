@@ -98,6 +98,9 @@ class Settings(BaseSettings):
     karen_feature_embedding_enabled: bool = False
     karen_feature_reranking_enabled: bool = False
     karen_feature_audio_enabled: bool = False
+    # Phase 03 (ADR-0036 §7.2): live (paid) memory extraction. MUST stay false: no live extractor
+    # exists and APP-1 is not approved. True refuses startup.
+    karen_feature_memory_extraction_live: bool = False
 
     internal_service_hmac_secret: SecretStr | None = None
     # Rotation (docs/security/internal-service-auth.md): verifier also accepts this key while
@@ -224,6 +227,11 @@ class Settings(BaseSettings):
             raise ValueError(
                 "KAREN_AI_ALLOW_DIRECT_PROVIDER_FALLBACK=true is refused: no direct-provider "
                 "path is implemented or approved (architecture §2.1). Set it to false."
+            )
+        if self.karen_feature_memory_extraction_live:
+            raise ValueError(
+                "KAREN_FEATURE_MEMORY_EXTRACTION_LIVE=true is refused: live memory extraction is not "
+                "implemented or approved (APP-1). Phase 03 uses the deterministic mock only."
             )
         if self.karen_deployed_artifact and "app_env" not in self.model_fields_set:
             raise ValueError(

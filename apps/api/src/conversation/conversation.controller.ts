@@ -54,7 +54,7 @@ import { RequireConsent } from '../consent/consent.guard.js';
 import { parseResumeSeq, SSE_HEARTBEAT, sseFrame, waitForDrain } from './chat-policy.js';
 import { ConversationService, requireIdempotencyKey } from './conversation.service.js';
 import { HEARTBEAT, StreamReaderService } from './stream-reader.service.js';
-import { UsageLimitsService } from './usage-limits.service.js';
+import { UsageLimitsService } from '../usage/usage-limits.service.js';
 
 const Uuid = new ParseUUIDPipe({ version: '4' });
 const caller = (p: AuthenticatedPrincipal) => ({ userId: p.userId, userRef: p.userRef });

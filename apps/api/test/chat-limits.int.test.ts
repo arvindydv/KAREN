@@ -125,7 +125,7 @@ describe('chat limits (integration)', () => {
     const running = await send(s.auth, s.cid, 'busy [[stub:hang]]').expect(202);
     // A concurrent request with key K holds its reservation (reserved, transaction not yet done).
     const key = randomUUID();
-    const { UsageLimitsService } = await import('../src/conversation/usage-limits.service.js');
+    const { UsageLimitsService } = await import('../src/usage/usage-limits.service.js');
     const usage = app.get(UsageLimitsService);
     // (small amount: the running answer already reserved $0.10 of the $0.15 daily limit)
     expect(await usage.reserve(s.userId, `send:${s.userId}:${key}`, new Date(), 10_000)).toBe(true);

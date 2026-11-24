@@ -54,3 +54,48 @@ describe('UsageLimitsService (fail closed, ADR-0013)', () => {
     expect(service.reserveMicro).toBe(100_000);
   });
 });
+
+describe('ledger request kind (M5a, L-10)', () => {
+  const capture = () => {
+    const calls: { create: Record<string, unknown>; update: Record<string, unknown> }[] = [];
+    const tx = {
+      usageLedgerEntry: {
+        upsert: vi.fn(
+          async (args: { create: Record<string, unknown>; update: Record<string, unknown> }) => {
+            calls.push(args);
+            return {};
+          },
+        ),
+      },
+    };
+    return { calls, tx: tx as unknown as Parameters<UsageLimitsService['recordInLedger']>[0] };
+  };
+  const service = new UsageLimitsService(
+    {} as RedisService,
+    {} as PrismaService,
+    {} as AiServiceClient,
+    env,
+  );
+  const base = { userId: USER, costMicroUsd: 10, inputTokens: null, outputTokens: null };
+
+  it('chat (default) increments `requests` only', async () => {
+    const { calls, tx } = capture();
+    await service.recordInLedger(tx, base);
+    expect(calls[0]!.create).toMatchObject({ requests: 1, memoryExtractionRequests: 0 });
+    expect(calls[0]!.update).toHaveProperty('requests');
+    expect(calls[0]!.update).not.toHaveProperty('memoryExtractionRequests');
+  });
+
+  it('memory_extraction increments its own counter; cost still combined', async () => {
+    const { calls, tx } = capture();
+    await service.recordInLedger(tx, { ...base, kind: 'memory_extraction' });
+    expect(calls[0]!.create).toMatchObject({
+      requests: 0,
+      memoryExtractionRequests: 1,
+      costMicroUsd: 10n,
+    });
+    expect(calls[0]!.update).toHaveProperty('memoryExtractionRequests');
+    expect(calls[0]!.update).not.toHaveProperty('requests');
+    expect(calls[0]!.update).toHaveProperty('costMicroUsd');
+  });
+});
