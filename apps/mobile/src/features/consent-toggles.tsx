@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { useApi } from '../auth/services';
+import { MEMORY_COPY } from './memory/copy';
+import { confirmMemoryRevoke } from './memory/dialogs';
 import {
   Banner,
   Body,
@@ -97,6 +99,38 @@ export function ConsentToggles({
     await invalidate(qk.consents, qk.consentHistory);
   };
 
+  /**
+   * Phase 03 (D6): turning off "Remember things about me" — directly, or via the AI_PROCESSING
+   * cascade — offers "also delete my memories now" (default: keep them paused). The delete is a
+   * second call that needs no consent; if it fails the memories stay suspended (safe) and the
+   * user is told where to delete them.
+   */
+  const requestDecision = (purpose: string, next: boolean) => {
+    const revokesMemory =
+      !next &&
+      (purpose === 'MEMORY_STORAGE' || (purpose === 'AI_PROCESSING' && granted('MEMORY_STORAGE')));
+    if (!revokesMemory) {
+      void decide(purpose, next);
+      return;
+    }
+    confirmMemoryRevoke((deleteNow) => {
+      void (async () => {
+        await decide(purpose, next);
+        if (!deleteNow) return;
+        try {
+          await unwrap(
+            api.POST('/v1/memory/clear', {
+              params: { header: { 'Idempotency-Key': idempotencyKey() } },
+              body: { scope: 'all' },
+            }),
+          );
+        } catch {
+          setRowError({ purpose, message: MEMORY_COPY.revokeDeleteFailed });
+        }
+      })();
+    });
+  };
+
   return (
     <View style={{ gap: 12 }}>
       {!notice ? (
@@ -138,7 +172,7 @@ export function ConsentToggles({
                 {...(blocked
                   ? { disabledReason: `Turn on ${missing.map(titleOf).join(', ')} first.` }
                   : {})}
-                onChange={(next) => void decide(p.purpose, next)}
+                onChange={(next) => requestDecision(p.purpose, next)}
               />
               {rowError?.purpose === p.purpose ? <ErrorState message={rowError.message} /> : null}
             </View>

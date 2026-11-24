@@ -138,7 +138,10 @@ export function useChatActions() {
 
   /** PATCH with If-Match = the version last read; 412 reloads and rethrows. */
   const update = useCallback(
-    async (c: Conversation, patch: { title?: string; pinned?: boolean; archived?: boolean }) => {
+    async (
+      c: Conversation,
+      patch: { title?: string; pinned?: boolean; archived?: boolean; memory_enabled?: boolean },
+    ) => {
       try {
         const next = await unwrap<Conversation>(
           api.PATCH('/v1/conversations/{id}', {
@@ -146,8 +149,13 @@ export function useChatActions() {
             body: patch,
           }),
         );
-        client.setQueryData(chatKeys.conversation(c.id), next);
+        // The PATCH response has no `memory_status` (detail-only field): keep the detail's last
+        // status until the refetch below brings the server's new value (never guessed locally).
+        client.setQueryData(chatKeys.conversation(c.id), { ...c, ...next });
         void client.invalidateQueries({ queryKey: chatKeys.lists });
+        if (patch.memory_enabled !== undefined) {
+          await client.invalidateQueries({ queryKey: chatKeys.conversation(c.id) });
+        }
         return next;
       } catch (err) {
         if (err instanceof ApiRequestError && err.code === 'PRECONDITION_FAILED') {
@@ -160,8 +168,18 @@ export function useChatActions() {
   );
 
   const remove = useCallback(
-    async (id: string) => {
-      await unwrap(api.DELETE('/v1/conversations/{id}', { params: { path: { id } } }));
+    async (id: string, deleteMemories = false) => {
+      // Phase 03 (M-05): `delete_memories=true` clears that chat's memories in the SAME server
+      // transaction, before the thread goes (one call, never two).
+      await unwrap(
+        api.DELETE('/v1/conversations/{id}', {
+          params: {
+            path: { id },
+            ...(deleteMemories ? { query: { delete_memories: 'true' as const } } : {}),
+          },
+        }),
+      );
+      if (deleteMemories) void client.invalidateQueries({ queryKey: ['memory'] });
       client.removeQueries({ queryKey: chatKeys.conversation(id) });
       client.removeQueries({ queryKey: chatKeys.messages(id) });
       void client.invalidateQueries({ queryKey: chatKeys.lists });
