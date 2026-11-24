@@ -74,6 +74,14 @@ SELECT 'R-32 erase_user as runtime (NEW-1)',
 SELECT 'R-33 erased account tombstoned', CASE WHEN status::text = 'DELETED' THEN 'PASS' ELSE 'FAIL' END, status::text
   FROM identity.users WHERE id = 'f0000000-0000-4000-8000-0000000000a1';
 
+-- ── R-40 memory maintenance (M2b; T-AWS-03) — callable by the runtime role, scope restored ──
+\connect :runtime_url
+SELECT 'R-40 purge_expired callable by runtime', 'PASS', row_to_json(p)::text FROM memory.purge_expired(NULL, 10) p;
+SELECT 'R-41 terminate_stale_jobs callable by runtime', 'PASS', memory.terminate_stale_jobs(10)::text;
+SELECT 'R-42 caller scope empty afterwards', CASE WHEN coalesce(current_setting('karen.user_id', true), '') = '' THEN 'PASS' ELSE 'FAIL' END, '';
+SELECT 'R-43 runtime sees no jobs unscoped', CASE WHEN count(*) = 0 THEN 'PASS' ELSE 'FAIL' END, count(*)::text FROM memory.extraction_jobs;
+\connect :migration_url
+
 -- ── cleanup of the synthetic rows ─────────────────────────────────────────────────────────
 BEGIN;
 SELECT set_config('karen.user_id', 'f0000000-0000-4000-8000-0000000000a1', true) \g /dev/null

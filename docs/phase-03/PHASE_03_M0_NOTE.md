@@ -256,4 +256,6 @@ Template: `PHASE_03_D1_APPROVAL_TEMPLATE.md`. Owner instruction in the session: 
 | 2026-11-23 | Implementation scope extended to **M2a** (owner: "yes" to "continue with M2a"); M2a built stacked on the unmerged M1 PR, merge order enforced |
 | 2026-11-23 | **Q6:** the consent suspension trigger writes the content-free `memory.suspended` audit row                                                   |
 
-M2b and later milestones still need a further written approval.
+| 2026-11-24 | **Written implementation authorisation for M2b → M7 and the NEW-1 fix**, development/test environments only (owner's "Phase 03 complete execution mission", §8: "This assignment authorizes engineering implementation in development/test environments, including M2b and the remaining milestones"). Explicitly **not** authorised: production deployment or migrations, enabling `MEMORY_FEATURE_ENABLED` in any deployed environment, live paid extraction, paid embeddings, new extensions, legal approval claims, marking Gate 02/03 passed. The same instruction schedules NEW-1 now (OD-10). |
+
+Merging any PR still needs the owner's explicit authorisation (D13; no merge by engineering).

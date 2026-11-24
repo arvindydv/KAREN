@@ -236,7 +236,7 @@ describe('memory schema: isolation, triggers, erasure (integration)', () => {
       expect(owners).toHaveLength(MEMORY_TABLES.length);
       expect(new Set(owners.map((o) => o.tableowner))).toEqual(new Set([probe]));
     });
-    it('every memory table has ENABLE + FORCE row-level security and exactly one owner policy', async () => {
+    it('every memory table has ENABLE + FORCE row-level security and exactly one owner policy (+ the M2b job lookup)', async () => {
       const rows = await owner.$queryRaw<
         { relname: string; relrowsecurity: boolean; relforcerowsecurity: boolean; n: bigint }[]
       >`SELECT c.relname, c.relrowsecurity, c.relforcerowsecurity,
@@ -246,7 +246,9 @@ describe('memory schema: isolation, triggers, erasure (integration)', () => {
       expect(rows).toHaveLength(MEMORY_TABLES.length);
       for (const r of rows) {
         expect(r, r.relname).toMatchObject({ relrowsecurity: true, relforcerowsecurity: true });
-        expect(Number(r.n), r.relname).toBe(1);
+        // M2b adds the single read-only, owner-role-bound lookup policy on the content-free job
+        // table (arch §5.3 item 3; asserted in detail by memory-maintenance.int.test.ts T-MNT-03).
+        expect(Number(r.n), r.relname).toBe(r.relname === 'extraction_jobs' ? 2 : 1);
       }
     });
   });
@@ -398,9 +400,12 @@ describe('memory schema: isolation, triggers, erasure (integration)', () => {
   });
 
   describe('T-RLS-05 FORCE as a non-superuser owner', () => {
-    it('unscoped SELECT on every memory table returns 0 rows for the owner', async () => {
+    it('unscoped SELECT on every memory CONTENT table returns 0 rows for the owner', async () => {
       await asProbeOwner(async (tx) => {
         for (const t of MEMORY_TABLES) {
+          // extraction_jobs: content-free; M2b's read-only lookup policy lets the migration role
+          // (and only it) read it unscoped — checked separately below.
+          if (t === 'extraction_jobs') continue;
           const [r] = await tx.$queryRawUnsafe<{ n: bigint }[]>(
             `SELECT count(*) AS n FROM memory.${t}`,
           );
@@ -408,6 +413,20 @@ describe('memory schema: isolation, triggers, erasure (integration)', () => {
         }
       });
       expect(await owner.memoryItem.count({ where: { userId: userB } })).toBeGreaterThan(0);
+    });
+    it('the owner may READ extraction_jobs unscoped (M2b lookup) but never write it unscoped', async () => {
+      const changed = await asProbeOwner(
+        (tx) =>
+          tx.$executeRaw`UPDATE memory.extraction_jobs SET attempts = attempts WHERE user_id = ${userB}::uuid`,
+      );
+      expect(changed).toBe(0);
+      const deleted = await asProbeOwner(
+        (tx) => tx.$executeRaw`DELETE FROM memory.extraction_jobs WHERE user_id = ${userB}::uuid`,
+      );
+      expect(deleted).toBe(0);
+      expect(await owner.memoryExtractionJob.count({ where: { userId: userB } })).toBeGreaterThan(
+        0,
+      );
     });
     it('thread/message deletion still applies SET NULL and CASCADE to FORCEd memory rows', async () => {
       const u = await mkUser();
