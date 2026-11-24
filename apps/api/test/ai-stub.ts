@@ -4,7 +4,11 @@ import {
   CONTRACT_VERSION,
   INTERNAL_SIGNATURE_HEADER,
   completionRequestSchema,
+  memoryExtractRequestSchema,
+  memoryExtractResponseSchema,
   type CompletionRequest,
+  type MemoryCandidate,
+  type MemoryExtractRequest,
   type StreamEvent,
 } from '@karen/ai-model-contracts';
 
@@ -19,9 +23,22 @@ import {
  *   [[stub:cost=0.08]]     reported cost in USD           [[stub:mock]]   is_mock=true
  *   [[stub:deterministic]] NO_MODEL route (no tokens billed)
  */
+/** What the stubbed `/internal/v1/memory/extract` answers (scriptable per test). */
+export interface ExtractScript {
+  candidates?: MemoryCandidate[];
+  /** Respond with this HTTP status + AI error envelope instead. */
+  status?: number;
+  /** Awaited before answering (lets a test act "while the AI call is in flight"). */
+  before?: () => Promise<void>;
+}
+
 export interface AiStub {
   url: string;
   requests: CompletionRequest[];
+  /** Every extract request received (validated against the v5 contract). */
+  extractRequests: MemoryExtractRequest[];
+  /** Responder for extract calls; default = a deterministic "remember …" splitter. */
+  extract: (req: MemoryExtractRequest) => ExtractScript;
   signed: boolean[];
   close(): Promise<void>;
 }
@@ -40,6 +57,8 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export async function startAiStub(): Promise<AiStub> {
   const requests: CompletionRequest[] = [];
   const signed: boolean[] = [];
+  const extractRequests: MemoryExtractRequest[] = [];
+  const stub = { extract: defaultExtract };
   const sockets = new Set<Socket>();
   const server: Server = createServer((req, res) => {
     void (async () => {
@@ -52,6 +71,59 @@ export async function startAiStub(): Promise<AiStub> {
             contract_version: CONTRACT_VERSION,
           }),
         );
+        return;
+      }
+      if (req.method === 'POST' && req.url === '/internal/v1/memory/extract') {
+        const parsed = memoryExtractRequestSchema.safeParse(JSON.parse(await readBody(req)));
+        if (!parsed.success) {
+          res.writeHead(422, { 'content-type': 'application/json' });
+          res.end(
+            JSON.stringify({
+              error: {
+                code: 'VALIDATION_ERROR',
+                message: 'contract',
+                retryable: false,
+                request_id: null,
+              },
+            }),
+          );
+          return;
+        }
+        extractRequests.push(parsed.data);
+        const script = stub.extract(parsed.data);
+        if (script.before) await script.before();
+        if (script.status) {
+          res.writeHead(script.status, { 'content-type': 'application/json' });
+          res.end(
+            JSON.stringify({
+              error: {
+                code: script.status >= 500 ? 'GATEWAY_PROVIDER_ERROR' : 'VALIDATION_ERROR',
+                message: 'stub',
+                retryable: script.status >= 500,
+                request_id: parsed.data.request_id,
+              },
+            }),
+          );
+          return;
+        }
+        const body = memoryExtractResponseSchema.parse({
+          contract_version: CONTRACT_VERSION,
+          request_id: parsed.data.request_id,
+          candidates: script.candidates ?? [],
+          usage: {
+            input_tokens: null,
+            output_tokens: null,
+            cached_tokens: null,
+            reasoning_tokens: null,
+          },
+          estimated_cost_usd: 0,
+          requested_model: null,
+          served_model: null,
+          is_mock: true,
+          prompt_version: 'memory_extract.v1',
+        });
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify(body));
         return;
       }
       if (req.method !== 'POST' || req.url !== '/internal/v1/completions/stream') {
@@ -167,12 +239,61 @@ export async function startAiStub(): Promise<AiStub> {
     url: `http://127.0.0.1:${port}`,
     requests,
     signed,
+    extractRequests,
+    get extract() {
+      return stub.extract;
+    },
+    set extract(fn) {
+      stub.extract = fn;
+    },
     close: () =>
       new Promise<void>((resolve) => {
         for (const s of sockets) s.destroy();
         server.close(() => resolve());
       }),
   };
+}
+
+/**
+ * Default extractor: "remember (that) X" / "X, yaad rakhna" → one explicit self candidate with a
+ * verbatim span; any other first-person clause → a non-explicit candidate. Deterministic.
+ */
+export function defaultExtract(req: MemoryExtractRequest): ExtractScript {
+  const text = req.message_text.replace(/\s*\[\[stub:[^\]]*\]\]\s*/g, ' ').trim();
+  const m = /^(?:please )?remember(?: that)? (.+?)[.!]?$/i.exec(text);
+  if (m?.[1]) {
+    return {
+      candidates: [
+        {
+          kind: 'preference',
+          slot: 'other',
+          subject: 'self',
+          source_span: text.replace(/[.!]$/, ''),
+          value_text: m[1],
+          explicit_request: true,
+          trigger_text: 'remember',
+          sensitivity: 'none',
+        },
+      ],
+    };
+  }
+  if (/^(i|i'm|my)\b/i.test(text)) {
+    const span = text.replace(/[.!]$/, '');
+    return {
+      candidates: [
+        {
+          kind: 'preference',
+          slot: 'other',
+          subject: 'self',
+          source_span: span,
+          value_text: span,
+          explicit_request: false,
+          sensitivity: 'none',
+        },
+      ],
+    };
+  }
+  return { candidates: [] };
 }
 
 /** Parses an SSE body into events (data JSON) and the count of heartbeat comments. */

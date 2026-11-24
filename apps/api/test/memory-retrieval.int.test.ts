@@ -158,9 +158,10 @@ describe('memory retrieval in chat (M4b, integration)', () => {
           userId: s.userId,
           replyMessageId: randomUUID(),
           sent: [{ itemId: item, ref: 'm1', rank: 1, reason: 'lexical' }],
+          replyStatus: 'completed',
         });
       });
-      expect(ok).toBe(false);
+      expect(ok.ok).toBe(false);
       expect((await owner.user.findUniqueOrThrow({ where: { id: s.userId } })).displayName).toBe(
         marker,
       );

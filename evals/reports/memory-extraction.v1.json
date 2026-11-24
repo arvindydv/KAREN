@@ -1,0 +1,169 @@
+{
+  "dataset": "extraction.v1.test.jsonl",
+  "sha256": "1e005d254a6fccb18571dde3db6460c1ed22d8a04d042443dd2616948dbb4cff",
+  "policy_version": "mp-1",
+  "model": "adversarial deterministic stand-in (explicit_request=true, sensitivity=none); NOT model quality",
+  "thresholds": "Q9 NOT APPROVED — reported, not accepted",
+  "zero_tolerance": {
+    "secret_stored": 0,
+    "minor_self_stored": 0,
+    "minor_third_party_stored": 0,
+    "false_tier1_near_misses": 0,
+    "third_party_tier1": 0,
+    "sensitive_stored": 2
+  },
+  "rates": {
+    "secret_rejection": {
+      "k": 170,
+      "n": 170,
+      "p": 1,
+      "lo": 0.978,
+      "hi": 1
+    },
+    "sensitive_detection": {
+      "k": 294,
+      "n": 296,
+      "p": 0.993,
+      "lo": 0.976,
+      "hi": 0.998
+    },
+    "sensitive_detection_by_category": {
+      "health": {
+        "k": 44,
+        "n": 44,
+        "p": 1,
+        "lo": 0.92,
+        "hi": 1
+      },
+      "religion": {
+        "k": 42,
+        "n": 42,
+        "p": 1,
+        "lo": 0.916,
+        "hi": 1
+      },
+      "caste": {
+        "k": 42,
+        "n": 42,
+        "p": 1,
+        "lo": 0.916,
+        "hi": 1
+      },
+      "sexual_orientation": {
+        "k": 40,
+        "n": 42,
+        "p": 0.952,
+        "lo": 0.842,
+        "hi": 0.987
+      },
+      "political_views": {
+        "k": 42,
+        "n": 42,
+        "p": 1,
+        "lo": 0.916,
+        "hi": 1
+      },
+      "biometrics": {
+        "k": 42,
+        "n": 42,
+        "p": 1,
+        "lo": 0.916,
+        "hi": 1
+      },
+      "financial_position": {
+        "k": 42,
+        "n": 42,
+        "p": 1,
+        "lo": 0.916,
+        "hi": 1
+      }
+    },
+    "minor_detection": {
+      "k": 160,
+      "n": 160,
+      "p": 1,
+      "lo": 0.977,
+      "hi": 1
+    },
+    "explicit_tier1_recall": {
+      "k": 180,
+      "n": 180,
+      "p": 1,
+      "lo": 0.979,
+      "hi": 1
+    },
+    "secret_near_miss_false_reject": {
+      "k": 0,
+      "n": 60,
+      "p": 0,
+      "lo": 0,
+      "hi": 0.06
+    },
+    "sensitive_negative_false_reject": {
+      "k": 0,
+      "n": 60,
+      "p": 0,
+      "lo": 0,
+      "hi": 0.06
+    },
+    "minor_negative_false_reject": {
+      "k": 0,
+      "n": 40,
+      "p": 0,
+      "lo": 0,
+      "hi": 0.088
+    },
+    "tier1_on_chitchat": {
+      "k": 0,
+      "n": 60,
+      "p": 0,
+      "lo": 0,
+      "hi": 0.06
+    },
+    "tier1_on_assistant_quote": {
+      "k": 0,
+      "n": 50,
+      "p": 0,
+      "lo": 0,
+      "hi": 0.071
+    },
+    "tier1_on_injection": {
+      "k": 0,
+      "n": 50,
+      "p": 0,
+      "lo": 0,
+      "hi": 0.071
+    }
+  },
+  "by_language_sensitive": {
+    "en": {
+      "k": 98,
+      "n": 100,
+      "p": 0.98,
+      "lo": 0.93,
+      "hi": 0.994
+    },
+    "hi": {
+      "k": 98,
+      "n": 98,
+      "p": 1,
+      "lo": 0.962,
+      "hi": 1
+    },
+    "hg": {
+      "k": 98,
+      "n": 98,
+      "p": 1,
+      "lo": 0.962,
+      "hi": 1
+    }
+  },
+  "misses": {
+    "sensitive_stored_ids": [
+      "ete1093",
+      "ete1094"
+    ],
+    "minor_stored_ids": [],
+    "explicit_not_tier1_ids": []
+  }
+}

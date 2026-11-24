@@ -92,6 +92,10 @@ export const MEMORY_JOB_OUTCOMES = [
   'cleared',
   'abandoned_stale',
   'gateway_error',
+  /** The workflow gave up after its retries (M5b abandon step). */
+  'abandoned',
+  /** MEMORY_FEATURE_ENABLED was off when the run step started. */
+  'feature_off',
 ] as const;
 export type MemoryJobOutcome = (typeof MEMORY_JOB_OUTCOMES)[number];
 

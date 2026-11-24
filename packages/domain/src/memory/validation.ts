@@ -184,9 +184,12 @@ export function validateCandidate(
     validUntil: kindExpires(kind) ? (cand.valid_until ?? null) : null,
   };
   if (labelCoerced) return { ...base, tier: 2, tier2Reason: 'label_coerced' };
+  // The rule locates the stored VALUE (value ⊆ span ⊆ message): a natural source_span includes
+  // the trigger itself ("Remember that I'm vegetarian"), and the trigger must precede the value
+  // in the same clause. Negation / question / reminder / clause checks are unchanged (H1).
   const decision = decideTier1({
     message: ctx.message,
-    span,
+    span: value,
     subject,
     askBeforeSaving: ctx.askBeforeSaving,
     modelExplicit: cand.explicit_request,

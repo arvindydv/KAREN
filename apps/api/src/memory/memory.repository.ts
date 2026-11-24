@@ -376,3 +376,113 @@ export async function touchLastUsed(
      WHERE user_id = ${userId}::uuid AND id = ANY(${[...ids]}::uuid[]) AND status = 'active'
        AND (last_used_at IS NULL OR last_used_at < now() - interval '1 day')`;
 }
+
+// ── Extraction jobs (M5b; arch §8.2, §8.4) ─────────────────────────────────────────────────
+
+/** One job per source message (UNIQUE); returns the new id or null when one already exists. */
+export async function insertExtractionJob(
+  tx: TransactionClient,
+  j: { userId: string; sourceMessageId: string; threadId: string; replyMessageId: string },
+): Promise<string | null> {
+  const rows = await tx.$queryRaw<{ id: string }[]>`
+    INSERT INTO memory.extraction_jobs (user_id, source_message_id, thread_id, reply_message_id)
+    VALUES (${j.userId}::uuid, ${j.sourceMessageId}::uuid, ${j.threadId}::uuid,
+            ${j.replyMessageId}::uuid)
+    ON CONFLICT (source_message_id) DO NOTHING
+    RETURNING id`;
+  return rows[0]?.id ?? null;
+}
+
+export async function countJobsToday(tx: TransactionClient, userId: string): Promise<number> {
+  const [r] = await tx.$queryRaw<{ n: number }[]>`
+    SELECT count(*)::int AS n FROM memory.extraction_jobs
+     WHERE user_id = ${userId}::uuid AND created_at >= date_trunc('day', now())`;
+  return r?.n ?? 0;
+}
+
+export interface JobRow {
+  id: string;
+  user_id: string;
+  source_message_id: string;
+  thread_id: string;
+  status: string;
+  outcome_code: string | null;
+  attempts: number;
+  version: number;
+  started_at: Date | null;
+}
+
+/** The job row locked FOR UPDATE (owner + RLS). */
+export async function lockJob(
+  tx: TransactionClient,
+  userId: string,
+  jobId: string,
+): Promise<JobRow | null> {
+  const rows = await tx.$queryRaw<JobRow[]>`
+    SELECT id, user_id, source_message_id, thread_id, status, outcome_code, attempts, version,
+           started_at
+      FROM memory.extraction_jobs
+     WHERE id = ${jobId}::uuid AND user_id = ${userId}::uuid
+     FOR UPDATE`;
+  return rows[0] ?? null;
+}
+
+/** Compare-and-set terminal update; returns false when the job changed underneath (lost CAS). */
+export async function finishJob(
+  tx: TransactionClient,
+  userId: string,
+  jobId: string,
+  expectedVersion: number,
+  f: {
+    status: 'completed' | 'skipped' | 'failed';
+    outcome: string;
+    stored?: number;
+    suggested?: number;
+    rejected?: number;
+    rejectedClass?: string | null;
+  },
+): Promise<boolean> {
+  const n = await tx.$executeRaw`
+    UPDATE memory.extraction_jobs
+       SET status = ${f.status}, outcome_code = ${f.outcome}, completed_at = now(),
+           expires_at = now() + memory.job_retention(),
+           stored_count = ${f.stored ?? 0}, suggested_count = ${f.suggested ?? 0},
+           rejected_count = ${f.rejected ?? 0}, rejected_class = ${f.rejectedClass ?? null},
+           version = version + 1
+     WHERE id = ${jobId}::uuid AND user_id = ${userId}::uuid AND version = ${expectedVersion}
+       AND status IN ('pending', 'running')`;
+  return n === 1;
+}
+
+/**
+ * Tier-1 supersession of a single-valued slot (§4.6): the prior value becomes an
+ * `explicit_supersede` revision and the item takes the new verbatim words and provenance.
+ */
+export async function supersedeItem(
+  tx: TransactionClient,
+  userId: string,
+  itemId: string,
+  c: ItemContent & {
+    sourceMessageId: string;
+    sourceThreadId: string;
+    sourceExcerpt: string;
+    sourceRecordedAt: Date;
+    expiresAt: Date | null;
+    revisionExpiresAt: Date;
+  },
+): Promise<void> {
+  await tx.$executeRaw`
+    INSERT INTO memory.item_revisions (user_id, item_id, item_version, kind, slot, value_text,
+      changed_by, expires_at)
+    SELECT user_id, id, version, kind, slot, value_text, 'explicit_supersede', ${c.revisionExpiresAt}
+      FROM memory.items WHERE id = ${itemId}::uuid AND user_id = ${userId}::uuid`;
+  await tx.$executeRaw`
+    UPDATE memory.items
+       SET kind = ${c.kind}, slot = ${c.slot}, value_text = ${c.text}, value_key = ${valueKeyOf(c)},
+           search_lexemes = array_to_tsvector(${tokenizeForSearch(c.text)}::text[]),
+           origin = 'explicit_request', source_message_id = ${c.sourceMessageId}::uuid,
+           source_thread_id = ${c.sourceThreadId}::uuid, source_excerpt = ${c.sourceExcerpt},
+           source_recorded_at = ${c.sourceRecordedAt}, confirmed_at = now(),
+           expires_at = ${c.expiresAt}, version = version + 1, updated_at = now()
+     WHERE id = ${itemId}::uuid AND user_id = ${userId}::uuid`;
+}

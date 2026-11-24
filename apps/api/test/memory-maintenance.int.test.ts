@@ -243,7 +243,7 @@ describe('memory maintenance functions (M2b, integration)', () => {
 
     it('due = pending, past next_attempt_at, younger than the max age; ids only', async () => {
       const u = await mkUser();
-      const due = await insertJob(u, { createdAgo: '1 minute' });
+      const due = await insertJob(u, { createdAgo: '1 minute', nextIn: '-23 hours' });
       const future = await insertJob(u, { nextIn: '1 hour' });
       const old = await insertJob(u, { createdAgo: '25 hours' });
       const running = await insertJob(u, { status: 'running' });
