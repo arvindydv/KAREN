@@ -112,6 +112,12 @@ GRANT SELECT, INSERT ON memory.access_events TO karen_api_runtime;
 GRANT EXECUTE ON FUNCTION memory.text_allowed(text) TO karen_api_runtime;
 GRANT EXECUTE ON FUNCTION memory.label_allowed(text) TO karen_api_runtime;
 GRANT EXECUTE ON FUNCTION memory.job_retention() TO karen_api_runtime;
+-- M2b cross-user maintenance (arch §5.3, OD-01): per-user-scoped SECURITY DEFINER functions. None
+-- takes a time, interval or grace parameter (H5); limits are clamped inside the functions.
+GRANT EXECUTE ON FUNCTION memory.lookup_extraction_job(uuid) TO karen_api_runtime;
+GRANT EXECUTE ON FUNCTION memory.due_extraction_jobs(integer) TO karen_api_runtime;
+GRANT EXECUTE ON FUNCTION memory.terminate_stale_jobs(integer) TO karen_api_runtime;
+GRANT EXECUTE ON FUNCTION memory.purge_expired(uuid, integer) TO karen_api_runtime;
 
 -- audit: append-only for the application (trigger also blocks UPDATE/DELETE/TRUNCATE)
 GRANT INSERT ON audit.audit_events TO karen_api_runtime;

@@ -36,19 +36,19 @@ Columns: **Where** = arch section · **M** = implementing milestone · **Proof**
 
 ### A2. Tenant/user isolation and FORCE RLS
 
-| ID        | Control                                                                                                                      | Where       | M        | Proof              | Env | State        |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------- | -------- | ------------------ | --- | ------------ |
-| SR-ISO-01 | Explicit `user_id = principal` in every memory query (RLS is the second layer)                                               | §5.4        | M3–M5b   | review + T-RLS-07  | L   | [ ]          |
-| SR-ISO-02 | Composite `(id, user_id)` FKs to `memory.items`; owner trigger on every reference into `conversation.*`                      | §4.3, §4.4  | M2a      | T-RLS-02           | L   | [ ]          |
-| SR-ISO-03 | DB trigger: every source message is a **user-role** message of the same user                                                 | §4.3, §7.1  | M2a      | T-RLS-08           | L   | [ ]          |
-| SR-ISO-04 | Ephemeral threads cannot enable memory (CHECK)                                                                               | §3.4        | M2a      | T-RLS-06           | L   | [ ]          |
-| SR-ISO-05 | Owner filter in the same SQL statement as `@@`; no shared index query                                                        | §6.2, §6.4  | M4b      | T-RET-02           | L   | [ ]          |
-| SR-ISO-06 | Adversarial wrong-user recall = 0 (near-identical memories across users)                                                     | §13.3       | M4b, M7  | T-RET-02           | L   | [ ]          |
-| SR-RLS-01 | ENABLE + FORCE on all six `memory.*` tables; owner policy `USING`/`WITH CHECK`                                               | §5.1        | M2a      | T-RLS-01, T-RLS-03 | L   | [ ]          |
-| SR-RLS-02 | FORCE proven as a **non-superuser, non-BYPASSRLS** owner; guard test fails the suite if `rolsuper` or `rolbypassrls` is true | §5.5        | M2a      | T-RLS-05, T-RLS-00 | L   | [ ]          |
-| SR-RLS-03 | No non-owner policy on content tables; only the read-only `TO CURRENT_USER` lookup policy on `extraction_jobs`               | §5.3        | M2b      | T-MNT-03           | L   | [ ]          |
-| SR-RLS-04 | FK `SET NULL`/`CASCADE` actions work under FORCE                                                                             | §5.5 item 5 | M2a      | T-RLS-05           | L   | [ ]          |
-| SR-RLS-05 | Same behaviour on RDS with the dedicated (non-superuser) migration role                                                      | §5.3        | pre-PROD | T-AWS-01           | AWS | [ ] **[NV]** |
+| ID        | Control                                                                                                                      | Where       | M        | Proof              | Env | State                                                           |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------- | -------- | ------------------ | --- | --------------------------------------------------------------- |
+| SR-ISO-01 | Explicit `user_id = principal` in every memory query (RLS is the second layer)                                               | §5.4        | M3–M5b   | review + T-RLS-07  | L   | [ ]                                                             |
+| SR-ISO-02 | Composite `(id, user_id)` FKs to `memory.items`; owner trigger on every reference into `conversation.*`                      | §4.3, §4.4  | M2a      | T-RLS-02           | L   | [ ]                                                             |
+| SR-ISO-03 | DB trigger: every source message is a **user-role** message of the same user                                                 | §4.3, §7.1  | M2a      | T-RLS-08           | L   | [ ]                                                             |
+| SR-ISO-04 | Ephemeral threads cannot enable memory (CHECK)                                                                               | §3.4        | M2a      | T-RLS-06           | L   | [ ]                                                             |
+| SR-ISO-05 | Owner filter in the same SQL statement as `@@`; no shared index query                                                        | §6.2, §6.4  | M4b      | T-RET-02           | L   | [ ]                                                             |
+| SR-ISO-06 | Adversarial wrong-user recall = 0 (near-identical memories across users)                                                     | §13.3       | M4b, M7  | T-RET-02           | L   | [ ]                                                             |
+| SR-RLS-01 | ENABLE + FORCE on all six `memory.*` tables; owner policy `USING`/`WITH CHECK`                                               | §5.1        | M2a      | T-RLS-01, T-RLS-03 | L   | [ ]                                                             |
+| SR-RLS-02 | FORCE proven as a **non-superuser, non-BYPASSRLS** owner; guard test fails the suite if `rolsuper` or `rolbypassrls` is true | §5.5        | M2a      | T-RLS-05, T-RLS-00 | L   | [ ]                                                             |
+| SR-RLS-03 | No non-owner policy on content tables; only the read-only `TO CURRENT_USER` lookup policy on `extraction_jobs`               | §5.3        | M2b      | T-MNT-03           | L   | [x] L — M2b `memory-maintenance.int.test.ts`, both owner models |
+| SR-RLS-04 | FK `SET NULL`/`CASCADE` actions work under FORCE                                                                             | §5.5 item 5 | M2a      | T-RLS-05           | L   | [ ]                                                             |
+| SR-RLS-05 | Same behaviour on RDS with the dedicated (non-superuser) migration role                                                      | §5.3        | pre-PROD | T-AWS-01           | AWS | [ ] **[NV]**                                                    |
 
 ### A3. Transaction consistency and locking
 
@@ -100,13 +100,13 @@ Columns: **Where** = arch section · **M** = implementing milestone · **Proof**
 
 ### A7. Maintenance functions
 
-| ID        | Control                                                                                                    | Where | M   | Proof      | Env | State |
-| --------- | ---------------------------------------------------------------------------------------------------------- | ----- | --- | ---------- | --- | ----- |
-| SR-MNT-01 | No function takes a time, interval or grace parameter; constants in the DB, changed only by migration (H5) | §5.3  | M2b | T-MNT-01   | L   | [ ]   |
-| SR-MNT-02 | Each constant defined once and shared by trigger and functions (03C-05)                                    | §5.3  | M2a | T-MNT-05   | L   | [ ]   |
-| SR-MNT-03 | Per-user `set_config` scoping; caller scope NULL after return                                              | §5.3  | M2b | T-MNT-02   | L   | [ ]   |
-| SR-MNT-04 | `REVOKE ALL FROM PUBLIC`; EXECUTE to `karen_api_runtime` only; parameters clamped                          | §5.2  | M2b | T-MNT-04   | L   | [ ]   |
-| SR-MNT-05 | Purge depends on `identity.users` being non-FORCEd **[V]**; recorded in `data-isolation.md`                | §5.3  | M2b | doc review | —   | [ ]   |
+| ID        | Control                                                                                                    | Where | M   | Proof      | Env | State                                                           |
+| --------- | ---------------------------------------------------------------------------------------------------------- | ----- | --- | ---------- | --- | --------------------------------------------------------------- |
+| SR-MNT-01 | No function takes a time, interval or grace parameter; constants in the DB, changed only by migration (H5) | §5.3  | M2b | T-MNT-01   | L   | [x] L — M2b `memory-maintenance.int.test.ts`, both owner models |
+| SR-MNT-02 | Each constant defined once and shared by trigger and functions (03C-05)                                    | §5.3  | M2a | T-MNT-05   | L   | [ ]                                                             |
+| SR-MNT-03 | Per-user `set_config` scoping; caller scope NULL after return                                              | §5.3  | M2b | T-MNT-02   | L   | [x] L — M2b `memory-maintenance.int.test.ts`, both owner models |
+| SR-MNT-04 | `REVOKE ALL FROM PUBLIC`; EXECUTE to `karen_api_runtime` only; parameters clamped                          | §5.2  | M2b | T-MNT-04   | L   | [x] L — M2b `memory-maintenance.int.test.ts`, both owner models |
+| SR-MNT-05 | Purge depends on `identity.users` being non-FORCEd **[V]**; recorded in `data-isolation.md`                | §5.3  | M2b | doc review | —   | [x] `data-isolation.md` + `docs/database/memory-maintenance.md` |
 
 ### A8. AI boundary and prompt injection
 

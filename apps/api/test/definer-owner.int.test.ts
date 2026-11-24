@@ -32,6 +32,12 @@ const DEFINER_ALLOW_LIST = [
   'identity.lookup_refresh_credential(p_verifier text)',
   'identity.lookup_session_token(p_verifier text)',
   'identity.staff_account_status(p_user_id uuid)',
+  // M2b (OD-01): per-user-scoped; read FORCEd memory tables only through the read-only job lookup
+  // policy (content-free table) or after set_config(karen.user_id). memory-maintenance.int.test.ts.
+  'memory.due_extraction_jobs(p_limit integer)',
+  'memory.lookup_extraction_job(p_id uuid)',
+  'memory.purge_expired(p_after uuid, p_batch integer)',
+  'memory.terminate_stale_jobs(p_limit integer)',
 ];
 
 describe('SECURITY DEFINER functions under the configured owner model (NEW-1)', () => {

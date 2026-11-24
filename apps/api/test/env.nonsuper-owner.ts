@@ -4,7 +4,8 @@
  */
 export const NONSUPER_OWNER_ROLE = 'karen_owner_nonsuper';
 export const NONSUPER_OWNER_PASSWORD = 'nonsuper_karen_local_only';
-export const NONSUPER_OWNER_DATABASE = 'karen_test_nonsuper';
+// Overridable so parallel worktrees never drop each other's harness database.
+export const NONSUPER_OWNER_DATABASE = process.env.TEST_NONSUPER_DATABASE ?? 'karen_test_nonsuper';
 
 const HOST = process.env.TEST_DATABASE_HOST ?? 'localhost:5442';
 
