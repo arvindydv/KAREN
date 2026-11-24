@@ -84,6 +84,21 @@ no `DELETE`/`UPDATE` on `audit.*`, and RDS IAM auth or Secrets-Manager-rotated p
   future hardening change FORCEs `identity.users`, the memory purge function must change in the same
   migration.
 
+### SECURITY DEFINER functions under FORCE RLS (NEW-1, ADR-0037)
+
+- FORCE makes the owner policy bind the table OWNER too, so a definer function owned by a
+  non-superuser migration role sees nothing in a FORCEd table until it sets `karen.user_id`. The
+  local/CI owner `karen` is a superuser and hides this; `pnpm test:integration` therefore also runs
+  the whole API integration suite against a database migrated by a `NOSUPERUSER NOBYPASSRLS` role
+  (`apps/api/test/global-setup.nonsuper-owner.ts`, project `integration-nonsuper-owner`).
+- A definer function that must resolve an id to its owner before it can scope itself does so only
+  through a reviewed, owner-role-only lookup policy: exact-id and GUC-gated on
+  `consent.data_rights_requests` (`karen.data_rights_lookup_id`), read-only `USING (true)` on the
+  content-free `memory.extraction_jobs` (M2b). No content table gets a non-owner policy.
+- Every definer function is listed in `apps/api/test/definer-owner.int.test.ts`; adding one fails
+  that test until it is reviewed against this section.
+- Cross-user maintenance functions take no caller clock (`now()` only) and no unbounded retention.
+
 ## Redis
 
 Keys are namespaced `karen:<purpose>:…` and carry TTLs; no user content is stored. Rate-limit keys

@@ -56,23 +56,27 @@ export class MaintenanceService implements OnApplicationBootstrap, OnApplication
     }
   }
 
-  /** Closes generations whose lease expired. Returns how many were closed. */
-  async reapStale(now = new Date()): Promise<number> {
+  /**
+   * Closes generations whose lease expired (database clock). Returns how many were closed.
+   * The function takes no clock argument (NEW-1 / B5.6): a caller cannot reap live runs.
+   */
+  async reapStale(): Promise<number> {
     const rows = await this.prisma.$queryRaw<{ message_id: string; status: string }[]>`
-      SELECT message_id, status FROM conversation.reap_stale_generations(${now}::timestamptz)`;
+      SELECT message_id, status FROM conversation.reap_stale_generations()`;
     if (rows.length > 0) {
       this.logger.warn({ count: rows.length }, 'Closed generations whose runner stopped');
     }
     return rows.length;
   }
 
-  async purge(now = new Date()): Promise<{ threads: number; events: number }> {
+  /** Database clock; the function clamps the retention to >= 1 hour (NEW-1 / B5.6). */
+  async purge(): Promise<{ threads: number; events: number }> {
     const hours = this.env.CHAT_EVENT_RETENTION_HOURS;
     const [row] = await this.prisma.$queryRaw<
       { threads_deleted: number; events_deleted: number }[]
     >`
       SELECT threads_deleted, events_deleted
-        FROM conversation.purge_expired(${now}::timestamptz, make_interval(hours => ${hours}::int))`;
+        FROM conversation.purge_expired(make_interval(hours => ${hours}::int))`;
     return { threads: row?.threads_deleted ?? 0, events: row?.events_deleted ?? 0 };
   }
 }

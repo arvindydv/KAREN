@@ -148,9 +148,24 @@ describe('memory schema: isolation, triggers, erasure (integration)', () => {
   let turnA: Awaited<ReturnType<typeof mkTurn>>;
   let turnB: Awaited<ReturnType<typeof mkTurn>>;
   let itemB: string;
+  // The role that owns the memory tables before this file re-owns them to the probe. It is
+  // restored afterwards (in the non-superuser-owner harness this is NOT the fixture role).
+  let originalOwner: string;
+  let reown = true;
+  let probe: string = PROBE_OWNER;
 
   beforeAll(async () => {
     await Promise.all([owner.$connect(), runtime.$connect()]);
+    const [o] = await owner.$queryRaw<{ tableowner: string }[]>`
+      SELECT tableowner FROM pg_tables WHERE schemaname = 'memory' AND tablename = 'items'`;
+    originalOwner = o!.tableowner;
+    const [ownerRole] = await owner.$queryRaw<{ rolsuper: boolean; rolbypassrls: boolean }[]>`
+      SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = ${originalOwner}`;
+    // In the non-superuser-owner harness the real owner already is what M-11 needs; re-owning
+    // the tables to a separate probe would strip the definer functions (owned by the real owner)
+    // of their access to them. Re-own only when the real owner is a superuser.
+    reown = ownerRole!.rolsuper || ownerRole!.rolbypassrls;
+    probe = reown ? PROBE_OWNER : originalOwner;
     [userA, userB] = [await mkUser(), await mkUser()];
     [turnA, turnB] = [await mkTurn(userA), await mkTurn(userB)];
     itemB = await insertItem(owner, userB, {
@@ -167,6 +182,7 @@ describe('memory schema: isolation, triggers, erasure (integration)', () => {
       INSERT INTO memory.access_events (user_id, item_id, reply_message_id, rank, reason, expires_at)
       VALUES (${userB}::uuid, ${itemB}::uuid, ${turnB.replyMessageId}::uuid, 1, 'lexical', now() + interval '90 days')`;
 
+    if (!reown) return;
     // Non-superuser, non-BYPASSRLS owner of the memory tables (M-11).
     await owner.$executeRawUnsafe(`DO $$ BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${PROBE_OWNER}') THEN
@@ -187,8 +203,10 @@ describe('memory schema: isolation, triggers, erasure (integration)', () => {
   });
 
   afterAll(async () => {
-    for (const t of MEMORY_TABLES) {
-      await owner.$executeRawUnsafe(`ALTER TABLE memory.${t} OWNER TO CURRENT_USER`);
+    if (reown) {
+      for (const t of MEMORY_TABLES) {
+        await owner.$executeRawUnsafe(`ALTER TABLE memory.${t} OWNER TO "${originalOwner}"`);
+      }
     }
     await Promise.all([owner.$disconnect(), runtime.$disconnect()]);
   });
@@ -196,7 +214,7 @@ describe('memory schema: isolation, triggers, erasure (integration)', () => {
   /** Run `fn` as the non-superuser owner, optionally scoped to a user. */
   const asProbeOwner = <T>(fn: (tx: TransactionClient) => Promise<T>, userId?: string) =>
     owner.$transaction(async (tx) => {
-      await tx.$executeRawUnsafe(`SET LOCAL ROLE ${PROBE_OWNER}`);
+      await tx.$executeRawUnsafe(`SET LOCAL ROLE "${probe}"`);
       if (userId) await tx.$queryRaw`SELECT set_config('karen.user_id', ${userId}, true)`;
       return fn(tx);
     });
@@ -212,11 +230,11 @@ describe('memory schema: isolation, triggers, erasure (integration)', () => {
         (tx) => tx.$queryRaw<{ rolsuper: boolean; rolbypassrls: boolean; u: string }[]>`
           SELECT rolsuper, rolbypassrls, current_user AS u FROM pg_roles WHERE rolname = current_user`,
       );
-      expect(me).toEqual({ rolsuper: false, rolbypassrls: false, u: PROBE_OWNER });
+      expect(me).toEqual({ rolsuper: false, rolbypassrls: false, u: probe });
       const owners = await owner.$queryRaw<{ tableowner: string }[]>`
         SELECT tableowner FROM pg_tables WHERE schemaname = 'memory'`;
       expect(owners).toHaveLength(MEMORY_TABLES.length);
-      expect(new Set(owners.map((o) => o.tableowner))).toEqual(new Set([PROBE_OWNER]));
+      expect(new Set(owners.map((o) => o.tableowner))).toEqual(new Set([probe]));
     });
     it('every memory table has ENABLE + FORCE row-level security and exactly one owner policy', async () => {
       const rows = await owner.$queryRaw<
