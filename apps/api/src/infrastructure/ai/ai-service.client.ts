@@ -4,6 +4,7 @@ import {
   INTERNAL_SIGNATURE_HEADER,
   REQUEST_ID_HEADER,
   aiErrorSchema,
+  completionRequestSchema,
   completionResponseSchema,
   streamEventSchema,
   type CompletionRequest,
@@ -14,6 +15,28 @@ import { internalRequestSigningString, signTimestamped } from '@karen/domain/nod
 import { Inject, Injectable } from '@nestjs/common';
 import { API_ENV } from '../../config/config.module.js';
 import type { ApiEnv } from '../../config/env.js';
+
+/**
+ * Validates an outgoing completion request against the contract BEFORE it leaves the API (v5:
+ * memory fields, character policy, status rules). A violation is a programming error here, never
+ * sent to the AI service; the field path is reported, never the content.
+ */
+function outgoingCompletion(input: CompletionInput): string {
+  const parsed = completionRequestSchema.safeParse({
+    contract_version: CONTRACT_VERSION,
+    ...input,
+  });
+  if (!parsed.success) {
+    const where = parsed.error.issues.map((i) => i.path.join('.') || '(root)').join(', ');
+    throw new AiServiceError(
+      'VALIDATION_ERROR',
+      `Outgoing completion request violates the contract at: ${where}`,
+      false,
+      null,
+    );
+  }
+  return JSON.stringify(parsed.data);
+}
 
 export class AiServiceError extends Error {
   constructor(
@@ -75,7 +98,7 @@ export class AiServiceClient {
     options: { timeoutMs?: number } = {},
   ): Promise<CompletionResponse> {
     const path = '/internal/v1/completions';
-    const body = JSON.stringify({ contract_version: CONTRACT_VERSION, ...input });
+    const body = outgoingCompletion(input);
     let response: Response;
     try {
       response = await this.fetchImpl(`${this.baseUrl}${path}`, {
@@ -129,7 +152,7 @@ export class AiServiceClient {
     options: { signal?: AbortSignal; connectTimeoutMs?: number } = {},
   ): AsyncGenerator<StreamEvent> {
     const path = '/internal/v1/completions/stream';
-    const body = JSON.stringify({ contract_version: CONTRACT_VERSION, ...input });
+    const body = outgoingCompletion(input);
     const connectTimeout = AbortSignal.timeout(options.connectTimeoutMs ?? 15_000);
     const signal = options.signal
       ? AbortSignal.any([options.signal, connectTimeout])

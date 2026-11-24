@@ -132,6 +132,8 @@ class CompletionService:
                 timezone=zone,
                 reply_language=request.reply_language,
                 user_name=request.user_name,
+                memory_status=request.memory_status,
+                memory_context=request.memory_context,
             ),
         )
         return request.model_copy(

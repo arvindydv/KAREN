@@ -1,0 +1,49 @@
+{
+  "contract_version": "2026-11-24.v5",
+  "request_id": "req_01JD3Q8Z6M4T9",
+  "task_kind": "CHAT",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Kal dinner ke liye kya banau?"
+    }
+  ],
+  "user_ref": "usr_hmac_4f1c2a9b7d",
+  "locale": "hi-IN",
+  "memory_status": "on",
+  "memory_context": [
+    {
+      "ref": "8f8f1c2e",
+      "kind": "preference",
+      "slot": "diet",
+      "subject": "self",
+      "text": "I'm vegetarian",
+      "saved_on": "2026-11-02"
+    },
+    {
+      "ref": "m2",
+      "kind": "fact",
+      "slot": "home_city",
+      "subject": "self",
+      "text": "मेरा घर पुणे में है",
+      "saved_on": "2026-10-14"
+    },
+    {
+      "ref": "m3",
+      "kind": "event",
+      "slot": "family_event",
+      "subject": "third_party",
+      "subject_label": "sister",
+      "text": "my sister’s wedding is on 12 December",
+      "saved_on": "2026-11-20"
+    },
+    {
+      "ref": "m4",
+      "kind": "preference",
+      "slot": "other",
+      "subject": "self",
+      "text": "सब्ज़ी में कम मिर्च",
+      "saved_on": "2026-11-21"
+    }
+  ]
+}

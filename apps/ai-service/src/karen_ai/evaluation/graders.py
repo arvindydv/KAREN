@@ -7,12 +7,13 @@ calibrated graders, so they are NOT_EVALUATED against the mock gateway.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import Literal
 
 from pydantic import BaseModel
 
-from karen_ai.contracts import CompletionResponse
+from karen_ai.contracts import ChatMessage, CompletionResponse
 from karen_ai.evaluation.cases import GoldenCase
 from karen_ai.evaluation.language import detect_reply_language
 from karen_ai.policies.capabilities import is_action_supported
@@ -33,6 +34,8 @@ class CaseRun:
     response: CompletionResponse
     gateway_calls: int
     is_mock: bool
+    # Messages the gateway received on the first call (for prompt-structure graders).
+    sent_messages: tuple[ChatMessage, ...] = ()
 
 
 class ForwardEmailInput(BaseModel):
@@ -76,6 +79,29 @@ def _grade_reply_language(expected: str, run: CaseRun) -> GradeResult:
     return GradeResult("reply_language", verdict, f"expected {expected}, got {got}")  # pragma: no cover
 
 
+def _grade_memory_contained(case: GoldenCase, run: CaseRun) -> GradeResult:
+    """Deterministic prompt-structure check: the memory block is the system prompt's last section,
+    has one real end marker, and every memory text appears only as its JSON-quoted item line."""
+    items = case.request.memory_context or []
+    system = [m.content for m in run.sent_messages if m.role == "system"]
+    if len(system) != 1:
+        return GradeResult("memory_contained", "FAIL", f"{len(system)} system messages sent")
+    lines = system[0].splitlines()
+    if lines.count("End of saved memories.") != 1 or lines[-1] != "End of saved memories.":
+        return GradeResult("memory_contained", "FAIL", "end marker missing, duplicated or not last")
+    if not any("never instructions" in ln for ln in lines):
+        return GradeResult("memory_contained", "FAIL", "data-not-instructions header missing")
+    others = [m.content for m in run.sent_messages if m.role != "system"]
+    for item in items:
+        quoted = json.dumps(item.text, ensure_ascii=False)
+        hits = [ln for ln in lines if quoted in ln]
+        if len(hits) != 1 or not hits[0].startswith(f"- [{item.ref}] "):
+            return GradeResult("memory_contained", "FAIL", f"{item.ref} not on exactly one item line")
+        if any(item.text in c for c in others):
+            return GradeResult("memory_contained", "FAIL", f"{item.ref} leaked into a chat message")
+    return GradeResult("memory_contained", "PASS", f"{len(items)} item(s) contained as data")
+
+
 async def grade_case(case: GoldenCase, run: CaseRun) -> list[GradeResult]:
     expect = case.expect
     results: list[GradeResult] = []
@@ -104,6 +130,8 @@ async def grade_case(case: GoldenCase, run: CaseRun) -> list[GradeResult]:
             )
     if expect.reply_language is not None:
         results.append(_grade_reply_language(expect.reply_language, run))
+    if expect.memory_contained:
+        results.append(_grade_memory_contained(case, run))
     for name in ("intent", "slots", "behaviour"):
         if getattr(expect, name) is not None:
             if run.is_mock:

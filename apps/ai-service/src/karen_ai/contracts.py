@@ -26,7 +26,9 @@ from pydantic import (
     model_validator,
 )
 
-CONTRACT_VERSION: Final = "2026-11-23.v4"
+from karen_ai.memory.charset import is_memory_label_allowed, is_memory_text_allowed
+
+CONTRACT_VERSION: Final = "2026-11-24.v5"
 
 RouteTier = Literal[
     "NO_MODEL",
@@ -92,6 +94,33 @@ def _iso_date(value: str) -> str:
 
 
 ModelId = Annotated[str, StringConstraints(pattern=MODEL_ID_PATTERN)]
+
+# ── v5: personal memory (Phase 03, ADR-0036 §2.4) ──────────────────────────────────────────────
+MemoryWireStatus = Literal["on", "off_thread", "off_ephemeral", "off_consent", "unavailable"]
+MEMORY_STATUSES: Final[tuple[MemoryWireStatus, ...]] = get_args(MemoryWireStatus)
+MemoryKind = Literal["fact", "preference", "context", "event"]
+MemorySubject = Literal["self", "third_party"]
+MemorySensitivity = Literal["none", "secret", "sensitive", "minor"]
+MEMORY_CONTEXT_WIRE_MAX_ITEMS: Final = 20
+MEMORY_EXTRACT_MAX_CANDIDATES: Final = 5
+MEMORY_EXTRACT_MESSAGE_MAX_CHARS: Final = 4_000
+SLOT_PATTERN: Final = r"^[a-z][a-z0-9_]{1,47}$"
+
+
+def _memory_text(value: str) -> str:
+    if not is_memory_text_allowed(value):
+        raise ValueError("memory text violates the character policy")
+    return value
+
+
+def _memory_label(value: str) -> str:
+    if not is_memory_label_allowed(value):
+        raise ValueError("invalid subject label")
+    return value
+
+
+MemoryWireText = Annotated[str, StringConstraints(min_length=1), AfterValidator(_memory_text)]
+MemoryLabel = Annotated[str, AfterValidator(_memory_label)]
 IsoDate = Annotated[str, StringConstraints(pattern=r"^\d{4}-\d{2}-\d{2}$"), AfterValidator(_iso_date)]
 NonNegativeInt = Annotated[int, Field(ge=0)]
 
@@ -165,6 +194,20 @@ class ChatMessage(ContractModel):
         return self
 
 
+class MemoryContextItem(ContractModel):
+    """One remembered item sent as DATA (never instructions); opaque ref, never a DB id."""
+
+    _omittable: ClassVar[frozenset[str]] = frozenset({"subject_label"})
+
+    ref: Annotated[str, StringConstraints(pattern=r"^m[0-9]{1,2}$")]
+    kind: MemoryKind
+    slot: Annotated[str, StringConstraints(pattern=SLOT_PATTERN)]
+    subject: MemorySubject
+    subject_label: MemoryLabel | None = None
+    text: MemoryWireText
+    saved_on: IsoDate
+
+
 class CompletionRequest(ContractModel):
     _omittable: ClassVar[frozenset[str]] = frozenset(
         {
@@ -177,10 +220,12 @@ class CompletionRequest(ContractModel):
             "timezone",
             "reply_language",
             "user_name",
+            "memory_status",
+            "memory_context",
         }
     )
 
-    contract_version: Literal["2026-11-23.v4"]
+    contract_version: Literal["2026-11-24.v5"]
     request_id: Annotated[str, StringConstraints(min_length=8, max_length=128)]
     task_kind: TaskKind
     route_tier: RouteTier | None = None
@@ -203,6 +248,26 @@ class CompletionRequest(ContractModel):
         ]
         | None
     ) = None
+    # v5 (Phase 03): memory status and the memories selected by the API. Absent = Phase 02.
+    memory_status: MemoryWireStatus | None = None
+    memory_context: (
+        Annotated[list[MemoryContextItem], Field(max_length=MEMORY_CONTEXT_WIRE_MAX_ITEMS)] | None
+    ) = None
+
+    @model_validator(mode="after")
+    def _memory_context_rules(self) -> CompletionRequest:
+        if self.memory_context is None:
+            return self
+        if self.memory_status != "on":
+            raise ValueError("memory_context requires memory_status 'on'")
+        if self.task_kind != "CHAT":
+            raise ValueError("memory_context is only allowed for CHAT")
+        if any(m.role == "system" for m in self.messages):
+            raise ValueError("memory_context cannot be combined with a caller system message")
+        refs = [m.ref for m in self.memory_context]
+        if len(set(refs)) != len(refs):
+            raise ValueError("duplicate ref")
+        return self
 
 
 class Usage(ContractModel):
@@ -216,8 +281,49 @@ class Usage(ContractModel):
         return cls(input_tokens=None, output_tokens=None, cached_tokens=None, reasoning_tokens=None)
 
 
+class MemoryExtractRequest(ContractModel):
+    _omittable: ClassVar[frozenset[str]] = frozenset({"locale"})
+
+    contract_version: Literal["2026-11-24.v5"]
+    request_id: Annotated[str, StringConstraints(min_length=8, max_length=128)]
+    user_ref: Annotated[str, StringConstraints(min_length=8, max_length=128)]
+    message_text: Annotated[str, StringConstraints(min_length=1, max_length=MEMORY_EXTRACT_MESSAGE_MAX_CHARS)]
+    locale: Annotated[str, StringConstraints(min_length=2, max_length=35)] | None = None
+    max_candidates: Annotated[int, Field(ge=1, le=MEMORY_EXTRACT_MAX_CANDIDATES)]
+    max_cost_usd: Annotated[float, Field(gt=0, le=1)]
+
+
+class MemoryCandidate(ContractModel):
+    """A PROPOSAL only; the API re-validates every field (V1-V12)."""
+
+    _omittable: ClassVar[frozenset[str]] = frozenset({"subject_label", "trigger_text", "valid_until"})
+
+    kind: MemoryKind
+    slot: Annotated[str, StringConstraints(pattern=SLOT_PATTERN)]
+    subject: MemorySubject
+    subject_label: Annotated[str, StringConstraints(max_length=40)] | None = None
+    source_span: Annotated[str, StringConstraints(min_length=1, max_length=280)]
+    value_text: Annotated[str, StringConstraints(min_length=1, max_length=280)]
+    explicit_request: bool
+    trigger_text: Annotated[str, StringConstraints(max_length=40)] | None = None
+    sensitivity: MemorySensitivity
+    valid_until: IsoDate | None = None
+
+
+class MemoryExtractResponse(ContractModel):
+    contract_version: Literal["2026-11-24.v5"]
+    request_id: str
+    candidates: Annotated[list[MemoryCandidate], Field(max_length=MEMORY_EXTRACT_MAX_CANDIDATES)]
+    usage: Usage
+    estimated_cost_usd: Annotated[float, Field(ge=0)] | None
+    requested_model: str | None
+    served_model: str | None
+    is_mock: bool
+    prompt_version: Annotated[str, StringConstraints(max_length=64)]
+
+
 class CompletionResponse(ContractModel):
-    contract_version: Literal["2026-11-23.v4"]
+    contract_version: Literal["2026-11-24.v5"]
     request_id: str
     route_tier: RouteTier
     requested_model: str | None
