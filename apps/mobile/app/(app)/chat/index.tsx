@@ -1,7 +1,9 @@
 import { TITLE_MAX_CHARS, type Conversation } from '@karen/api-contracts';
 import { useRouter } from 'expo-router';
+import { confirmDeleteChat } from '../../../src/features/memory/dialogs';
+import { useMemoryStatus } from '../../../src/lib/memory-queries';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import {
   Caption,
   EmptyState,
@@ -58,14 +60,11 @@ export default function ChatListScreen() {
       router.push(`/chat/${c.id}`);
     });
 
+  // The memory option is offered only when the server says the feature is on.
+  const memoryFeature = useMemoryStatus().data?.feature_enabled === true;
   const confirmDelete = (c: Conversation) =>
-    Alert.alert(
-      'Delete this conversation?',
-      'All its messages are permanently deleted. This can’t be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => run(() => actions.remove(c.id)) },
-      ],
+    confirmDeleteChat(memoryFeature, (deleteMemories) =>
+      run(() => actions.remove(c.id, deleteMemories)),
     );
 
   return (

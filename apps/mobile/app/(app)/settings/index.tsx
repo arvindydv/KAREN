@@ -29,6 +29,11 @@ export default function SettingsScreen() {
           onPress={() => router.push('/settings/security')}
         />
         <LinkRow
+          label="Memory"
+          description="What KAREN remembers about you, suggestions, export"
+          onPress={() => router.push('/settings/memory')}
+        />
+        <LinkRow
           label="Privacy"
           description="Consents, legal, export or delete your data"
           onPress={() => router.push('/settings/privacy')}

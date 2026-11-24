@@ -1,7 +1,7 @@
 import { MESSAGE_MAX_CHARS, TITLE_MAX_CHARS, type Message } from '@karen/api-contracts';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Alert, FlatList, KeyboardAvoidingView, View } from 'react-native';
+import { AccessibilityInfo, FlatList, KeyboardAvoidingView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Banner,
@@ -13,6 +13,8 @@ import {
 import { ActionSheet } from '../../../src/features/chat/action-sheet';
 import { StarField } from '../../../src/features/chat/assistant-orb';
 import { ChatWelcome, SuggestionCards } from '../../../src/features/chat/chat-welcome';
+import { ChatMemoryBar, ChatMemoryChips } from '../../../src/features/memory/chat-memory';
+import { confirmDeleteChat } from '../../../src/features/memory/dialogs';
 import { ChatHeader, useKeyboardVisible } from '../../../src/features/chat/chat-chrome';
 import { Composer } from '../../../src/features/chat/composer';
 import { ConsentRequired, useAiConsent } from '../../../src/features/chat/consent-gate';
@@ -68,6 +70,8 @@ export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const conversationId = String(id);
   const conversation = useConversation(conversationId);
+  // Memory chips show outcomes since this screen opened (§3.6).
+  const [openedAt] = useState(() => new Date().toISOString());
   const messages = useMessages(conversationId);
   const usage = useAiUsage();
   const consent = useAiConsent();
@@ -192,6 +196,7 @@ export default function ConversationScreen() {
             menuLabel={`${c?.title ?? 'Conversation'}. Conversation options`}
             onMenu={() => c && setMenu(true)}
           />
+          {c ? <ChatMemoryBar conversation={c} /> : null}
           {c?.mode === 'ephemeral' && c.expires_at ? (
             <View style={{ paddingHorizontal: t.spacing.lg }}>
               <Banner>
@@ -260,6 +265,7 @@ export default function ConversationScreen() {
             </View>
           ) : null}
 
+          {c ? <ChatMemoryChips conversation={c} since={openedAt} /> : null}
           <View
             style={{
               paddingHorizontal: t.spacing.lg,
@@ -335,21 +341,13 @@ export default function ConversationScreen() {
                   label: 'Delete…',
                   destructive: true,
                   onPress: () =>
-                    Alert.alert(
-                      'Delete this conversation?',
-                      'All its messages are permanently deleted.',
-                      [
-                        { text: 'Cancel', style: 'cancel' },
-                        {
-                          text: 'Delete',
-                          style: 'destructive',
-                          onPress: () =>
-                            void actions
-                              .remove(c.id)
-                              .then(() => router.replace('/chat'))
-                              .catch((err: unknown) => setProblem(sendProblem(err))),
-                        },
-                      ],
+                    confirmDeleteChat(
+                      c.memory_status !== undefined && c.memory_status !== 'off_feature',
+                      (deleteMemories) =>
+                        void actions
+                          .remove(c.id, deleteMemories)
+                          .then(() => router.replace('/chat'))
+                          .catch((err: unknown) => setProblem(sendProblem(err))),
                     ),
                 },
               ]
