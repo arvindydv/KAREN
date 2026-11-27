@@ -2,7 +2,7 @@
 # KAREN AI service image. Build context: apps/ai-service (self-contained, incl. mock registry).
 #   docker build -t karen/ai-service:dev apps/ai-service
 
-FROM ghcr.io/astral-sh/uv:0.13.9 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.10 AS uv
 
 FROM python:3.12-slim-trixie AS builder
 COPY --from=uv /uv /usr/local/bin/uv
