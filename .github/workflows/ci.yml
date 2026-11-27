@@ -76,7 +76,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://karen:karen_local_only@localhost:5442/karen
           SHADOW_DATABASE_URL: postgresql://karen:karen_local_only@localhost:5442/karen_shadow
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
         with:
           # Pinned: an unpinned (latest) uv changed `--project` resolution and broke CI.
           version: '0.9.10'
@@ -139,7 +139,7 @@ jobs:
         working-directory: apps/${{ matrix.app }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
         with:
           # Pinned: an unpinned (latest) uv changed `--project` resolution and broke CI.
           version: '0.9.10'
